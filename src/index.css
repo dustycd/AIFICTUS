@@ -1,0 +1,550 @@
+/* Custom font face declarations for Arvo */
+@font-face {
+  font-family: 'Arvo';
+  src: url('/fonts/Arvo-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Arvo';
+  src: url('/fonts/Arvo-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Arvo';
+  src: url('/fonts/Arvo-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Arvo';
+  src: url('/fonts/Arvo-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Exact Fictus AI Logo Replica - Updated for Arvo */
+.fictus-logo-text {
+  font-family: 'Arvo', 'Arial Black', 'Helvetica', sans-serif;
+  font-weight: 700;
+  font-size: clamp(3rem, 8vw, 8rem);
+  letter-spacing: 0.05em;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  
+  /* 3D Beveled Effect */
+  background: linear-gradient(135deg, 
+    #8B5CF6 0%,     /* Purple-500 */
+    #A855F7 25%,    /* Purple-500 lighter */
+    #7C3AED 50%,    /* Purple-600 */
+    #6D28D9 75%,    /* Purple-700 */
+    #5B21B6 100%    /* Purple-800 */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Multiple text shadows for 3D depth effect */
+  text-shadow: 
+    1px 1px 0px #4C1D95,    /* Purple-900 - close shadow */
+    2px 2px 0px #3730A3,    /* Indigo-800 - medium shadow */
+    3px 3px 0px #312E81,    /* Indigo-900 - far shadow */
+    4px 4px 8px rgba(0,0,0,0.5), /* Black shadow for depth */
+    0px 0px 20px rgba(139, 92, 246, 0.3); /* Purple glow */
+  
+  /* Beveled border effect */
+  position: relative;
+}
+
+.fictus-logo-text::before {
+  content: 'FICTUS AI';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  
+  /* Darker outline for definition */
+  background: linear-gradient(135deg, 
+    #4C1D95 0%,     /* Purple-900 */
+    #3730A3 50%,    /* Indigo-800 */
+    #312E81 100%    /* Indigo-900 */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Offset for outline effect */
+  transform: translate(1px, 1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .fictus-logo-text {
+    font-size: clamp(2rem, 12vw, 4rem);
+    letter-spacing: 0.03em;
+  }
+}
+
+@media (min-width: 1024px) {
+  .fictus-logo-text {
+    font-size: clamp(6rem, 10vw, 10rem);
+  }
+}
+
+/* Custom scrollbar styles */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Enhanced animations for the verify page */
+@keyframes neon-glow {
+  0%, 100% {
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes float-up-down {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    transform: translateX(0%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Apply animations */
+.neon-text {
+  animation: neon-glow 2s ease-in-out infinite alternate;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.float-animation {
+  animation: float-up-down 3s ease-in-out infinite;
+}
+
+.rotate-slow {
+  animation: rotate-slow 20s linear infinite;
+}
+
+.shimmer-effect {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.bounce-in {
+  animation: bounce-in 0.6s ease-out;
+}
+
+.slide-in-up {
+  animation: slide-in-up 0.8s ease-out;
+}
+
+.fade-in-scale {
+  animation: fade-in-scale 0.6s ease-out;
+}
+
+/* Enhanced gradient text */
+.gradient-text {
+  background: linear-gradient(45deg, #00D4FF, #0099CC, #0066FF);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Video grid animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Custom button hover effects */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+/* Typography base styles - Use Arvo for all text except numbers */
+body {
+  font-family: 'Arvo', 'Georgia', 'Times New Roman', serif;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Heading defaults - Use Arvo for headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Arvo', 'Georgia', 'Times New Roman', serif;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+}
+
+/* Special class for numbers only - use Inter for reliability */
+.numeric-text, .metric-number {
+  font-family: 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Paragraph defaults - Use Arvo */
+p {
+  margin: 0;
+  line-height: 1.625;
+  font-family: 'Arvo', 'Georgia', 'Times New Roman', serif;
+}
+
+/* Button text optimization - Use Arvo */
+button {
+  font-family: 'Arvo', 'Georgia', 'Times New Roman', serif;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+/* Link hover effects */
+a {
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-family: 'Arvo', 'Georgia', 'Times New Roman', serif;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+/* Modal animations */
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-top-4 {
+  animation: slide-in-from-top 0.3s ease-out;
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Remove default focus outlines and replace with subtle alternatives */
+*:focus {
+  outline: none;
+}
+
+/* Custom focus styles for accessibility - subtle and elegant */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+}
+
+/* Remove focus outline for mouse users but keep for keyboard users */
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Custom checkbox styles */
+input[type="checkbox"]:focus-visible {
+  box-shadow: 0 0 0 2px #1F2937, 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+input[type="checkbox"]:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Form validation styles */
+.form-error {
+  border-color: #EF4444;
+}
+
+.form-error:focus {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-success {
+  border-color: #10B981;
+}
+
+.form-success:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Password strength indicator */
+.password-strength {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.password-strength.weak {
+  background-color: #EF4444;
+  width: 25%;
+}
+
+.password-strength.fair {
+  background-color: #F59E0B;
+  width: 50%;
+}
+
+.password-strength.good {
+  background-color: #3B82F6;
+  width: 75%;
+}
+
+.password-strength.strong {
+  background-color: #10B981;
+  width: 100%;
+}
+
+/* Enhanced hover effects for interactive elements */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Glowing border effect */
+.glow-border {
+  position: relative;
+  background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  background: linear-gradient(45deg, #3B82F6, #06B6D4, #8B5CF6);
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+/* Particle animation for background */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.6;
+  animation: float 6s ease-in-out infinite;
+}
+
+.particle:nth-child(1) { animation-delay: 0s; }
+.particle:nth-child(2) { animation-delay: 1s; }
+.particle:nth-child(3) { animation-delay: 2s; }
+.particle:nth-child(4) { animation-delay: 3s; }
+.particle:nth-child(5) { animation-delay: 4s; }
+
+/* Improved accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .bg-gray-800 {
+    background-color: #000000;
+  }
+  
+  .text-gray-400 {
+    color: #ffffff;
+  }
+  
+  .border-gray-700 {
+    border-color: #ffffff;
+  }
+}
