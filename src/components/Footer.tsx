@@ -107,13 +107,12 @@ const Footer: React.FC = () => {
               Support
             </Typography>
             <nav className="space-y-3">
-              <Link 
-                to="/contact"
-                onClick={handleLinkClick}
+              <a 
+                href="mailto:help@fictus.io"
                 className="block text-gray-400 hover:text-white transition-colors"
               >
-                <Typography variant="cardCaption">Contact</Typography>
-              </Link>
+                <Typography variant="cardCaption">Contact Us</Typography>
+              </a>
             </nav>
           </div>
         </div>
