@@ -294,7 +294,7 @@ const Header: React.FC = () => {
                 <Link 
                   to="/auth"
                   onClick={handleNavClick}
-                  className="w-full group relative px-6 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300 mt-4"
+                  className="w-full group relative px-4 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300 mt-4 block"
                 >
                   <div className="flex items-center justify-center gap-2">
                     <User className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
