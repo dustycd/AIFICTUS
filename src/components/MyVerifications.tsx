@@ -46,6 +46,12 @@ const MyVerifications = () => {
 
   const ITEMS_PER_PAGE = 20;
 
+  // Generate download filename with original name preserved for user's own files
+  const getDownloadFilename = (verification: UserVerification): string => {
+    // For user's own files, preserve original filename
+    return verification.original_filename || verification.file_name || 'download';
+  };
+
   // Load user's verifications
   const loadVerifications = async (page = 0, reset = false) => {
     if (!user) return;
@@ -229,7 +235,7 @@ const MyVerifications = () => {
     return null;
   };
 
-  // Download file
+  // Download file with original filename preserved
   const downloadFile = async (verification: UserVerification) => {
     const url = getFullMediaUrl(verification);
     if (!url) return;
@@ -240,7 +246,7 @@ const MyVerifications = () => {
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = verification.original_filename || verification.file_name || 'download';
+      link.download = getDownloadFilename(verification); // Keep original filename for user's own files
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -671,6 +677,16 @@ const MyVerifications = () => {
                           </div>
                         </div>
 
+                        {/* Show original filename for user's own files */}
+                        <Typography variant="cardTitle" className="mb-2 truncate">
+                          {verification.original_filename || verification.file_name}
+                        </Typography>
+
+                        <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
+                          <span className="numeric-text">{formatFileSize(verification.file_size || 0)}</span>
+                          <span>{formatDate(verification.created_at)}</span>
+                        </div>
+
                         {/* Risk Factors Preview */}
                         {verification.risk_factors && verification.risk_factors.length > 0 && (
                           <div className="mb-3">
@@ -769,6 +785,11 @@ const MyVerifications = () => {
                               </div>
                             )}
                           </div>
+
+                          {/* Show original filename for user's own files */}
+                          <Typography variant="h4" className="mb-2">
+                            {verification.original_filename || verification.file_name}
+                          </Typography>
 
                           <div className="flex items-center gap-6 mb-4 text-sm text-gray-400">
                             {verification.confidence_score != null && (

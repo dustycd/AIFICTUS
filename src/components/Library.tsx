@@ -44,6 +44,27 @@ const Library = () => {
 
   const ITEMS_PER_PAGE = 20;
 
+  // Generate anonymous display name for content
+  const getAnonymousDisplayName = (item: LibraryItem): string => {
+    const isVideoContent = isVideo(item.content_type);
+    const contentType = isVideoContent ? 'video' : 'image';
+    const statusPrefix = item.verification_status === 'authentic' ? 'verified' : 
+                        item.verification_status === 'fake' ? 'ai-generated' : 
+                        item.verification_status === 'suspicious' ? 'suspicious' : 'content';
+    
+    // Use the item ID to create a consistent but anonymous identifier
+    const shortId = item.id.substring(0, 8);
+    return `${statusPrefix}-${contentType}-${shortId}`;
+  };
+
+  // Generate download filename
+  const getDownloadFilename = (item: LibraryItem): string => {
+    const isVideoContent = isVideo(item.content_type);
+    const extension = isVideoContent ? 'mp4' : 'jpg'; // Default extensions
+    const anonymousName = getAnonymousDisplayName(item);
+    return `fictus-ai-${anonymousName}.${extension}`;
+  };
+
   // Load public library items
   const loadLibraryItems = async (page = 0, reset = false) => {
     try {
@@ -128,7 +149,8 @@ const Library = () => {
         filtered.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
         break;
       case 'name':
-        filtered.sort((a, b) => (a.original_filename || a.file_name).localeCompare(b.original_filename || b.file_name));
+        // Sort by anonymous display name instead of original filename
+        filtered.sort((a, b) => getAnonymousDisplayName(a).localeCompare(getAnonymousDisplayName(b)));
         break;
     }
 
@@ -194,7 +216,7 @@ const Library = () => {
     return null;
   };
 
-  // Download file
+  // Download file with anonymous filename
   const downloadFile = async (item: LibraryItem) => {
     const url = getFullMediaUrl(item);
     if (!url) return;
@@ -205,7 +227,7 @@ const Library = () => {
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = item.original_filename || item.file_name || 'download';
+      link.download = getDownloadFilename(item); // Use anonymous filename
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -277,7 +299,7 @@ const Library = () => {
       return (
         <img 
           src={mediaUrl}
-          alt={item.original_filename || item.file_name}
+          alt={getAnonymousDisplayName(item)} // Use anonymous name for alt text
           className="w-full h-full object-cover"
           onError={(e) => {
             // Fallback to placeholder on error
@@ -341,9 +363,7 @@ const Library = () => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
 
@@ -421,7 +441,7 @@ const Library = () => {
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search library..."
+                    placeholder="Search by content type or status..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
@@ -494,7 +514,7 @@ const Library = () => {
                     <option value="recent">🕒 Most Recent</option>
                     <option value="confidence">📊 Highest Confidence</option>
                     <option value="views">👁️ Most Viewed</option>
-                    <option value="name">📝 Name A-Z</option>
+                    <option value="name">📝 Content ID</option>
                   </select>
 
                   {/* View Mode Toggle */}
@@ -656,8 +676,9 @@ const Library = () => {
                           </div>
                         </div>
 
+                        {/* Anonymous Display Name */}
                         <Typography variant="cardTitle" className="mb-2 truncate">
-                          {item.original_filename || item.file_name}
+                          {getAnonymousDisplayName(item)}
                         </Typography>
 
                         <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
@@ -683,12 +704,12 @@ const Library = () => {
                           </div>
                         )}
 
-                        {/* Uploader */}
+                        {/* Anonymous Footer */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-400" />
+                            <Globe className="h-4 w-4 text-gray-400" />
                             <Typography variant="caption" color="secondary">
-                              {item.uploader_name || 'Anonymous'}
+                              Community Content
                             </Typography>
                           </div>
                           <Typography variant="caption" className="text-blue-400">
@@ -733,8 +754,9 @@ const Library = () => {
                             </div>
                           </div>
 
+                          {/* Anonymous Display Name */}
                           <Typography variant="h4" className="mb-2">
-                            {item.original_filename || item.file_name}
+                            {getAnonymousDisplayName(item)}
                           </Typography>
 
                           <div className="flex items-center gap-6 mb-4 text-sm text-gray-400">
@@ -790,8 +812,8 @@ const Library = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 text-sm">
                               <div className="flex items-center gap-1">
-                                <User className="h-4 w-4 text-gray-400" />
-                                <span>{item.uploader_name || 'Anonymous'}</span>
+                                <Globe className="h-4 w-4 text-gray-400" />
+                                <span>Community Content</span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4 text-gray-400" />
@@ -899,7 +921,7 @@ const Library = () => {
                 ) : (
                   <img
                     src={getFullMediaUrl(selectedItem) || undefined}
-                    alt={selectedItem.original_filename || selectedItem.file_name}
+                    alt={getAnonymousDisplayName(selectedItem)}
                     className="max-w-full max-h-full object-contain"
                   />
                 )}
@@ -908,13 +930,13 @@ const Library = () => {
               {/* Analysis Details */}
               <div className="w-full lg:w-96 p-6 overflow-y-auto">
                 <div className="space-y-6">
-                  {/* File Info */}
+                  {/* File Info - Anonymized */}
                   <div>
-                    <Typography variant="cardTitle" className="mb-4">File Information</Typography>
+                    <Typography variant="cardTitle" className="mb-4">Content Information</Typography>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Filename</span>
-                        <span className="text-sm truncate ml-2">{selectedItem.original_filename || selectedItem.file_name}</span>
+                        <span className="text-gray-400">Content ID</span>
+                        <span className="text-sm truncate ml-2">{getAnonymousDisplayName(selectedItem)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Type</span>
@@ -925,12 +947,12 @@ const Library = () => {
                         <span className="numeric-text text-sm">{formatFileSize(selectedItem.file_size || 0)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Uploaded</span>
+                        <span className="text-gray-400">Verified</span>
                         <span className="text-sm">{formatDate(selectedItem.created_at)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Uploader</span>
-                        <span className="text-sm">{selectedItem.uploader_name || 'Anonymous'}</span>
+                        <span className="text-gray-400">Source</span>
+                        <span className="text-sm">Community Shared</span>
                       </div>
                     </div>
                   </div>
@@ -1030,14 +1052,14 @@ const Library = () => {
                       className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <Download className="h-5 w-5" />
-                      Download File
+                      Download Content
                     </button>
                     
                     <button
                       onClick={() => {
                         if (navigator.share) {
                           navigator.share({
-                            title: `Fictus AI Verification: ${selectedItem.original_filename || selectedItem.file_name}`,
+                            title: `Fictus AI Verification: ${getAnonymousDisplayName(selectedItem)}`,
                             text: `This ${isVideo(selectedItem.content_type) ? 'video' : 'image'} has been verified with ${selectedItem.confidence_score?.toFixed(1)}% confidence as ${selectedItem.verification_status}.`,
                             url: window.location.href
                           });
