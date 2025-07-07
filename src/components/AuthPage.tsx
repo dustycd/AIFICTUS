@@ -14,6 +14,7 @@ const AuthPage: React.FC = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaError, setCaptchaError] = useState<string | null>(null);
   const [captchaLoaded, setCaptchaLoaded] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState(0); // Force re-render when needed
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
   
@@ -73,15 +74,8 @@ const AuthPage: React.FC = () => {
     setCaptchaError(null);
     setCaptchaLoaded(false);
     
-    // Reset captcha
-    if (captchaRef.current) {
-      try {
-        captchaRef.current.resetCaptcha();
-        console.log('🔄 hCaptcha reset successfully');
-      } catch (error) {
-        console.warn('⚠️ Failed to reset hCaptcha:', error);
-      }
-    }
+    // Force hCaptcha re-render by changing key
+    setCaptchaKey(prev => prev + 1);
   }, [isLogin]);
 
   // Redirect when user is authenticated
@@ -103,6 +97,7 @@ const AuthPage: React.FC = () => {
     
     setCaptchaToken(token);
     setCaptchaError(null);
+    setCaptchaLoaded(true);
     
     // Clear captcha error if it exists
     if (errors.captcha) {
@@ -126,6 +121,7 @@ const AuthPage: React.FC = () => {
     });
     
     setCaptchaToken(null);
+    setCaptchaLoaded(false);
     
     // Provide more specific error messages
     let errorMessage = 'Security verification failed. Please try again.';
@@ -147,13 +143,15 @@ const AuthPage: React.FC = () => {
     setCaptchaError(null);
   };
 
-  const handleCaptchaOpen = () => {
-    console.log('👁️ hCaptcha challenge opened');
-  };
-
-  const handleCaptchaClose = () => {
-    console.log('👁️ hCaptcha challenge closed');
-  };
+  // Memoize captcha callbacks to prevent re-renders
+  const captchaCallbacks = React.useMemo(() => ({
+    onVerify: handleCaptchaVerify,
+    onExpire: handleCaptchaExpire,
+    onError: handleCaptchaError,
+    onLoad: handleCaptchaLoad,
+    onOpen: () => console.log('👁️ hCaptcha challenge opened'),
+    onClose: () => console.log('👁️ hCaptcha challenge closed')
+  }), []);
 
   // Form validation
   const validateForm = (): boolean => {
@@ -264,6 +262,7 @@ const AuthPage: React.FC = () => {
           }
         }
         setCaptchaToken(null);
+        setCaptchaKey(prev => prev + 1); // Force re-render
       } else if (data?.user) {
         console.log('✅ Auth successful:', data.user.email);
         setAuthSuccess(true);
@@ -290,6 +289,7 @@ const AuthPage: React.FC = () => {
         }
       }
       setCaptchaToken(null);
+      setCaptchaKey(prev => prev + 1); // Force re-render
     } finally {
       setIsLoading(false);
     }
@@ -384,6 +384,7 @@ const AuthPage: React.FC = () => {
           }
         }
         setCaptchaToken(null);
+        setCaptchaKey(prev => prev + 1); // Force re-render
       } else {
         setErrors({ 
           general: 'Password reset instructions have been sent to your email address.' 
@@ -405,6 +406,7 @@ const AuthPage: React.FC = () => {
         }
       }
       setCaptchaToken(null);
+      setCaptchaKey(prev => prev + 1); // Force re-render
     } finally {
       setIsLoading(false);
     }
@@ -785,17 +787,19 @@ const AuthPage: React.FC = () => {
                 <div className="flex justify-center">
                   <div className="relative">
                     <HCaptcha
+                      key={captchaKey}
                       ref={captchaRef}
                       sitekey={HCAPTCHA_SITE_KEY}
-                      onVerify={handleCaptchaVerify}
-                      onExpire={handleCaptchaExpire}
-                      onError={handleCaptchaError}
-                      onLoad={handleCaptchaLoad}
-                      onOpen={handleCaptchaOpen}
-                      onClose={handleCaptchaClose}
+                      onVerify={captchaCallbacks.onVerify}
+                      onExpire={captchaCallbacks.onExpire}
+                      onError={captchaCallbacks.onError}
+                      onLoad={captchaCallbacks.onLoad}
+                      onOpen={captchaCallbacks.onOpen}
+                      onClose={captchaCallbacks.onClose}
                       theme="dark"
                       size="normal"
                       tabindex={0}
+                      reCaptchaCompat={false}
                     />
                     
                     {/* Loading indicator */}
