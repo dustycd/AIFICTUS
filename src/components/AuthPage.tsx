@@ -312,15 +312,7 @@ const AuthPage: React.FC = () => {
 
   // Handle social login (Google only) with hCaptcha token
   const handleGoogleLogin = async () => {
-    // Require captcha for OAuth as well
-    if (!captchaToken) {
-      setErrors({ captcha: 'Please complete the security verification before using Google sign-in' });
-      console.log('❌ Google OAuth blocked: Missing captcha token');
-      return;
-    }
-
-    console.log('🔐 Starting Google OAuth with captcha verification');
-    console.log('- Captcha Token Preview:', captchaToken.substring(0, 20) + '...');
+    console.log('🔐 Starting Google OAuth');
     setIsLoading(true);
     
     const timeoutId = setTimeout(() => {
@@ -330,41 +322,19 @@ const AuthPage: React.FC = () => {
     }, 10000);
     
     try {
-      console.log('🔐 Attempting Google OAuth with hCaptcha token...');
-      const { error } = await signInWithOAuth('google', captchaToken);
+      console.log('🔐 Attempting Google OAuth...');
+      const { error } = await signInWithOAuth('google');
       
       clearTimeout(timeoutId);
       
       if (error) {
         console.error('❌ Google OAuth error:', error);
         setErrors({ general: 'Google authentication failed. Please try again.' });
-        
-        // Reset captcha on error
-        if (captchaRef.current) {
-          try {
-            captchaRef.current.resetCaptcha();
-            console.log('🔄 hCaptcha reset after OAuth error');
-          } catch (resetError) {
-            console.warn('⚠️ Failed to reset hCaptcha after OAuth error:', resetError);
-          }
-        }
-        setCaptchaToken(null);
       }
     } catch (error: any) {
       clearTimeout(timeoutId);
       console.error('❌ OAuth exception:', error);
       setErrors({ general: 'Google authentication failed. Please try again.' });
-      
-      // Reset captcha on error
-      if (captchaRef.current) {
-        try {
-          captchaRef.current.resetCaptcha();
-          console.log('🔄 hCaptcha reset after OAuth exception');
-        } catch (resetError) {
-          console.warn('⚠️ Failed to reset hCaptcha after OAuth exception:', resetError);
-        }
-      }
-      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -920,7 +890,7 @@ const AuthPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                disabled={isLoading || !captchaToken}
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Chrome className="h-5 w-5" />
