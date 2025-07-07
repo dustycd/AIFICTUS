@@ -116,37 +116,7 @@ const TechnologyExplainer = () => {
             ))}
           </div>
 
-          {/* Visual Demo */}
-          <div className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700">
-            <div className="mb-6">
-              <Typography variant="cardTitle" className="mb-2">
-                Live Analysis Demo
-              </Typography>
-              <Typography variant="cardCaption" color="secondary">
-                Watch how our AI processes video frames in real-time
-              </Typography>
-            </div>
-
-            {/* Mock Analysis Interface */}
-            <div className="bg-black rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <Typography variant="caption" color="accent">
-                  Analysis Progress
-                </Typography>
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="flex items-center gap-2 px-3 py-1 bg-blue-500 rounded text-white text-sm hover:bg-blue-600 transition-colors"
-                >
-                  {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                  {isPlaying ? 'Pause' : 'Start'}
-                </button>
-              </div>
-
-              {/* Progress Bars */}
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  </div>
+         
                 </div>
               </div>
             </div>
