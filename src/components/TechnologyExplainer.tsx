@@ -12,49 +12,6 @@ const TechnologyExplainer = () => {
       title: "Neural Network Analysis",
       description: "Deep learning models trained on millions of authentic and synthetic videos",
       details: [
-        "Facial landmark detection and tracking",
-        "Micro-expression analysis for unnatural movements",
-        "Temporal consistency checking across frames",
-        "Biometric authentication patterns"
-      ]
-    },
-    {
-      icon: <Shield className="h-6 w-6" />,
-      title: "Deepfake Detection",
-      description: "Specialized algorithms to identify AI-generated faces and voice synthesis",
-      details: [
-        "GAN artifact detection in generated content",
-        "Face swap boundary analysis",
-        "Voice cloning pattern recognition",
-        "Compression artifact inconsistencies"
-      ]
-    },
-    {
-      icon: <Cpu className="h-6 w-6" />,
-      title: "Real-time Processing",
-      description: "Optimized inference pipeline for instant verification results",
-      details: [
-        "GPU-accelerated processing clusters",
-        "Parallel analysis across multiple models",
-        "Edge computing for reduced latency",
-        "Scalable cloud infrastructure"
-      ]
-    },
-    {
-      icon: <Database className="h-6 w-6" />,
-      title: "Secure Storage",
-      description: "Encrypted storage and verification certificates for audit trails",
-      details: [
-        "End-to-end encryption",
-        "Immutable verification records",
-        "Secure cloud storage",
-        "Privacy-first architecture"
-      ]
-    }
-  ];
-
-  return (
-    <section className="relative py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-16">
