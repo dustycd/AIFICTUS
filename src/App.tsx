@@ -15,7 +15,6 @@ import MyVerifications from './components/MyVerifications';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import CookiesPolicy from './components/CookiesPolicy';
-import Contact from './components/Contact';
 import { useAuth } from './hooks/useAuth';
 import { initializeStorage } from './lib/storage';
 
@@ -163,7 +162,6 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/library" element={<Library />} />
           <Route path="/my-verifications" element={<MyVerifications />} />
-          <Route path="/contact" element={<Contact />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
