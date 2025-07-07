@@ -678,7 +678,9 @@ const Library = () => {
 
                         {/* Anonymous Display Name */}
                         <Typography variant="cardTitle" className="mb-2 truncate">
-                          {getAnonymousDisplayName(item)}
+                          {item.verification_status === 'authentic' ? 'Verified Content' : 
+                           item.verification_status === 'suspicious' ? 'Suspicious Content' : 
+                           item.verification_status === 'fake' ? 'AI-Generated Content' : 'Analyzed Content'}
                         </Typography>
 
                         <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
