@@ -146,49 +146,6 @@ const TechnologyExplainer = () => {
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>Facial Analysis</span>
-                    <span>94%</span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div className="bg-green-400 h-2 rounded-full w-[94%] transition-all duration-1000" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>Temporal Consistency</span>
-                    <span>87%</span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div className="bg-yellow-400 h-2 rounded-full w-[87%] transition-all duration-1000" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>Audio Synthesis</span>
-                    <span>99%</span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div className="bg-green-400 h-2 rounded-full w-[99%] transition-all duration-1000" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Results */}
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Shield className="h-5 w-5 text-green-400" />
-                <Typography variant="cardTitle" color="success">
-                  Verification Complete
-                </Typography>
-              </div>
-              <Typography variant="cardCaption" color="secondary">
-                Confidence Score: 96.8% Authentic
-              </Typography>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
   );
 };
