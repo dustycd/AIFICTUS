@@ -14,7 +14,7 @@ const AuthPage: React.FC = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaError, setCaptchaError] = useState<string | null>(null);
   const [captchaLoaded, setCaptchaLoaded] = useState(false);
-  const [captchaKey, setCaptchaKey] = useState(0); // Force re-render when needed
+  const [captchaReady, setCaptchaReady] = useState(false);
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
   
@@ -73,9 +73,7 @@ const AuthPage: React.FC = () => {
     setCaptchaToken(null);
     setCaptchaError(null);
     setCaptchaLoaded(false);
-    
-    // Force hCaptcha re-render by changing key
-    setCaptchaKey(prev => prev + 1);
+    setCaptchaReady(false);
   }, [isLogin]);
 
   // Redirect when user is authenticated
@@ -92,66 +90,29 @@ const AuthPage: React.FC = () => {
   // Handle captcha verification
   const handleCaptchaVerify = (token: string) => {
     console.log('✅ hCaptcha verified successfully');
-    console.log('- Token length:', token.length);
-    console.log('- Token preview:', token.substring(0, 20) + '...');
-    
     setCaptchaToken(token);
     setCaptchaError(null);
-    setCaptchaLoaded(true);
-    
-    // Clear captcha error if it exists
-    if (errors.captcha) {
-      setErrors((prev: any) => ({ ...prev, captcha: undefined }));
-    }
+    setErrors((prev: any) => ({ ...prev, captcha: undefined }));
   };
 
   const handleCaptchaExpire = () => {
     console.log('⏰ hCaptcha expired');
     setCaptchaToken(null);
-    setCaptchaError('Security verification expired. Please verify again.');
+    setCaptchaError('Verification expired. Please try again.');
   };
 
   const handleCaptchaError = (err: string) => {
     console.error('❌ hCaptcha error:', err);
-    console.error('- Error details:', {
-      error: err,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      domain: window.location.hostname
-    });
-    
     setCaptchaToken(null);
-    setCaptchaLoaded(false);
-    
-    // Provide more specific error messages
-    let errorMessage = 'Security verification failed. Please try again.';
-    
-    if (err.includes('network')) {
-      errorMessage = 'Network error during verification. Please check your connection and try again.';
-    } else if (err.includes('timeout')) {
-      errorMessage = 'Verification timed out. Please try again.';
-    } else if (err.includes('invalid')) {
-      errorMessage = 'Invalid verification. Please refresh the page and try again.';
-    }
-    
-    setCaptchaError(errorMessage);
+    setCaptchaError('Verification failed. Please try again.');
   };
 
   const handleCaptchaLoad = () => {
     console.log('📦 hCaptcha loaded successfully');
     setCaptchaLoaded(true);
+    setCaptchaReady(true);
     setCaptchaError(null);
   };
-
-  // Memoize captcha callbacks to prevent re-renders
-  const captchaCallbacks = React.useMemo(() => ({
-    onVerify: handleCaptchaVerify,
-    onExpire: handleCaptchaExpire,
-    onError: handleCaptchaError,
-    onLoad: handleCaptchaLoad,
-    onOpen: () => console.log('👁️ hCaptcha challenge opened'),
-    onClose: () => console.log('👁️ hCaptcha challenge closed')
-  }), []);
 
   // Form validation
   const validateForm = (): boolean => {
@@ -262,7 +223,6 @@ const AuthPage: React.FC = () => {
           }
         }
         setCaptchaToken(null);
-        setCaptchaKey(prev => prev + 1); // Force re-render
       } else if (data?.user) {
         console.log('✅ Auth successful:', data.user.email);
         setAuthSuccess(true);
@@ -278,18 +238,7 @@ const AuthPage: React.FC = () => {
       clearTimeout(timeoutId);
       console.error('❌ Auth exception:', error);
       setErrors({ general: 'Something went wrong. Please try again.' });
-      
-      // Reset captcha on error
-      if (captchaRef.current) {
-        try {
-          captchaRef.current.resetCaptcha();
-          console.log('🔄 hCaptcha reset after auth exception');
-        } catch (resetError) {
-          console.warn('⚠️ Failed to reset hCaptcha after auth exception:', resetError);
-        }
-      }
       setCaptchaToken(null);
-      setCaptchaKey(prev => prev + 1); // Force re-render
     } finally {
       setIsLoading(false);
     }
@@ -406,7 +355,6 @@ const AuthPage: React.FC = () => {
         }
       }
       setCaptchaToken(null);
-      setCaptchaKey(prev => prev + 1); // Force re-render
     } finally {
       setIsLoading(false);
     }
@@ -784,51 +732,44 @@ const AuthPage: React.FC = () => {
                   </div>
                 </label>
                 
-                <div className="flex justify-center">
-                  <div className="relative">
+                <div className="flex justify-center mb-4">
+                  {HCAPTCHA_SITE_KEY && (
                     <HCaptcha
-                      key={captchaKey}
                       ref={captchaRef}
                       sitekey={HCAPTCHA_SITE_KEY}
-                      onVerify={captchaCallbacks.onVerify}
-                      onExpire={captchaCallbacks.onExpire}
-                      onError={captchaCallbacks.onError}
-                      onLoad={captchaCallbacks.onLoad}
-                      onOpen={captchaCallbacks.onOpen}
-                      onClose={captchaCallbacks.onClose}
+                      onVerify={handleCaptchaVerify}
+                      onExpire={handleCaptchaExpire}
+                      onError={handleCaptchaError}
+                      onLoad={handleCaptchaLoad}
                       theme="dark"
                       size="normal"
-                      tabindex={0}
-                      reCaptchaCompat={false}
                     />
-                    
-                    {/* Loading indicator */}
-                    {!captchaLoaded && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded">
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-                          <Typography variant="caption" color="secondary">
-                            Loading security verification...
-                          </Typography>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
                 
+                {/* Loading indicator */}
+                {!captchaReady && HCAPTCHA_SITE_KEY && (
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                    <Typography variant="caption" color="secondary">
+                      Loading security verification...
+                    </Typography>
+                  </div>
+                )}
+                
                 {/* Captcha status indicators */}
-                <div className="mt-2 text-center">
+                <div className="text-center">
                   {captchaToken && (
                     <div className="flex items-center justify-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-400" />
                       <Typography variant="caption" className="text-green-400">
-                        Security verification completed
+                        Verification completed ✓
                       </Typography>
                     </div>
                   )}
                   
                   {(errors.captcha || captchaError) && (
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2 mt-2">
                       <AlertTriangle className="h-4 w-4 text-red-400" />
                       <Typography variant="caption" className="text-red-400">
                         {errors.captcha || captchaError}
