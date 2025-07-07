@@ -413,6 +413,18 @@ a:focus:not(:focus-visible) {
   box-shadow: none;
 }
 
+/* Disable horizontal scrolling on mobile for modal */
+.modal-no-horizontal-scroll {
+  overscroll-behavior-x: none;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll on body when modal is open */
+body.modal-open {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 /* Custom checkbox styles */
 input[type="checkbox"]:focus-visible {
   box-shadow: 0 0 0 2px #1F2937, 0 0 0 4px rgba(59, 130, 246, 0.3);
