@@ -165,7 +165,6 @@ const About = () => {
       {/* Enhanced Story Section with Parallax */}
       <section 
         className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black to-gray-900 relative"
-        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="max-w-4xl mx-auto text-center">
