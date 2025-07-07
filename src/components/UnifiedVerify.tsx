@@ -48,6 +48,7 @@ const UnifiedVerify = () => {
   const [shareToLibrary, setShareToLibrary] = useState(false);
   const [usageInfo, setUsageInfo] = useState<any>(null);
   const [usageError, setUsageError] = useState<string | null>(null);
+  const [isDragSupported, setIsDragSupported] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load user's monthly usage on component mount
@@ -68,8 +69,26 @@ const UnifiedVerify = () => {
     loadUsageInfo();
   }, [user]);
 
+  // Check if device supports drag and drop
+  useEffect(() => {
+    const checkDragSupport = () => {
+      // Check if it's a touch device
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      
+      // Check if drag and drop is supported
+      const div = document.createElement('div');
+      const hasDragSupport = ('draggable' in div) || ('ondragstart' in div && 'ondrop' in div);
+      
+      // Disable drag and drop on touch devices as it's unreliable
+      setIsDragSupported(hasDragSupport && !isTouchDevice);
+    };
+
+    checkDragSupport();
+  }, []);
   // Handle drag events
   const handleDrag = useCallback((e: React.DragEvent) => {
+    if (!isDragSupported) return;
+    
     e.preventDefault();
     e.stopPropagation();
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -81,6 +100,8 @@ const UnifiedVerify = () => {
 
   // Handle drop event
   const handleDrop = useCallback((e: React.DragEvent) => {
+    if (!isDragSupported) return;
+    
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -436,18 +457,26 @@ const UnifiedVerify = () => {
                     ? 'border-green-400 bg-green-500/10'
                     : 'border-gray-600 hover:border-gray-500'
                 }`}
+                {...(isDragSupported && {
+                  onDragEnter: handleDrag,
+                  onDragLeave: handleDrag,
+                  onDragOver: handleDrag,
+                  onDrop: handleDrop
+                })}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
+                {/* File Input - Always present for mobile compatibility */}
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="video/*,image/*"
+                  accept="video/*,image/*,.mp4,.mov,.avi,.webm,.mkv,.m4v,.3gp,.flv,.wmv,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.svg,.heic,.heif,.avif"
                   onChange={handleFileInputChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   disabled={isVerifying}
+                  multiple={false}
                 />
 
                 <div className="space-y-6">
@@ -476,11 +505,17 @@ const UnifiedVerify = () => {
                       </div>
                       <div>
                         <Typography variant="h3" className="mb-2">
+                          {isDragSupported ? 'Drop your file here or tap to browse' : 'Tap to select your file'}
                           Drop your file here or click to browse
                         </Typography>
                         <Typography variant="body" color="secondary">
                           Supports videos (MP4, MOV, AVI, WebM) and images (JPG, PNG, GIF, WebP)
                         </Typography>
+                        {!isDragSupported && (
+                          <Typography variant="caption" color="secondary" className="mt-2 block">
+                            Tap the area above to select a file from your device
+                          </Typography>
+                        )}
                       </div>
                     </>
                   )}
