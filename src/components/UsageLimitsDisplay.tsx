@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Image, Film, TrendingUp, Calendar, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Clock, Image, Film, TrendingUp, Calendar, AlertTriangle, CheckCircle, RotateCcw } from 'lucide-react';
 import { Typography, Heading } from './Typography';
 import { useAuth } from '../hooks/useAuth';
 import { usageLimits, UsageInfo, USAGE_LIMITS } from '../lib/usageLimits';
@@ -98,16 +98,17 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
   // Default usage if no data (new user)
   const currentUsage = usage || {
     userId: user.id,
-    monthYear: usageLimits.getCurrentMonth(),
-    videosUsed: 0, // Changed from videoSecondsUsed
+    periodStart: new Date().toISOString(),
+    periodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+    videosUsed: 0,
     imagesUsed: 0,
-    videosRemaining: USAGE_LIMITS.VIDEOS_PER_MONTH, // Changed from videoSecondsRemaining
+    videosRemaining: USAGE_LIMITS.VIDEOS_PER_MONTH,
     imagesRemaining: USAGE_LIMITS.IMAGES_PER_MONTH,
     canUploadVideo: true,
     canUploadImage: true
   };
 
-  const videoPercentUsed = (currentUsage.videosUsed / USAGE_LIMITS.VIDEOS_PER_MONTH) * 100; // Changed calculation
+  const videoPercentUsed = (currentUsage.videosUsed / USAGE_LIMITS.VIDEOS_PER_MONTH) * 100;
   const imagePercentUsed = (currentUsage.imagesUsed / USAGE_LIMITS.IMAGES_PER_MONTH) * 100;
 
   const getUsageColor = (percent: number) => {
@@ -122,13 +123,17 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
     return { icon: CheckCircle, color: 'text-green-400', text: 'Available' };
   };
 
+  // Calculate days until reset
+  const daysUntilReset = usageLimits.getDaysUntilReset(currentUsage.periodEnd);
+  const formattedPeriod = usageLimits.formatPeriod(currentUsage.periodStart, currentUsage.periodEnd);
+
   if (compact) {
     return (
       <div className={`bg-gray-800/20 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 ${className}`}>
         <div className="flex items-center justify-between mb-3">
           <Typography variant="cardTitle" className="text-sm">Monthly Usage</Typography>
           <Typography variant="caption" color="secondary" className="text-xs">
-            {currentUsage.monthYear}
+            {formattedPeriod}
           </Typography>
         </div>
         
@@ -171,6 +176,16 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Reset countdown */}
+        <div className="mt-3 pt-3 border-t border-gray-700/50">
+          <div className="flex items-center justify-center gap-2">
+            <RotateCcw className="h-3 w-3 text-gray-400" />
+            <Typography variant="caption" color="secondary" className="text-xs">
+              Resets in {daysUntilReset} day{daysUntilReset !== 1 ? 's' : ''}
+            </Typography>
+          </div>
+        </div>
       </div>
     );
   }
@@ -185,7 +200,7 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
           </Heading>
           <div className="flex items-center gap-2 text-gray-400">
             <Calendar className="h-4 w-4" />
-            <Typography variant="caption">{currentUsage.monthYear}</Typography>
+            <Typography variant="caption">{formattedPeriod}</Typography>
           </div>
         </div>
       )}
@@ -327,6 +342,19 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
             </Typography>
             <Typography variant="caption" color="secondary">
               Images Used
+            </Typography>
+          </div>
+        </div>
+
+        {/* Reset Information */}
+        <div className="mt-6 pt-4 border-t border-gray-700/30">
+          <div className="flex items-center justify-center gap-2">
+            <RotateCcw className="h-4 w-4 text-gray-400" />
+            <Typography variant="body" color="secondary" className="text-center">
+              Your limits reset in <span className="numeric-text text-white">{daysUntilReset}</span> day{daysUntilReset !== 1 ? 's' : ''} 
+              <span className="text-gray-500 ml-1">
+                ({new Date(currentUsage.periodEnd).toLocaleDateString()})
+              </span>
             </Typography>
           </div>
         </div>

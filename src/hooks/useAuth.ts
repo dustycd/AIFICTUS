@@ -331,13 +331,13 @@ export const useAuth = () => {
 
   const signInWithOAuth = async (provider: 'google', hcaptchaToken?: string) => {
     try {
-      console.log('Attempting OAuth signin with provider:', provider, 'and hCaptcha token:', !!hcaptchaToken)
+      console.log('Attempting OAuth signin with provider:', provider)
       
       const oauthTimeout = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('OAuth timeout')), 10000)
       })
       
-      const oauthPromise = auth.signInWithOAuth(provider, hcaptchaToken)
+      const oauthPromise = auth.signInWithOAuth(provider)
       
       const { data, error } = await Promise.race([oauthPromise, oauthTimeout]) as any
       
