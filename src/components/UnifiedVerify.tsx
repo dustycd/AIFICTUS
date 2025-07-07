@@ -85,6 +85,36 @@ const UnifiedVerify = () => {
 
     checkDragSupport();
   }, []);
+
+  // Handle file selection
+  const handleFileSelection = async (file: File) => {
+    setError(null);
+    setVerificationResult(null);
+    
+    // Validate file
+    const validation = validateFile(file);
+    if (!validation.isValid) {
+      setError(validation.error || 'Invalid file');
+      return;
+    }
+
+    // Check usage limits
+    const contentType = getContentType(file);
+    try {
+      const limitCheck = await usageLimits.checkUsageLimits(user.id, contentType);
+      if (limitCheck && !limitCheck.canUpload) {
+        setError(limitCheck.reason);
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to check usage limits:', err);
+      setError('Failed to check usage limits. Please try again.');
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
   // Handle drag events
   const handleDrag = useCallback((e: React.DragEvent) => {
     if (!isDragSupported) return;
@@ -109,7 +139,7 @@ const UnifiedVerify = () => {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelection(e.dataTransfer.files[0]);
     }
-  }, []);
+  }, [handleFileSelection]);
 
   // Check if user is authenticated
   if (loading) {
@@ -245,35 +275,6 @@ const UnifiedVerify = () => {
     if (e.target.files && e.target.files[0]) {
       handleFileSelection(e.target.files[0]);
     }
-  };
-
-  // Handle file selection
-  const handleFileSelection = async (file: File) => {
-    setError(null);
-    setVerificationResult(null);
-    
-    // Validate file
-    const validation = validateFile(file);
-    if (!validation.isValid) {
-      setError(validation.error || 'Invalid file');
-      return;
-    }
-
-    // Check usage limits
-    const contentType = getContentType(file);
-    try {
-      const limitCheck = await usageLimits.checkUsageLimits(user.id, contentType);
-      if (limitCheck && !limitCheck.canUpload) {
-        setError(limitCheck.reason);
-        return;
-      }
-    } catch (err) {
-      console.error('Failed to check usage limits:', err);
-      setError('Failed to check usage limits. Please try again.');
-      return;
-    }
-
-    setSelectedFile(file);
   };
 
   // Handle verification
@@ -506,7 +507,6 @@ const UnifiedVerify = () => {
                       <div>
                         <Typography variant="h3" className="mb-2">
                           {isDragSupported ? 'Drop your file here or tap to browse' : 'Tap to select your file'}
-                          Drop your file here or click to browse
                         </Typography>
                         <Typography variant="body" color="secondary">
                           Supports videos (MP4, MOV, AVI, WebM) and images (JPG, PNG, GIF, WebP)
