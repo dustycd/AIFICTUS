@@ -174,6 +174,25 @@ const About = () => {
                 Our Story
               </span>
             </Heading>
+            
+            <div className="space-y-8">
+              {[
+                "Fictus AI started with a simple but urgent insight: as AI becomes more powerful, so does the risk of it being misused. Our founders saw firsthand how deepfakes and other AI-generated content could threaten public trust, journalism, and personal privacy.",
+                "What began as a research project has now grown into a full platform designed to help creators, journalists, and organizations verify the authenticity of video content. We're building the tools needed to protect trust in our digital world.",
+                "Our team brings together decades of experience in AI, machine learning, and cybersecurity. We're not just focused on detecting AI-generated content—we're also helping people understand how digital media is changing.",
+                "Although we're still in the early stages, we're already working with beta users to improve and grow. Every day, we're getting closer to our mission: making video verification easy to use, widely available, and essential for digital literacy."
+              ].map((text, index) => (
+                <div 
+                  key={index}
+                  className="opacity-0 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 0.3}s`, animationFillMode: 'forwards' }}
+                >
+                  <Typography variant="body" color="secondary" className="text-lg leading-relaxed">
+                    {text}
+                  </Typography>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -220,41 +239,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* Achievements Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Heading level={2} className="mb-6">
-              <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                Recognition & Awards
-              </span>
-            </Heading>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {achievements.map((achievement, index) => (
-              <div 
-                key={index} 
-                className="group bg-gray-800/30 rounded-xl p-6 border border-gray-700 hover:border-yellow-500/50 transition-all duration-300 hover:transform hover:scale-105"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-yellow-400 group-hover:scale-110 transition-transform duration-300">
-                    {achievement.icon}
-                  </div>
-                  <div>
-                    <Typography variant="cardTitle" className="mb-2 group-hover:text-yellow-400 transition-colors">
-                      {achievement.title}
-                    </Typography>
-                    <Typography variant="cardCaption" color="secondary">
-                      {achievement.org}
-                    </Typography>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Enhanced CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-900/20 to-cyan-900/20 relative overflow-hidden">
