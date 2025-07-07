@@ -146,6 +146,13 @@ const TechnologyExplainer = () => {
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
