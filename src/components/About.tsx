@@ -33,14 +33,6 @@ const About = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-rotate values
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveValue(prev => (prev + 1) % values.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
   const missionPoints = [
     {
       icon: <Shield className="h-8 w-8" />,
@@ -65,40 +57,6 @@ const About = () => {
     }
   ];
 
-  const values = [
-    {
-      icon: <Target className="h-12 w-12" />,
-      title: "Accuracy First",
-      description: "We prioritize precision and reliability in every detection algorithm we develop.",
-      color: "text-blue-400",
-      bgColor: "from-blue-500/10 to-blue-600/5",
-      stats: "99.7% Accuracy"
-    },
-    {
-      icon: <Heart className="h-12 w-12" />,
-      title: "Human-Centered",
-      description: "Technology should empower people, not replace human judgment and creativity.",
-      color: "text-red-400",
-      bgColor: "from-red-500/10 to-red-600/5",
-      stats: "People First"
-    },
-    {
-      icon: <Zap className="h-12 w-12" />,
-      title: "Innovation",
-      description: "We push the boundaries of what's possible in AI and machine learning.",
-      color: "text-yellow-400",
-      bgColor: "from-yellow-500/10 to-yellow-600/5",
-      stats: "7 AI Models"
-    },
-    {
-      icon: <Users className="h-12 w-12" />,
-      title: "Transparency",
-      description: "Open about our methods, limitations, and the ongoing fight against misinformation.",
-      color: "text-green-400",
-      bgColor: "from-green-500/10 to-green-600/5",
-      stats: "Open Source"
-    }
-  ];
 
   const techStack = [
     { icon: <Cpu className="h-8 w-8" />, name: "Neural Networks", progress: 95 },
@@ -214,65 +172,6 @@ const About = () => {
             <Heading level={2} className="mb-8">
               <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                 Our Story
-              </span>
-            </Heading>
-            
-            <div className="space-y-8">
-              {[
-                "Fictus AI was born from a simple yet urgent realization: as artificial intelligence becomes more sophisticated, so does its potential for misuse. Our founders witnessed the growing threat of deepfake technology and its impact on public discourse, journalism, and individual privacy.",
-                "What started as a research initiative has evolved into a comprehensive platform designed to help content creators, journalists, and organizations verify the authenticity of video content. We're building the tools needed to maintain trust in our increasingly digital world.",
-                "Our team combines decades of experience in artificial intelligence, machine learning, and cybersecurity. We're committed to developing technology that not only detects AI-generated content but also educates users about the evolving landscape of digital media.",
-                "While we're still in our early stages, we're already working with beta users to refine our technology and expand our capabilities. Every day brings us closer to our goal of making video verification accessible, accurate, and essential for digital literacy."
-              ].map((text, index) => (
-                <div 
-                  key={index}
-                  className="opacity-0 animate-fade-in-up"
-                  style={{ animationDelay: `${index * 0.3}s`, animationFillMode: 'forwards' }}
-                >
-                  <Typography variant="body" color="secondary" className="text-lg leading-relaxed">
-                    {text}
-                  </Typography>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-     
-                  {/* Animated Background Pattern */}
-                  <div className="absolute inset-0 opacity-5">
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-                  </div>
-                  
-                  <div className={`${value.color} mb-6 flex justify-center transition-all duration-500 ${
-                    activeValue === index ? 'scale-110 rotate-12' : 'group-hover:scale-110'
-                  }`}>
-                    {value.icon}
-                  </div>
-                  
-                  <Typography variant="cardTitle" className="mb-4 text-center">
-                    {value.title}
-                  </Typography>
-                  
-                  <Typography variant="cardCaption" color="secondary" className="leading-relaxed text-center mb-6">
-                    {value.description}
-                  </Typography>
-
-                  {/* Stats Badge */}
-                  <div className={`text-center transition-all duration-300 ${
-                    activeValue === index ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-                  }`}>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${value.color} bg-current/10`}>
-                      {value.stats}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Technology Stack with Progress Bars */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-900 to-black">
