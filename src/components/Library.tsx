@@ -511,10 +511,10 @@ const Library = () => {
                     onChange={(e) => setSortBy(e.target.value)}
                     className="px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-colors"
                   >
-                    <option value="recent">🕒 Most Recent</option>
-                    <option value="confidence">📊 Highest Confidence</option>
-                    <option value="views">👁️ Most Viewed</option>
-                    <option value="name">📝 Content ID</option>
+                    <option value="recent">Most Recent</option>
+                    <option value="confidence">Highest Confidence</option>
+                    <option value="views">Most Viewed</option>
+                    <option value="name">Content ID</option>
                   </select>
 
                   {/* View Mode Toggle */}
