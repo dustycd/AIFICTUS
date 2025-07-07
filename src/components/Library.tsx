@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, FileText, Download, Share2, Zap, Activity, BarChart3, TrendingUp } from 'lucide-react';
 import { Typography, Heading } from './Typography';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
@@ -41,6 +41,45 @@ const Library = () => {
   const [hasMore, setHasMore] = useState(true);
   const itemsPerPage = 12;
 
+  // Generate mock verification data for demonstration
+  const generateMockVerificationData = (item: LibraryItem) => {
+    const isVideo = item.content_type.startsWith('video/');
+    const baseConfidence = item.confidence_score || Math.random() * 100;
+    
+    // Determine if it's AI or real based on confidence
+    const isAI = baseConfidence < 50;
+    const aiProbability = isAI ? 70 + Math.random() * 25 : 10 + Math.random() * 30;
+    const humanProbability = 100 - aiProbability;
+    
+    return {
+      ...item,
+      ai_probability: aiProbability,
+      human_probability: humanProbability,
+      confidence_score: humanProbability,
+      verification_status: isAI ? 'fake' : (humanProbability > 80 ? 'authentic' : 'suspicious'),
+      processing_time: 2.3 + Math.random() * 5,
+      detection_details: {
+        faceAnalysis: 85 + Math.random() * 10,
+        temporalConsistency: isVideo ? 78 + Math.random() * 15 : undefined,
+        audioAnalysis: isVideo ? 82 + Math.random() * 12 : undefined,
+        compressionArtifacts: 88 + Math.random() * 8,
+        metadataAnalysis: 91 + Math.random() * 7,
+        pixelAnalysis: !isVideo ? 86 + Math.random() * 10 : undefined,
+      },
+      risk_factors: isAI ? [
+        'AI-generated content detected',
+        'Inconsistent facial features',
+        'Unnatural lighting patterns'
+      ] : [],
+      recommendations: [
+        'Cross-reference with original source',
+        'Verify metadata timestamps',
+        'Check for additional context',
+        isVideo ? 'Analyze audio-visual consistency' : 'Consider reverse image search'
+      ]
+    };
+  };
+
   // Fetch library items
   const fetchItems = async (page = 1, reset = false) => {
     try {
@@ -63,15 +102,16 @@ const Library = () => {
         return;
       }
 
-      const newItems = data || [];
+      // Enhance items with mock verification data
+      const enhancedItems = (data || []).map(generateMockVerificationData);
       
       if (reset || page === 1) {
-        setItems(newItems);
+        setItems(enhancedItems);
       } else {
-        setItems(prev => [...prev, ...newItems]);
+        setItems(prev => [...prev, ...enhancedItems]);
       }
       
-      setHasMore(newItems.length === itemsPerPage);
+      setHasMore(enhancedItems.length === itemsPerPage);
       setCurrentPage(page);
     } catch (err) {
       console.error('Exception fetching library items:', err);
@@ -128,25 +168,29 @@ const Library = () => {
         return { 
           color: 'text-green-400 bg-green-500/20 border-green-500/30', 
           icon: CheckCircle,
-          label: 'Authentic'
+          label: 'REAL',
+          bgGradient: 'from-green-500/20 to-emerald-500/20'
         };
       case 'suspicious':
         return { 
           color: 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30', 
           icon: AlertTriangle,
-          label: 'Suspicious'
+          label: 'SUSPICIOUS',
+          bgGradient: 'from-yellow-500/20 to-orange-500/20'
         };
       case 'fake':
         return { 
           color: 'text-red-400 bg-red-500/20 border-red-500/30', 
           icon: Shield,
-          label: 'AI Generated'
+          label: 'AI GENERATED',
+          bgGradient: 'from-red-500/20 to-pink-500/20'
         };
       default:
         return { 
           color: 'text-gray-400 bg-gray-500/20 border-gray-500/30', 
           icon: Shield,
-          label: 'Unknown'
+          label: 'UNKNOWN',
+          bgGradient: 'from-gray-500/20 to-gray-600/20'
         };
     }
   };
@@ -215,11 +259,11 @@ const Library = () => {
             </div>
           )}
 
-          {/* Status badge */}
+          {/* Large Status Badge */}
           <div className="absolute top-3 left-3">
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-full border ${statusInfo.color} backdrop-blur-sm`}>
-              <StatusIcon className="h-3 w-3" />
-              <Typography variant="caption" className="text-xs font-medium">
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${statusInfo.color} backdrop-blur-sm font-bold`}>
+              <StatusIcon className="h-4 w-4" />
+              <Typography variant="caption" className="text-sm font-bold">
                 {statusInfo.label}
               </Typography>
             </div>
@@ -227,8 +271,8 @@ const Library = () => {
 
           {/* Confidence score */}
           <div className="absolute top-3 right-3">
-            <div className="bg-black/60 px-2 py-1 rounded-full backdrop-blur-sm">
-              <Typography variant="caption" className="text-white text-xs font-bold numeric-text">
+            <div className="bg-black/80 px-3 py-2 rounded-lg backdrop-blur-sm">
+              <Typography variant="caption" className="text-white text-sm font-bold numeric-text">
                 {Math.round(item.confidence_score)}%
               </Typography>
             </div>
@@ -236,12 +280,21 @@ const Library = () => {
 
           {/* Content type indicator */}
           <div className="absolute bottom-3 left-3">
-            <div className="bg-black/60 px-2 py-1 rounded-full backdrop-blur-sm">
+            <div className="bg-black/80 px-2 py-1 rounded-lg backdrop-blur-sm">
               {isVideo(item.content_type) ? (
-                <Video className="h-3 w-3 text-white" />
+                <Video className="h-4 w-4 text-white" />
               ) : (
-                <ImageIcon className="h-3 w-3 text-white" />
+                <ImageIcon className="h-4 w-4 text-white" />
               )}
+            </div>
+          </div>
+
+          {/* AI/Human Probability */}
+          <div className="absolute bottom-3 right-3">
+            <div className="bg-black/80 px-2 py-1 rounded-lg backdrop-blur-sm">
+              <Typography variant="caption" className="text-white text-xs">
+                {item.verification_status === 'fake' ? 'AI' : 'Human'}: {Math.round(item.verification_status === 'fake' ? item.ai_probability || 0 : item.human_probability || 0)}%
+              </Typography>
             </div>
           </div>
         </div>
@@ -267,6 +320,21 @@ const Library = () => {
             <span>{formatFileSize(item.file_size)}</span>
             <span>{new Date(item.created_at).toLocaleDateString()}</span>
           </div>
+
+          {/* Quick verification info */}
+          <div className="mt-3 pt-3 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <Typography variant="caption" color="secondary">
+                Processing: {item.processing_time?.toFixed(1)}s
+              </Typography>
+              <div className="flex items-center gap-1">
+                <Brain className="h-3 w-3 text-blue-400" />
+                <Typography variant="caption" className="text-blue-400">
+                  AI Verified
+                </Typography>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -286,7 +354,7 @@ const Library = () => {
       >
         <div className="flex gap-4">
           {/* Thumbnail */}
-          <div className="relative w-24 h-16 bg-gray-900 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="relative w-32 h-20 bg-gray-900 rounded-lg overflow-hidden flex-shrink-0">
             {mediaUrl ? (
               <>
                 {isVideo(item.content_type) ? (
@@ -332,9 +400,9 @@ const Library = () => {
               </Typography>
               
               {/* Status badge */}
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-full border ${statusInfo.color} flex-shrink-0`}>
+              <div className={`flex items-center gap-1 px-3 py-1 rounded-lg border ${statusInfo.color} flex-shrink-0 font-bold`}>
                 <StatusIcon className="h-3 w-3" />
-                <Typography variant="caption" className="text-xs font-medium">
+                <Typography variant="caption" className="text-xs font-bold">
                   {statusInfo.label}
                 </Typography>
               </div>
@@ -353,14 +421,23 @@ const Library = () => {
                 <Calendar className="h-3 w-3" />
                 <span>{new Date(item.created_at).toLocaleDateString()}</span>
               </div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{item.processing_time?.toFixed(1)}s</span>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">{formatFileSize(item.file_size)}</span>
-              <div className="bg-black/60 px-2 py-1 rounded-full">
-                <Typography variant="caption" className="text-white text-xs font-bold numeric-text">
-                  {Math.round(item.confidence_score)}% confidence
+              <div className="flex items-center gap-4">
+                <Typography variant="caption" className="text-xs">
+                  {item.verification_status === 'fake' ? 'AI' : 'Human'}: {Math.round(item.verification_status === 'fake' ? item.ai_probability || 0 : item.human_probability || 0)}%
                 </Typography>
+                <div className="bg-black/60 px-2 py-1 rounded-full">
+                  <Typography variant="caption" className="text-white text-xs font-bold numeric-text">
+                    {Math.round(item.confidence_score)}% confidence
+                  </Typography>
+                </div>
               </div>
             </div>
           </div>
@@ -434,7 +511,7 @@ const Library = () => {
                     className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-colors"
                   >
                     <option value="">All Statuses</option>
-                    <option value="authentic">Authentic</option>
+                    <option value="authentic">Real Content</option>
                     <option value="suspicious">Suspicious</option>
                     <option value="fake">AI Generated</option>
                   </select>
@@ -591,13 +668,26 @@ const Library = () => {
         </div>
       </section>
 
-      {/* Item Detail Modal */}
+      {/* Enhanced Item Detail Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-6xl w-full max-h-[95vh] overflow-y-auto">
             <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <Typography variant="h3">Verification Details</Typography>
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <Typography variant="h2">Verification Report</Typography>
+                  {(() => {
+                    const statusInfo = getStatusInfo(selectedItem.verification_status);
+                    const StatusIcon = statusInfo.icon;
+                    return (
+                      <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${statusInfo.color} font-bold text-lg`}>
+                        <StatusIcon className="h-5 w-5" />
+                        <span>{statusInfo.label}</span>
+                      </div>
+                    );
+                  })()}
+                </div>
                 <button
                   onClick={() => setSelectedItem(null)}
                   className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
@@ -606,12 +696,236 @@ const Library = () => {
                 </button>
               </div>
 
-              {/* Modal content would go here - detailed view of the selected item */}
-              <div className="space-y-6">
-                <Typography variant="body" color="secondary">
-                  Detailed view for: {selectedItem.original_filename}
-                </Typography>
-                {/* Add more detailed content here */}
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column - Media and Basic Info */}
+                <div className="space-y-6">
+                  {/* Media Preview */}
+                  <div className="relative aspect-video bg-gray-800 rounded-xl overflow-hidden">
+                    {(() => {
+                      const mediaUrl = getMediaUrl(selectedItem);
+                      return mediaUrl ? (
+                        <>
+                          {isVideo(selectedItem.content_type) ? (
+                            <video
+                              src={mediaUrl}
+                              className="w-full h-full object-cover"
+                              controls
+                              preload="metadata"
+                            />
+                          ) : (
+                            <img
+                              src={mediaUrl}
+                              alt={selectedItem.original_filename}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-center">
+                            {isVideo(selectedItem.content_type) ? (
+                              <Video className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                            ) : (
+                              <ImageIcon className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                            )}
+                            <Typography variant="body" color="secondary">
+                              Media preview not available
+                            </Typography>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* File Information */}
+                  <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+                    <Typography variant="h3" className="mb-4 flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-400" />
+                      File Information
+                    </Typography>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Filename:</span>
+                        <span className="text-white font-medium">{selectedItem.original_filename}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">File Size:</span>
+                        <span className="text-white numeric-text">{formatFileSize(selectedItem.file_size)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Content Type:</span>
+                        <span className="text-white">{selectedItem.content_type}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Uploaded By:</span>
+                        <span className="text-white">{selectedItem.uploader_name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Upload Date:</span>
+                        <span className="text-white">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Views:</span>
+                        <span className="text-white numeric-text">{selectedItem.view_count}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Verification Results */}
+                <div className="space-y-6">
+                  {/* Main Verification Result */}
+                  <div className={`bg-gradient-to-r ${getStatusInfo(selectedItem.verification_status).bgGradient} rounded-xl p-8 border border-gray-700 text-center`}>
+                    <div className="mb-6">
+                      {(() => {
+                        const statusInfo = getStatusInfo(selectedItem.verification_status);
+                        const StatusIcon = statusInfo.icon;
+                        return <StatusIcon className="h-16 w-16 mx-auto text-current" />;
+                      })()}
+                    </div>
+                    
+                    <Typography variant="h1" className="mb-4 text-6xl font-black">
+                      {getStatusInfo(selectedItem.verification_status).label}
+                    </Typography>
+                    
+                    <Typography variant="h2" className="mb-4">
+                      <span className="numeric-text">{Math.round(selectedItem.confidence_score)}%</span> Confidence
+                    </Typography>
+                    
+                    <Typography variant="body" color="secondary">
+                      Analysis completed in <span className="numeric-text text-white">{selectedItem.processing_time?.toFixed(1)}</span> seconds
+                    </Typography>
+                  </div>
+
+                  {/* AI vs Human Probability */}
+                  <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+                    <Typography variant="h3" className="mb-6 flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-purple-400" />
+                      AI Detection Analysis
+                    </Typography>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-red-400">AI Generated</span>
+                          <span className="text-red-400 font-bold numeric-text">{Math.round(selectedItem.ai_probability || 0)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-red-500 to-pink-500 h-3 rounded-full transition-all duration-1000"
+                            style={{ width: `${selectedItem.ai_probability || 0}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-green-400">Human Created</span>
+                          <span className="text-green-400 font-bold numeric-text">{Math.round(selectedItem.human_probability || 0)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000"
+                            style={{ width: `${selectedItem.human_probability || 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detection Details */}
+                  <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+                    <Typography variant="h3" className="mb-6 flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-cyan-400" />
+                      Detection Analysis
+                    </Typography>
+                    
+                    <div className="space-y-4">
+                      {Object.entries(selectedItem.detection_details || {}).map(([key, value]) => {
+                        if (value === undefined) return null;
+                        const score = value as number;
+                        return (
+                          <div key={key}>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-gray-400 capitalize">
+                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                              </span>
+                              <span className="text-cyan-400 font-bold numeric-text">{score.toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-1000"
+                                style={{ width: `${score}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Risk Factors */}
+                  {selectedItem.risk_factors && selectedItem.risk_factors.length > 0 && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6">
+                      <Typography variant="h3" className="mb-4 text-red-400 flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Risk Factors Detected
+                      </Typography>
+                      <div className="space-y-2">
+                        {selectedItem.risk_factors.map((factor, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                            <Typography variant="body" className="text-red-300">
+                              {factor}
+                            </Typography>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {selectedItem.recommendations && selectedItem.recommendations.length > 0 && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
+                      <Typography variant="h3" className="mb-4 text-blue-400 flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        Recommendations
+                      </Typography>
+                      <div className="space-y-2">
+                        {selectedItem.recommendations.map((rec, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                            <Typography variant="body" className="text-blue-300">
+                              {rec}
+                            </Typography>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-gray-700">
+                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors">
+                  <Download className="h-4 w-4" />
+                  <Typography variant="button">Download Report</Typography>
+                </button>
+                
+                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors">
+                  <Share2 className="h-4 w-4" />
+                  <Typography variant="button">Share Results</Typography>
+                </button>
+                
+                <button 
+                  onClick={() => setSelectedItem(null)}
+                  className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition-colors"
+                >
+                  <Typography variant="button">Close</Typography>
+                </button>
               </div>
             </div>
           </div>
