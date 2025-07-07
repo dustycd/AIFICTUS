@@ -670,8 +670,8 @@ const Library = () => {
 
       {/* Enhanced Item Detail Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-6xl w-full max-h-[95vh] overflow-y-auto overflow-x-hidden">
             <div className="p-6">
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-8">
@@ -681,9 +681,9 @@ const Library = () => {
                     const statusInfo = getStatusInfo(selectedItem.verification_status);
                     const StatusIcon = statusInfo.icon;
                     return (
-                      <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${statusInfo.color} font-bold text-lg`}>
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${statusInfo.color} font-bold text-sm sm:text-base`}>
                         <StatusIcon className="h-5 w-5" />
-                        <span>{statusInfo.label}</span>
+                        <span className="whitespace-nowrap">{statusInfo.label}</span>
                       </div>
                     );
                   })()}
@@ -786,11 +786,11 @@ const Library = () => {
                       })()}
                     </div>
                     
-                    <Typography variant="h1" className="mb-4 text-6xl font-black">
+                    <Typography variant="h1" className="mb-4 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
                       {getStatusInfo(selectedItem.verification_status).label}
                     </Typography>
                     
-                    <Typography variant="h2" className="mb-4">
+                    <Typography variant="h2" className="mb-4 text-xl sm:text-2xl">
                       <span className="numeric-text">{Math.round(selectedItem.confidence_score)}%</span> Confidence
                     </Typography>
                     
