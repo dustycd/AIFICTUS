@@ -4,7 +4,6 @@ import Header from './components/Header';
 import VideoGrid from './components/VideoGrid';
 import Hero from './components/Hero';
 import HowItWorks from './components/HowItWorks';
-import TechnologyExplainer from './components/TechnologyExplainer';
 import TrustIndicators from './components/TrustIndicators';
 import Footer from './components/Footer';
 import About from './components/About';
@@ -101,9 +100,6 @@ function App() {
         
         {/* How It Works Section */}
         <HowItWorks />
-        
-        {/* Technology Explainer */}
-        <TechnologyExplainer />
         
         {/* Trust Indicators */}
         <TrustIndicators />
