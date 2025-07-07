@@ -61,6 +61,33 @@ const TrustIndicators = () => {
     }
   ];
 
+  const technologyFeatures = [
+    {
+      icon: <Cpu className="h-6 w-6" />,
+      title: "Neural Network Analysis",
+      description: "Deep learning models trained on millions of samples",
+      progress: 95
+    },
+    {
+      icon: <Eye className="h-6 w-6" />,
+      title: "Facial Movement Detection",
+      description: "Advanced algorithms analyze micro-expressions and inconsistencies",
+      progress: 92
+    },
+    {
+      icon: <Database className="h-6 w-6" />,
+      title: "Temporal Consistency",
+      description: "Frame-by-frame analysis for temporal artifacts",
+      progress: 88
+    },
+    {
+      icon: <Network className="h-6 w-6" />,
+      title: "Compression Analysis",
+      description: "Detection of AI-generated compression patterns",
+      progress: 90
+    }
+  ];
+
   return (
     <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-900 to-black">
       <div className="max-w-7xl mx-auto">
