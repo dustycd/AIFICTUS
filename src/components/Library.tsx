@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, FileText, Download, Share2, Zap, Activity, BarChart3, TrendingUp, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, FileText, Download, Share2, Zap, Activity, BarChart3, TrendingUp } from 'lucide-react';
 import { Typography, Heading } from './Typography';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
@@ -47,16 +47,8 @@ const Library = () => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
-  // Swipe state
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-
-  // Refs for touch handling
-  const modalRef = useRef<HTMLDivElement>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  
+ const [touchStart, setTouchStart] = useState<number | null>(null);
+ const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const itemsPerPage = 12;
 
   // Generate comprehensive AI or Not API data for demonstration
@@ -276,7 +268,6 @@ const Library = () => {
   const handleItemSelect = (item: LibraryItem, index: number) => {
     setSelectedItem(item);
     setSelectedIndex(index);
-    setSwipeOffset(0); // Reset swipe offset when opening modal
   };
 
   const isVideo = (contentType: string) => contentType.startsWith('video/');
@@ -330,7 +321,6 @@ const Library = () => {
       const newIndex = selectedIndex - 1;
       setSelectedItem(items[newIndex]);
       setSelectedIndex(newIndex);
-      setSwipeOffset(0); // Reset swipe offset when navigating
     }
   };
 
@@ -339,92 +329,6 @@ const Library = () => {
       const newIndex = selectedIndex + 1;
       setSelectedItem(items[newIndex]);
       setSelectedIndex(newIndex);
-      setSwipeOffset(0); // Reset swipe offset when navigating
-    }
-  };
-
-  // Touch/Mouse handlers for swipe navigation
-  const handleStart = (clientX: number) => {
-    setIsDragging(true);
-    setStartX(clientX);
-  };
-
-  const handleMove = (clientX: number) => {
-    if (!isDragging) return;
-    
-    const deltaX = clientX - startX;
-    const maxOffset = 100; // Maximum swipe distance before triggering navigation
-    
-    // Limit the swipe offset to prevent excessive movement
-    const limitedOffset = Math.max(-maxOffset, Math.min(maxOffset, deltaX));
-    setSwipeOffset(limitedOffset);
-  };
-
-  const handleEnd = () => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    
-    const threshold = 50; // Minimum swipe distance to trigger navigation
-    
-    if (Math.abs(swipeOffset) > threshold) {
-      if (swipeOffset > 0) {
-        // Swiped right - go to previous
-        navigateToPrevious();
-      } else {
-        // Swiped left - go to next
-        navigateToNext();
-      }
-    }
-    
-    // Reset swipe offset with animation
-    setSwipeOffset(0);
-  };
-
-  // Touch event handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      handleStart(e.touches[0].clientX);
-      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - (touchStartRef.current?.x || 0);
-      const deltaY = touch.clientY - (touchStartRef.current?.y || 0);
-      
-      // Only handle horizontal swipes
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-        e.preventDefault(); // Prevent scrolling
-        handleMove(touch.clientX);
-      }
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    handleEnd();
-    touchStartRef.current = null;
-  };
-
-  // Mouse event handlers for desktop
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    handleStart(e.clientX);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    handleMove(e.clientX);
-  };
-
-  const handleMouseUp = () => {
-    handleEnd();
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      handleEnd();
     }
   };
 
@@ -432,17 +336,16 @@ const Library = () => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!selectedItem) return;
     
-    if (e.key === 'ArrowLeft' && !isDragging) {
+    if (e.key === 'ArrowLeft') {
       e.preventDefault();
       navigateToPrevious();
-    } else if (e.key === 'ArrowRight' && !isDragging) {
+    } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       navigateToNext();
-    } else if (e.key === 'Escape' && !isDragging) {
+    } else if (e.key === 'Escape') {
       e.preventDefault();
       setSelectedItem(null);
       setSelectedIndex(-1);
-      setSwipeOffset(0); // Reset swipe offset when closing modal
     }
   };
 
@@ -450,42 +353,43 @@ const Library = () => {
   useEffect(() => {
     if (selectedItem) {
       document.addEventListener('keydown', handleKeyDown);
-      
-      // Add mouse event listeners for desktop drag support
-      if (isDragging) {
-        const handleGlobalMouseMove = (e: MouseEvent) => {
-          handleMove(e.clientX);
-        };
-        
-        const handleGlobalMouseUp = () => {
-          handleEnd();
-        };
-        
-        document.addEventListener('mousemove', handleGlobalMouseMove);
-        document.addEventListener('mouseup', handleGlobalMouseUp);
-        
-        return () => {
-          document.removeEventListener('keydown', handleKeyDown);
-          document.removeEventListener('mousemove', handleGlobalMouseMove);
-          document.removeEventListener('mouseup', handleGlobalMouseUp);
-        };
-      }
-      
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      // Prevent horizontal scrolling when modal is open
+      document.body.classList.add('modal-open');
     }
-  }, [selectedItem, selectedIndex, items, isDragging, startX]);
 
-  // Calculate transform and opacity based on swipe offset
-  const getCardTransform = () => {
-    const rotation = swipeOffset * 0.1; // Subtle rotation effect
-    return `translateX(${swipeOffset}px) rotate(${rotation}deg)`;
-  };
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('modal-open');
+    };
+  }, [selectedItem, selectedIndex, items]);
 
-  const getCardOpacity = () => {
-    const maxOffset = 100;
-    return Math.max(0.7, 1 - Math.abs(swipeOffset) / maxOffset);
-  };
+ // Handle touch events for swipe navigation
+ const handleTouchStart = (e: React.TouchEvent) => {
+   setTouchEnd(null);
+   setTouchStart(e.targetTouches[0].clientX);
+ };
 
+ const handleTouchMove = (e: React.TouchEvent) => {
+   setTouchEnd(e.targetTouches[0].clientX);
+ };
+
+ const handleTouchEnd = () => {
+   if (!touchStart || !touchEnd) return;
+   
+   const distance = touchStart - touchEnd;
+   const isLeftSwipe = distance > 50;
+   const isRightSwipe = distance < -50;
+
+   if (isLeftSwipe && selectedIndex < items.length - 1) {
+     // Swipe left - go to next item
+     navigateToNext();
+   }
+   
+   if (isRightSwipe && selectedIndex > 0) {
+     // Swipe right - go to previous item
+     navigateToPrevious();
+   }
+ };
   // Render item card
   const renderItemCard = (item: LibraryItem) => {
     const itemIndex = items.findIndex(i => i.id === item.id);
@@ -939,52 +843,15 @@ const Library = () => {
 
       {/* Enhanced Item Detail Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-hidden"
-             onClick={(e) => e.target === e.currentTarget && (setSelectedItem(null), setSelectedIndex(-1), setSwipeOffset(0))}>
-          <div 
-            ref={modalRef}
-            className="relative bg-gray-900 rounded-2xl max-w-5xl w-full max-h-[90vh] border border-gray-700 shadow-2xl select-none"
-            style={{
-              transform: getCardTransform(),
-              opacity: getCardOpacity(),
-              transition: isDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out',
-              cursor: isDragging ? 'grabbing' : 'grab'
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}>
-            
-            {/* Swipe Indicators */}
-            {isDragging && (
-              <>
-                {/* Left indicator (Previous) */}
-                <div 
-                  className={`absolute left-4 top-1/2 transform -translate-y-1/2 z-10 transition-opacity duration-200 ${
-                    swipeOffset > 30 ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <div className="bg-green-500/20 border-2 border-green-400 rounded-full p-3">
-                    <ArrowLeft className="h-6 w-6 text-green-400" />
-                  </div>
-                </div>
-                
-                {/* Right indicator (Next) */}
-                <div 
-                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 z-10 transition-opacity duration-200 ${
-                    swipeOffset < -30 ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <div className="bg-blue-500/20 border-2 border-blue-400 rounded-full p-3">
-                    <ArrowRight className="h-6 w-6 text-blue-400" />
-                  </div>
-                </div>
-              </>
-            )}
-
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+             onClick={(e) => e.target === e.currentTarget && (setSelectedItem(null), setSelectedIndex(-1))}
+             onTouchStart={handleTouchStart}
+             onTouchMove={handleTouchMove}
+             onTouchEnd={handleTouchEnd}>
+          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+               onTouchStart={handleTouchStart}
+               onTouchMove={handleTouchMove}
+               onTouchEnd={handleTouchEnd}>
             <div className="p-6">
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-6">
@@ -1035,7 +902,7 @@ const Library = () => {
                   
                   {/* Close button */}
                   <button
-                    onClick={() => (setSelectedItem(null), setSelectedIndex(-1), setSwipeOffset(0))}
+                    onClick={() => (setSelectedItem(null), setSelectedIndex(-1))}
                     className="p-2 hover:bg-gray-800 rounded-lg transition-colors ml-2"
                     title="Close (Esc)"
                   >
@@ -1065,8 +932,7 @@ const Library = () => {
                             <img
                               src={mediaUrl}
                               alt="Media content"
-                              className="w-full h-full object-cover select-none"
-                              draggable={false}
+                              className="w-full h-full object-cover"
                             />
                           )}
                         </>
@@ -1299,30 +1165,10 @@ const Library = () => {
                 </button>
                 
                 <button 
-                  onClick={() => (setSelectedItem(null), setSelectedIndex(-1), setSwipeOffset(0))}
+                  onClick={() => (setSelectedItem(null), setSelectedIndex(-1))}
                   className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm"
                 >
                   <Typography variant="button" className="text-sm">Close</Typography>
-                </button>
-              </div>
-              
-              {/* Swipe Instructions */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
-                <div className="bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-600">
-                  <Typography variant="caption" color="secondary" className="text-center">
-                    <span className="hidden sm:inline">← → Navigate</span>
-                    <span className="sm:hidden">Swipe to navigate</span>
-                  </Typography>
-                </div>
-              </div>
-              
-              {/* Navigation Arrows for Desktop */}
-              <div className="hidden sm:block">
-                <button onClick={navigateToPrevious} disabled={selectedIndex <= 0} className="absolute left-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/60 hover:bg-black/80 rounded-full border border-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button onClick={navigateToNext} disabled={selectedIndex >= items.length - 1} className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/60 hover:bg-black/80 rounded-full border border-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                  <ChevronRight className="h-6 w-6" />
                 </button>
               </div>
             </div>
