@@ -239,32 +239,7 @@ const About = () => {
         </div>
       </section>
 
-      {/* Interactive Values Section - FIXED SPACING */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <Heading level={3} className="mb-6">
-              <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-                Our Values
-              </span>
-            </Heading>
-            <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto text-lg">
-              The principles that guide everything we do
-            </Typography>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {values.map((value, index) => (
-              <div 
-                key={index} 
-                className={`group cursor-pointer transition-all duration-500 ${activeValue === index ? 'scale-105' : 'hover:scale-105'}`}
-                onMouseEnter={() => setActiveValue(index)}
-              >
-                <div className={`relative overflow-hidden rounded-2xl p-8 border transition-all duration-500 h-full min-h-[320px] ${
-                  activeValue === index 
-                    ? 'border-gray-500 bg-gradient-to-br ' + value.bgColor 
-                    : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
-                }`}>
+     
                   {/* Animated Background Pattern */}
                   <div className="absolute inset-0 opacity-5">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
