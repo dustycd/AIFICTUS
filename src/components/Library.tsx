@@ -25,6 +25,7 @@ interface LibraryItem {
   storage_bucket: string;
   storage_path: string;
   thumbnail_path: string;
+  // Navigation helpers
   // AI or Not API specific fields
   report_id?: string;
   api_verdict?: string;
@@ -43,6 +44,7 @@ const Library = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const itemsPerPage = 12;
@@ -260,7 +262,12 @@ const Library = () => {
     return null;
   };
 
-  // Check if content is video
+  // Handle item selection with index tracking
+  const handleItemSelect = (item: LibraryItem, index: number) => {
+    setSelectedItem(item);
+    setSelectedIndex(index);
+  };
+
   const isVideo = (contentType: string) => contentType.startsWith('video/');
 
   // Get status color and icon
@@ -306,8 +313,51 @@ const Library = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Navigation functions
+  const navigateToPrevious = () => {
+    if (selectedIndex > 0) {
+      const newIndex = selectedIndex - 1;
+      setSelectedItem(items[newIndex]);
+      setSelectedIndex(newIndex);
+    }
+  };
+
+  const navigateToNext = () => {
+    if (selectedIndex < items.length - 1) {
+      const newIndex = selectedIndex + 1;
+      setSelectedItem(items[newIndex]);
+      setSelectedIndex(newIndex);
+    }
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!selectedItem) return;
+    
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      navigateToPrevious();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      navigateToNext();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setSelectedItem(null);
+      setSelectedIndex(-1);
+    }
+  };
+
+  // Add keyboard event listeners when modal is open
+  useEffect(() => {
+    if (selectedItem) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [selectedItem, selectedIndex, items]);
+
   // Render item card
   const renderItemCard = (item: LibraryItem) => {
+    const itemIndex = items.findIndex(i => i.id === item.id);
     const mediaUrl = getMediaUrl(item);
     const statusInfo = getStatusInfo(item.verification_status);
     const StatusIcon = statusInfo.icon;
@@ -316,7 +366,7 @@ const Library = () => {
       <div
         key={item.id}
         className="group bg-gray-800/50 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300 overflow-hidden cursor-pointer hover:transform hover:scale-105"
-        onClick={() => setSelectedItem(item)}
+        onClick={() => handleItemSelect(item, itemIndex)}
       >
         {/* Media Preview */}
         <div className="relative aspect-video bg-gray-900 overflow-hidden">
@@ -430,6 +480,7 @@ const Library = () => {
 
   // Render list item
   const renderListItem = (item: LibraryItem) => {
+    const itemIndex = items.findIndex(i => i.id === item.id);
     const mediaUrl = getMediaUrl(item);
     const statusInfo = getStatusInfo(item.verification_status);
     const StatusIcon = statusInfo.icon;
@@ -438,7 +489,7 @@ const Library = () => {
       <div
         key={item.id}
         className="group bg-gray-800/50 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300 p-4 cursor-pointer"
-        onClick={() => setSelectedItem(item)}
+        onClick={() => handleItemSelect(item, itemIndex)}
       >
         <div className="flex gap-4">
           {/* Thumbnail */}
@@ -751,7 +802,8 @@ const Library = () => {
 
       {/* Enhanced Item Detail Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+             onClick={(e) => e.target === e.currentTarget && (setSelectedItem(null), setSelectedIndex(-1))}>
           <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               {/* Modal Header */}
@@ -769,12 +821,47 @@ const Library = () => {
                     );
                   })()}
                 </div>
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                
+                <div className="flex items-center gap-2">
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={navigateToPrevious}
+                    disabled={selectedIndex <= 0}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Previous item (←)"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Item counter */}
+                  <div className="px-3 py-1 bg-gray-800 rounded-lg">
+                    <Typography variant="caption" className="text-xs">
+                      <span className="numeric-text">{selectedIndex + 1}</span> of <span className="numeric-text">{items.length}</span>
+                    </Typography>
+                  </div>
+                  
+                  <button
+                    onClick={navigateToNext}
+                    disabled={selectedIndex >= items.length - 1}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Next item (→)"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Close button */}
+                  <button
+                    onClick={() => (setSelectedItem(null), setSelectedIndex(-1))}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors ml-2"
+                    title="Close (Esc)"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Main Content Grid */}
@@ -1031,7 +1118,7 @@ const Library = () => {
                 </button>
                 
                 <button 
-                  onClick={() => setSelectedItem(null)}
+                  onClick={() => (setSelectedItem(null), setSelectedIndex(-1))}
                   className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm"
                 >
                   <Typography variant="button" className="text-sm">Close</Typography>
