@@ -61,32 +61,6 @@ const TrustIndicators = () => {
     }
   ];
 
-  const technologyFeatures = [
-    {
-      icon: <Cpu className="h-6 w-6" />,
-      title: "Neural Network Analysis",
-      description: "Deep learning models trained on millions of samples",
-      progress: 95
-    },
-    {
-      icon: <Eye className="h-6 w-6" />,
-      title: "Facial Movement Detection",
-      description: "Advanced algorithms analyze micro-expressions and inconsistencies",
-      progress: 92
-    },
-    {
-      icon: <Database className="h-6 w-6" />,
-      title: "Temporal Consistency",
-      description: "Frame-by-frame analysis for temporal artifacts",
-      progress: 88
-    },
-    {
-      icon: <Network className="h-6 w-6" />,
-      title: "Compression Analysis",
-      description: "Detection of AI-generated compression patterns",
-      progress: 90
-    }
-  ];
 
   return (
     <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-900 to-black">
@@ -157,48 +131,7 @@ const TrustIndicators = () => {
           ))}
         </div>
 
-        {/* Technology Deep Dive */}
-        <div className="mb-24">
-          <div className="text-center mb-16">
-            <Heading level={3} className="mb-6">
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                How Our Technology Works
-              </span>
-            </Heading>
-            <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto">
-              Our AI detection system combines multiple advanced techniques to analyze digital media
-            </Typography>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {technologyFeatures.map((feature, index) => (
-              <div key={index} className="bg-gray-800/30 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all duration-300 group">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="text-blue-400 group-hover:scale-110 transition-transform duration-300">
-                    {feature.icon}
-                  </div>
-                  <div className="flex-1">
-                    <Typography variant="cardTitle" className="mb-1">{feature.title}</Typography>
-                    <Typography variant="cardCaption" color="secondary" className="text-sm">
-                      {feature.description}
-                    </Typography>
-                  </div>
-                  <span className="text-blue-400 font-bold numeric-text">{feature.progress}%</span>
-                </div>
-                
-                <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                  <div 
-                    className="h-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-1000 ease-out"
-                    style={{ 
-                      width: `${feature.progress}%`,
-                      animationDelay: `${index * 0.2}s`
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+       
 
         {/* Use Cases */}
         <div className="mb-24">
