@@ -12,6 +12,49 @@ const TechnologyExplainer = () => {
       title: "Neural Network Analysis",
       description: "Deep learning models trained on millions of authentic and synthetic videos",
       details: [
+        "Facial landmark detection and tracking",
+        "Micro-expression analysis for unnatural movements",
+        "Temporal consistency checking across frames",
+        "Biometric authentication patterns"
+      ]
+    },
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "Deepfake Detection",
+      description: "Specialized algorithms to identify AI-generated faces and voice synthesis",
+      details: [
+        "GAN artifact detection in generated content",
+        "Face swap boundary analysis",
+        "Voice cloning pattern recognition",
+        "Compression artifact inconsistencies"
+      ]
+    },
+    {
+      icon: <Cpu className="h-6 w-6" />,
+      title: "Real-time Processing",
+      description: "Optimized inference pipeline for instant verification results",
+      details: [
+        "GPU-accelerated processing clusters",
+        "Parallel analysis across multiple models",
+        "Edge computing for reduced latency",
+        "Scalable cloud infrastructure"
+      ]
+    },
+    {
+      icon: <Database className="h-6 w-6" />,
+      title: "Secure Storage",
+      description: "Encrypted storage and verification certificates for audit trails",
+      details: [
+        "End-to-end encryption",
+        "Immutable verification records",
+        "Secure cloud storage",
+        "Privacy-first architecture"
+      ]
+    }
+  ];
+
+  return (
+    <section className="relative py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -103,9 +146,45 @@ const TechnologyExplainer = () => {
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>Facial Analysis</span>
+                    <span>94%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-green-400 h-2 rounded-full w-[94%] transition-all duration-1000" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>Temporal Consistency</span>
+                    <span>87%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-yellow-400 h-2 rounded-full w-[87%] transition-all duration-1000" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>Audio Synthesis</span>
+                    <span>99%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-green-400 h-2 rounded-full w-[99%] transition-all duration-1000" />
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Results */}
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <Shield className="h-5 w-5 text-green-400" />
+                <Typography variant="cardTitle" color="success">
+                  Verification Complete
+                </Typography>
+              </div>
+              <Typography variant="cardCaption" color="secondary">
+                Confidence Score: 96.8% Authentic
+              </Typography>
             </div>
           </div>
         </div>
