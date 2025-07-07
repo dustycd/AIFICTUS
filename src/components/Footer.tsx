@@ -108,7 +108,7 @@ const Footer: React.FC = () => {
             </Typography>
             <nav className="space-y-3">
               <a 
-                href="mailto:help@fictus.io"
+                href="mailto:Team@fictus.io"
                 className="block text-gray-400 hover:text-white transition-colors"
               >
                 <Typography variant="cardCaption">Contact Us</Typography>
