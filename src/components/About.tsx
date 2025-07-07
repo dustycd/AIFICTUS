@@ -172,6 +172,11 @@ const About = () => {
             <Heading level={2} className="mb-8">
               <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                 Our Story
+              </span>
+            </Heading>
+          </div>
+        </div>
+      </section>
 
       {/* Technology Stack with Progress Bars */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-900 to-black">
