@@ -34,33 +34,6 @@ const TrustIndicators = () => {
     }
   ];
 
-  const technologyFeatures = [
-    {
-      icon: <Eye className="h-6 w-6" />,
-      title: "Facial Analysis",
-      description: "Detects unnatural facial movements and inconsistencies",
-      progress: 95
-    },
-    {
-      icon: <Activity className="h-6 w-6" />,
-      title: "Temporal Consistency",
-      description: "Analyzes frame-to-frame coherence in video sequences",
-      progress: 92
-    },
-    {
-      icon: <Database className="h-6 w-6" />,
-      title: "Metadata Verification",
-      description: "Examines file properties and creation timestamps",
-      progress: 88
-    },
-    {
-      icon: <Network className="h-6 w-6" />,
-      title: "Compression Analysis",
-      description: "Identifies artifacts from AI generation processes",
-      progress: 90
-    }
-  ];
-
   const useCases = [
     {
       icon: <Video className="h-8 w-8" />,
