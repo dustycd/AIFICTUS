@@ -551,48 +551,45 @@ const Library = () => {
       {/* Search and Filters - Mobile Optimized */}
       <section className="px-4 sm:px-6 lg:px-8 mb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Mobile Filter Toggle */}
-          <div className="lg:hidden mb-4">
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search content..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Filters Button */}
+          <div className="text-center mb-6">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-xl text-white transition-all duration-300"
             >
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5" />
-                <Typography variant="body">Filters & Search</Typography>
-              </div>
-              <ChevronDown className={`h-5 w-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              <Filter className="h-5 w-5" />
+              <Typography variant="body">Filters</Typography>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
-          {/* Filters Container */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
-            <div className="bg-gray-800/50 rounded-2xl border border-gray-700 p-4 lg:p-6">
-              {/* Search Bar */}
-              <div className="mb-4 lg:mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search content..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Filter Controls */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          {/* Expandable Filters Container */}
+          {showFilters && (
+            <div className="bg-gray-800/50 rounded-2xl border border-gray-700 p-6 mb-6 animate-in slide-in-from-top-4 duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Status Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
                     Verification Status
                   </label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-colors"
                   >
                     <option value="">All Statuses</option>
                     <option value="authentic">Real Content</option>
@@ -603,13 +600,13 @@ const Library = () => {
 
                 {/* Content Type Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
                     Content Type
                   </label>
                   <select
                     value={contentTypeFilter}
                     onChange={(e) => setContentTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-colors"
                   >
                     <option value="">All Types</option>
                     <option value="video">Videos</option>
@@ -619,75 +616,75 @@ const Library = () => {
 
                 {/* View Mode Toggle */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
                     View Mode
                   </label>
-                  <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-600">
+                  <div className="flex bg-gray-900 rounded-xl p-1 border border-gray-600">
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                         viewMode === 'grid'
                           ? 'bg-blue-500 text-white'
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
                       <Grid className="h-4 w-4" />
-                      <span className="hidden sm:inline">Grid</span>
+                      <span>Grid</span>
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                         viewMode === 'list'
                           ? 'bg-blue-500 text-white'
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
                       <List className="h-4 w-4" />
-                      <span className="hidden sm:inline">List</span>
+                      <span>List</span>
                     </button>
                   </div>
                 </div>
+              </div>
 
-                {/* Clear Filters */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Actions
-                  </label>
+              {/* Clear Filters Button */}
+              <div className="mt-6 pt-6 border-t border-gray-700">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                  {/* Active Filters Display */}
+                  {(searchTerm || statusFilter || contentTypeFilter) && (
+                    <div className="flex flex-wrap gap-2">
+                      <Typography variant="caption" color="secondary" className="mr-2">
+                        Active filters:
+                      </Typography>
+                      {searchTerm && (
+                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
+                          Search: "{searchTerm}"
+                        </span>
+                      )}
+                      {statusFilter && (
+                        <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
+                          Status: {statusFilter}
+                        </span>
+                      )}
+                      {contentTypeFilter && (
+                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-medium">
+                          Type: {contentTypeFilter}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Clear All Button */}
                   <button
                     onClick={clearFilters}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition-colors"
                   >
                     <X className="h-4 w-4" />
                     <span>Clear All</span>
                   </button>
                 </div>
               </div>
-
-              {/* Active Filters Display */}
-              {(searchTerm || statusFilter || contentTypeFilter) && (
-                <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-700">
-                  <Typography variant="caption" color="secondary" className="mr-2">
-                    Active filters:
-                  </Typography>
-                  {searchTerm && (
-                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
-                      Search: "{searchTerm}"
-                    </span>
-                  )}
-                  {statusFilter && (
-                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                      Status: {statusFilter}
-                    </span>
-                  )}
-                  {contentTypeFilter && (
-                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
-                      Type: {contentTypeFilter}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
-          </div>
+          )}
         </div>
       </section>
 
