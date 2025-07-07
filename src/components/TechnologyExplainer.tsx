@@ -56,17 +56,6 @@ const TechnologyExplainer = () => {
   return (
     <section className="relative py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <Heading level={2} className="mb-6">
-            The Technology Behind Fictus AI
-          </Heading>
-          <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto">
-            Built on state-of-the-art machine learning and secure storage technology, 
-            our platform sets the gold standard for video authenticity verification.
-          </Typography>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Technology Tabs */}
           <div className="space-y-4">
