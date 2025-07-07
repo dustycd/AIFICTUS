@@ -747,16 +747,6 @@ const AuthPage: React.FC = () => {
                   )}
                 </div>
                 
-                {/* Loading indicator */}
-                {!captchaReady && HCAPTCHA_SITE_KEY && (
-                  <div className="flex items-center justify-center gap-2 mb-4">
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-                    <Typography variant="caption" color="secondary">
-                      Loading security verification...
-                    </Typography>
-                  </div>
-                )}
-                
                 {/* Captcha status indicators */}
                 <div className="text-center">
                   {captchaToken && (
