@@ -47,6 +47,8 @@ const Library = () => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+ const [touchStart, setTouchStart] = useState<number | null>(null);
+ const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const itemsPerPage = 12;
 
   // Generate comprehensive AI or Not API data for demonstration
@@ -355,6 +357,33 @@ const Library = () => {
     }
   }, [selectedItem, selectedIndex, items]);
 
+ // Handle touch events for swipe navigation
+ const handleTouchStart = (e: React.TouchEvent) => {
+   setTouchEnd(null);
+   setTouchStart(e.targetTouches[0].clientX);
+ };
+
+ const handleTouchMove = (e: React.TouchEvent) => {
+   setTouchEnd(e.targetTouches[0].clientX);
+ };
+
+ const handleTouchEnd = () => {
+   if (!touchStart || !touchEnd) return;
+   
+   const distance = touchStart - touchEnd;
+   const isLeftSwipe = distance > 50;
+   const isRightSwipe = distance < -50;
+
+   if (isLeftSwipe && selectedIndex < items.length - 1) {
+     // Swipe left - go to next item
+     navigateToNext();
+   }
+   
+   if (isRightSwipe && selectedIndex > 0) {
+     // Swipe right - go to previous item
+     navigateToPrevious();
+   }
+ };
   // Render item card
   const renderItemCard = (item: LibraryItem) => {
     const itemIndex = items.findIndex(i => i.id === item.id);
@@ -697,6 +726,12 @@ const Library = () => {
                 </div>
               </div>
 
+              {/* Mobile Swipe Hint */}
+              <div className="block sm:hidden mt-4 text-center">
+                <Typography variant="caption" color="secondary" className="text-xs">
+                  💡 Swipe left or right to navigate between items
+                </Typography>
+              </div>
               {/* Clear Filters Button */}
               <div className="mt-6 pt-6 border-t border-gray-700">
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -803,8 +838,14 @@ const Library = () => {
       {/* Enhanced Item Detail Modal */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-             onClick={(e) => e.target === e.currentTarget && (setSelectedItem(null), setSelectedIndex(-1))}>
-          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+             onClick={(e) => e.target === e.currentTarget && (setSelectedItem(null), setSelectedIndex(-1))}
+             onTouchStart={handleTouchStart}
+             onTouchMove={handleTouchMove}
+             onTouchEnd={handleTouchEnd}>
+          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+               onTouchStart={handleTouchStart}
+               onTouchMove={handleTouchMove}
+               onTouchEnd={handleTouchEnd}>
             <div className="p-6">
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-6">
