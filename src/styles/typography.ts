@@ -62,55 +62,54 @@ export const typography = {
 // Typography utility classes - using Arvo for all text except numbers
 export const typographyClasses = {
   // Headings - using Arvo
-  // Mobile-first headings with responsive scaling
-  h1: `font-bold text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl tracking-tight leading-tight sm:leading-none`,
-  h2: `font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight`,
-  h3: `font-semibold text-lg sm:text-xl leading-snug`,
-  h4: `font-semibold text-base sm:text-lg leading-snug`,
-  h5: `font-medium text-sm sm:text-base leading-normal`,
-  h6: `font-medium text-xs sm:text-sm leading-normal`,
+  h1: `font-bold text-6xl sm:text-7xl lg:text-8xl tracking-tight leading-none`,
+  h2: `font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight`,
+  h3: `font-semibold text-xl leading-snug`,
+  h4: `font-semibold text-lg leading-snug`,
+  h5: `font-medium text-base leading-normal`,
+  h6: `font-medium text-sm leading-normal`,
 
   // Body text - using Arvo
-  body: `font-normal text-sm sm:text-base leading-relaxed`,
-  bodySmall: `font-normal text-xs sm:text-sm leading-normal`,
-  bodyLarge: `font-normal text-base sm:text-lg leading-relaxed`,
+  body: `font-normal text-base leading-relaxed`,
+  bodySmall: `font-normal text-sm leading-normal`,
+  bodyLarge: `font-normal text-lg leading-relaxed`,
 
   // Special text styles - using Arvo
-  caption: `font-normal text-xs sm:text-sm leading-normal`,
-  overline: `font-medium text-xs sm:text-sm uppercase tracking-wider leading-normal`,
-  subtitle1: `font-normal text-sm sm:text-base leading-relaxed`,
-  subtitle2: `font-medium text-xs sm:text-sm leading-normal`,
+  caption: `font-normal text-xs leading-normal`,
+  overline: `font-medium text-xs uppercase tracking-wider leading-normal`,
+  subtitle1: `font-normal text-base leading-relaxed`,
+  subtitle2: `font-medium text-sm leading-normal`,
 
   // Button text - using Arvo
-  button: `font-bold text-sm sm:text-base leading-none`,
-  buttonSmall: `font-bold text-xs sm:text-sm leading-none`,
-  buttonLarge: `font-bold text-base sm:text-lg leading-none`,
+  button: `font-bold text-base leading-none`,
+  buttonSmall: `font-bold text-sm leading-none`,
+  buttonLarge: `font-bold text-lg leading-none`,
 
   // Navigation - using Arvo
-  navLink: `font-medium text-sm sm:text-base leading-none`,
-  navLinkMobile: `font-medium text-base sm:text-lg leading-none`,
+  navLink: `font-medium text-base leading-none`,
+  navLinkMobile: `font-medium text-lg leading-none`,
 
   // Hero section - using Arvo
-  heroTitle: `font-bold text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl tracking-tight leading-tight sm:leading-none`,
-  heroSubtitle: `font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight`,
-  heroCaption: `font-normal text-sm sm:text-base md:text-lg leading-normal`,
+  heroTitle: `font-bold text-6xl sm:text-7xl lg:text-8xl tracking-tight leading-none`,
+  heroSubtitle: `font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight`,
+  heroCaption: `font-normal text-sm sm:text-base leading-normal`,
 
   // Card elements - using Arvo
-  cardTitle: `font-semibold text-sm sm:text-base leading-snug`,
-  cardSubtitle: `font-normal text-xs sm:text-sm leading-normal`,
-  cardCaption: `font-normal text-xs sm:text-sm leading-normal`,
+  cardTitle: `font-semibold text-base leading-snug`,
+  cardSubtitle: `font-normal text-sm leading-normal`,
+  cardCaption: `font-normal text-xs leading-normal`,
 
   // Tags and labels - using Arvo
-  tag: `font-medium text-xs sm:text-sm leading-none`,
-  label: `font-medium text-xs sm:text-sm leading-normal`,
+  tag: `font-medium text-xs leading-none`,
+  label: `font-medium text-sm leading-normal`,
   
   // Special effects - using Arvo
   neonText: `font-bold tracking-tight`,
   gradientText: `font-bold bg-clip-text text-transparent`,
   
   // Metrics and numbers - ONLY these use Inter for reliability
-  metric: `font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-none numeric-text`,
-  metricLarge: `font-bold text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight leading-none numeric-text`,
+  metric: `font-bold text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none numeric-text`,
+  metricLarge: `font-bold text-6xl sm:text-7xl lg:text-8xl tracking-tight leading-none numeric-text`,
 } as const;
 
 // Color combinations for text
@@ -130,13 +129,13 @@ export const textColors = {
 
 // Responsive typography utilities
 export const responsiveText = {
-  xs: 'text-xs sm:text-sm md:text-base',
-  sm: 'text-sm sm:text-base md:text-lg',
-  base: 'text-base sm:text-lg md:text-xl',
-  lg: 'text-lg sm:text-xl md:text-2xl',
-  xl: 'text-xl sm:text-2xl md:text-3xl',
-  '2xl': 'text-2xl sm:text-3xl md:text-4xl',
-  '3xl': 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl',
-  '4xl': 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl',
-  hero: 'text-4xl sm:text-6xl md:text-7xl lg:text-8xl',
+  xs: 'text-xs sm:text-sm',
+  sm: 'text-sm sm:text-base',
+  base: 'text-base sm:text-lg',
+  lg: 'text-lg sm:text-xl',
+  xl: 'text-xl sm:text-2xl',
+  '2xl': 'text-2xl sm:text-3xl',
+  '3xl': 'text-3xl sm:text-4xl lg:text-5xl',
+  '4xl': 'text-4xl sm:text-5xl lg:text-6xl',
+  hero: 'text-6xl sm:text-7xl lg:text-8xl',
 } as const;
