@@ -92,26 +92,26 @@ const Header: React.FC = () => {
 
   return (
     <header 
-      className={`fixed left-0 right-0 z-50 bg-black/60 backdrop-blur-md transition-all duration-300 ${
+      className={`fixed left-0 right-0 z-50 bg-black/80 backdrop-blur-md transition-all duration-300 ${
         isVisible ? 'top-8 translate-y-0' : 'top-8 -translate-y-full'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center cursor-pointer" onClick={handleNavClick}>
             <img 
               src="/fictus.png" 
               alt="Fictus AI" 
-              className="h-10 w-auto object-contain filter drop-shadow-sm"
+              className="h-8 sm:h-10 w-auto object-contain filter drop-shadow-sm"
               style={{ imageRendering: 'crisp-edges' }}
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
             {/* Navigation Links */}
-            <nav className="flex items-center space-x-8">
+            <nav className="flex items-center space-x-4 lg:space-x-8">
               <Link 
                 to="/verify"
                 className={`transition-colors ${
@@ -119,7 +119,7 @@ const Header: React.FC = () => {
                 }`}
                 onClick={handleNavClick}
               >
-                <Typography variant="navLink" className="text-sm">Verify Video</Typography>
+                <Typography variant="navLink" className="text-sm lg:text-base">Verify Video</Typography>
               </Link>
               <Link 
                 to="/library"
@@ -128,7 +128,7 @@ const Header: React.FC = () => {
                 }`}
                 onClick={handleNavClick}
               >
-                <Typography variant="navLink" className="text-sm">Library</Typography>
+                <Typography variant="navLink" className="text-sm lg:text-base">Library</Typography>
               </Link>
               <Link 
                 to="/about"
@@ -137,7 +137,7 @@ const Header: React.FC = () => {
                 }`}
                 onClick={handleNavClick}
               >
-                <Typography variant="navLink" className="text-sm">About</Typography>
+                <Typography variant="navLink" className="text-sm lg:text-base">About</Typography>
               </Link>
             </nav>
 
@@ -148,12 +148,12 @@ const Header: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300"
+                  className="flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-lg lg:rounded-xl backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-7 h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold text-xs lg:text-sm">
                     {getUserInitials()}
                   </div>
-                  <Typography variant="navLink" className="text-sm text-blue-400 font-semibold">
+                  <Typography variant="navLink" className="text-xs lg:text-sm text-blue-400 font-semibold hidden sm:block">
                     {getUserDisplayName()}
                   </Typography>
                 </button>
@@ -161,7 +161,7 @@ const Header: React.FC = () => {
                 {/* User Dropdown Menu */}
                 {showUserMenu && (
                   <div className="absolute right-0 top-full mt-2 w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl py-2 z-50">
-                    <div className="px-4 py-3 border-b border-gray-700">
+                    <div className="px-3 py-2 lg:px-4 lg:py-3 border-b border-gray-700">
                       <Typography variant="cardTitle" className="mb-1">
                         {getUserDisplayName()}
                       </Typography>
@@ -176,7 +176,7 @@ const Header: React.FC = () => {
                         handleNavClick();
                         setShowUserMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors flex items-center gap-3"
+                      className="w-full px-3 py-2 lg:px-4 lg:py-3 text-left hover:bg-gray-800 transition-colors flex items-center gap-3"
                     >
                       <History className="h-4 w-4 text-gray-400" />
                       <Typography variant="cardCaption">My Verifications</Typography>
@@ -184,7 +184,7 @@ const Header: React.FC = () => {
                     
                     <button
                       onClick={handleSignOut}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors flex items-center gap-3"
+                      className="w-full px-3 py-2 lg:px-4 lg:py-3 text-left hover:bg-gray-800 transition-colors flex items-center gap-3"
                     >
                       <LogOut className="h-4 w-4 text-gray-400" />
                       <Typography variant="cardCaption">Sign Out</Typography>
@@ -196,11 +196,11 @@ const Header: React.FC = () => {
               <Link 
                 to="/auth"
                 onClick={handleNavClick}
-                className="group relative px-6 py-2.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
+                className="group relative px-4 lg:px-6 py-2 lg:py-2.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-lg lg:rounded-xl backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
               >
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-blue-400 group-hover:text-blue-300 transition-colors" />
-                  <Typography variant="navLink" className="text-sm text-blue-400 group-hover:text-blue-300 transition-colors font-semibold">
+                  <Typography variant="navLink" className="text-xs lg:text-sm text-blue-400 group-hover:text-blue-300 transition-colors font-semibold">
                     Login
                   </Typography>
                 </div>
@@ -214,7 +214,7 @@ const Header: React.FC = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-white hover:text-blue-400 transition-colors p-2"
+            className="md:hidden text-white hover:text-blue-400 transition-colors p-1.5"
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -222,8 +222,8 @@ const Header: React.FC = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-black/90 backdrop-blur-sm rounded-b-2xl border-t border-gray-700/50">
-            <nav className="px-6 py-6 space-y-6">
+          <div className="md:hidden bg-black/95 backdrop-blur-sm rounded-b-xl border-t border-gray-700/50">
+            <nav className="px-4 py-4 space-y-4">
               <Link 
                 to="/verify"
                 onClick={handleNavClick}
@@ -231,7 +231,7 @@ const Header: React.FC = () => {
                   isActivePage('/verify') ? 'text-blue-400' : 'text-white hover:text-blue-400'
                 }`}
               >
-                <Typography variant="navLinkMobile" className="text-base">Verify Video</Typography>
+                <Typography variant="navLinkMobile" className="text-lg">Verify Video</Typography>
               </Link>
               <Link 
                 to="/library"
@@ -240,7 +240,7 @@ const Header: React.FC = () => {
                   isActivePage('/library') ? 'text-blue-400' : 'text-white hover:text-blue-400'
                 }`}
               >
-                <Typography variant="navLinkMobile" className="text-base">Library</Typography>
+                <Typography variant="navLinkMobile" className="text-lg">Library</Typography>
               </Link>
               <Link 
                 to="/about"
@@ -249,14 +249,14 @@ const Header: React.FC = () => {
                   isActivePage('/about') ? 'text-blue-400' : 'text-white hover:text-blue-400'
                 }`}
               >
-                <Typography variant="navLinkMobile" className="text-base">About</Typography>
+                <Typography variant="navLinkMobile" className="text-lg">About</Typography>
               </Link>
               
               {/* Mobile Auth Section */}
               {user ? (
-                <div className="pt-4 border-t border-gray-700">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="pt-3 border-t border-gray-700">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold">
                       {getUserInitials()}
                     </div>
                     <div>
@@ -272,20 +272,20 @@ const Header: React.FC = () => {
                   <Link
                     to="/my-verifications"
                     onClick={handleNavClick}
-                    className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl transition-colors flex items-center gap-3 mb-3"
+                    className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg transition-colors flex items-center gap-3 mb-3"
                   >
                     <History className="h-5 w-5 text-gray-400" />
-                    <Typography variant="navLinkMobile" className="text-base">
+                    <Typography variant="navLinkMobile" className="text-lg">
                       My Verifications
                     </Typography>
                   </Link>
                   
                   <button
                     onClick={handleSignOut}
-                    className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl transition-colors flex items-center gap-3"
+                    className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg transition-colors flex items-center gap-3"
                   >
                     <LogOut className="h-5 w-5 text-gray-400" />
-                    <Typography variant="navLinkMobile" className="text-base">
+                    <Typography variant="navLinkMobile" className="text-lg">
                       Sign Out
                     </Typography>
                   </button>
@@ -294,11 +294,11 @@ const Header: React.FC = () => {
                 <Link 
                   to="/auth"
                   onClick={handleNavClick}
-                  className="w-full group relative px-4 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300 mt-4 block"
+                  className="w-full group relative px-4 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-lg backdrop-blur-sm hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all duration-300 mt-3 block"
                 >
                   <div className="flex items-center justify-center gap-2">
                     <User className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
-                    <Typography variant="navLinkMobile" className="text-base text-blue-400 group-hover:text-blue-300 transition-colors font-semibold">
+                    <Typography variant="navLinkMobile" className="text-lg text-blue-400 group-hover:text-blue-300 transition-colors font-semibold">
                       Login / Sign Up
                     </Typography>
                   </div>

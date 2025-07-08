@@ -415,43 +415,43 @@ const UnifiedVerify = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header Section */}
-      <section className="relative pt-32 pb-12 px-4 sm:px-6 lg:px-8">
+      <section className="relative pt-20 sm:pt-32 pb-8 sm:pb-12 px-3 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <img 
               src="/fictus.png" 
               alt="Fictus AI" 
-              className="mx-auto h-16 w-auto object-contain filter drop-shadow-lg"
+              className="mx-auto h-12 sm:h-16 w-auto object-contain filter drop-shadow-lg"
               style={{ imageRendering: 'crisp-edges' }}
             />
           </div>
           
-          <Heading level={1} className="mb-8 text-5xl lg:text-6xl font-black">
+          <Heading level={1} className="mb-6 sm:mb-8 text-3xl sm:text-5xl lg:text-6xl font-black px-2">
             <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Verify Media Content
             </span>
           </Heading>
           
-          <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto text-xl mb-8 leading-relaxed">
+          <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto text-base sm:text-xl mb-6 sm:mb-8 leading-relaxed px-2">
             Upload your video or image to verify its authenticity using our advanced AI detection technology.
             Get detailed analysis results in seconds.
           </Typography>
 
           {/* Usage Limits Display */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <UsageLimitsDisplay compact={true} showTitle={false} />
           </div>
         </div>
       </section>
 
       {/* Main Verification Interface */}
-      <section className="pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pb-12 sm:pb-20 px-3 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {!verificationResult ? (
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {/* File Upload Area */}
               <div
-                className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
+                className={`relative border-2 border-dashed rounded-xl sm:rounded-2xl p-6 sm:p-12 text-center transition-all duration-300 ${
                   dragActive
                     ? 'border-blue-400 bg-blue-500/10'
                     : selectedFile
@@ -475,44 +475,44 @@ const UnifiedVerify = () => {
                   type="file"
                   accept="video/*,image/*,.mp4,.mov,.avi,.webm,.mkv,.m4v,.3gp,.flv,.wmv,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.svg,.heic,.heif,.avif"
                   onChange={handleFileInputChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 touch-manipulation"
                   disabled={isVerifying}
                   multiple={false}
                 />
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {selectedFile ? (
                     <>
-                      <div className="mx-auto w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
+                      <div className="mx-auto w-16 sm:w-20 h-16 sm:h-20 bg-green-500/20 rounded-full flex items-center justify-center">
                         {isVideoFile(selectedFile) ? (
-                          <FileVideo className="h-10 w-10 text-green-400" />
+                          <FileVideo className="h-8 sm:h-10 w-8 sm:w-10 text-green-400" />
                         ) : (
-                          <FileImage className="h-10 w-10 text-green-400" />
+                          <FileImage className="h-8 sm:h-10 w-8 sm:w-10 text-green-400" />
                         )}
                       </div>
                       <div>
-                        <Typography variant="h3" className="mb-2">
+                        <Typography variant="h3" className="mb-2 text-lg sm:text-xl break-all px-2">
                           {selectedFile.name}
                         </Typography>
-                        <Typography variant="body" color="secondary">
+                        <Typography variant="body" color="secondary" className="text-sm sm:text-base">
                           {formatFileSize(selectedFile.size)} • {selectedFile.type}
                         </Typography>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="mx-auto w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center">
-                        <Upload className="h-10 w-10 text-gray-400" />
+                      <div className="mx-auto w-16 sm:w-20 h-16 sm:h-20 bg-gray-700 rounded-full flex items-center justify-center">
+                        <Upload className="h-8 sm:h-10 w-8 sm:w-10 text-gray-400" />
                       </div>
                       <div>
-                        <Typography variant="h3" className="mb-2">
+                        <Typography variant="h3" className="mb-2 text-lg sm:text-xl px-2">
                           {isDragSupported ? 'Drop your file here or tap to browse' : 'Tap to select your file'}
                         </Typography>
-                        <Typography variant="body" color="secondary">
+                        <Typography variant="body" color="secondary" className="text-sm sm:text-base px-2">
                           Supports videos (MP4, MOV, AVI, WebM) and images (JPG, PNG, GIF, WebP)
                         </Typography>
                         {!isDragSupported && (
-                          <Typography variant="caption" color="secondary" className="mt-2 block">
+                          <Typography variant="caption" color="secondary" className="mt-2 block text-xs px-2">
                             Tap the area above to select a file from your device
                           </Typography>
                         )}
@@ -524,28 +524,28 @@ const UnifiedVerify = () => {
 
               {/* Options */}
               {selectedFile && (
-                <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700">
+                <div className="bg-gray-800/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700">
                   <div className="flex items-center justify-between mb-6">
-                    <Typography variant="h3">Verification Options</Typography>
+                    <Typography variant="h3" className="text-lg sm:text-xl">Verification Options</Typography>
                     <button
                       onClick={resetForm}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-gray-400 hover:text-white transition-colors p-1"
                     >
                       <X className="h-5 w-5" />
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={shareToLibrary}
                         onChange={(e) => setShareToLibrary(e.target.checked)}
-                        className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded"
+                        className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded touch-manipulation"
                       />
                       <div>
-                        <Typography variant="body">Share to Community Library</Typography>
-                        <Typography variant="caption" color="secondary">
+                        <Typography variant="body" className="text-sm sm:text-base">Share to Community Library</Typography>
+                        <Typography variant="caption" color="secondary" className="text-xs sm:text-sm">
                           Help educate others by sharing your verification results anonymously
                         </Typography>
                       </div>
@@ -555,33 +555,33 @@ const UnifiedVerify = () => {
                   <button
                     onClick={handleVerification}
                     disabled={isVerifying}
-                    className="w-full mt-6 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                    className="w-full mt-4 sm:mt-6 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 touch-manipulation"
                   >
                     {isVerifying ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <Typography variant="button">
+                        <Typography variant="button" className="text-sm sm:text-base">
                           {uploadProgress < 50 ? 'Uploading...' : 'Analyzing...'}
                         </Typography>
                       </>
                     ) : (
                       <>
                         <Zap className="h-5 w-5" />
-                        <Typography variant="button">Start Verification</Typography>
+                        <Typography variant="button" className="text-sm sm:text-base">Start Verification</Typography>
                       </>
                     )}
                   </button>
 
                   {/* Progress Bar */}
                   {isVerifying && (
-                    <div className="mt-4">
-                      <div className="flex justify-between text-sm mb-2">
+                    <div className="mt-3 sm:mt-4">
+                      <div className="flex justify-between text-xs sm:text-sm mb-2">
                         <span>Progress</span>
                         <span>{uploadProgress}%</span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div className="w-full bg-gray-700 rounded-full h-2 sm:h-3">
                         <div
-                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 sm:h-3 rounded-full transition-all duration-300"
                           style={{ width: `${uploadProgress}%` }}
                         />
                       </div>
@@ -592,14 +592,14 @@ const UnifiedVerify = () => {
 
               {/* Error Display */}
               {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-6 w-6 text-red-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <Typography variant="h4" className="text-red-400 mb-2">
+                      <Typography variant="h4" className="text-red-400 mb-2 text-base sm:text-lg">
                         Verification Failed
                       </Typography>
-                      <Typography variant="body" className="text-red-300">
+                      <Typography variant="body" className="text-red-300 text-sm sm:text-base">
                         {error}
                       </Typography>
                     </div>
@@ -609,21 +609,21 @@ const UnifiedVerify = () => {
             </div>
           ) : (
             /* Results Display */
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {/* Status Header */}
-              <div className={`bg-gradient-to-r ${getStatusColor(verificationResult.status)} rounded-2xl p-8 border text-center`}>
+              <div className={`bg-gradient-to-r ${getStatusColor(verificationResult.status)} rounded-xl sm:rounded-2xl p-6 sm:p-8 border text-center`}>
                 <div className="flex justify-center mb-4">
                   {getStatusIcon(verificationResult.status)}
                 </div>
-                <Typography variant="h2" className="mb-2 capitalize">
+                <Typography variant="h2" className="mb-2 capitalize text-xl sm:text-2xl lg:text-3xl">
                   {verificationResult.status}
                 </Typography>
-                <Typography variant="h3" className="mb-4">
+                <Typography variant="h3" className="mb-4 text-lg sm:text-xl">
                   <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                     {verificationResult.confidence.toFixed(1)}%
                   </span> Confidence
                 </Typography>
-                <Typography variant="body" color="secondary">
+                <Typography variant="body" color="secondary" className="text-sm sm:text-base">
                   Analysis completed in <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                     {verificationResult.processingTime.toFixed(1)}
                   </span> seconds
@@ -631,26 +631,26 @@ const UnifiedVerify = () => {
               </div>
 
               {/* Detailed Results */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 {/* Analysis Metrics */}
-                <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700">
-                  <Typography variant="h3" className="mb-6 flex items-center gap-2">
+                <div className="bg-gray-800/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700">
+                  <Typography variant="h3" className="mb-4 sm:mb-6 flex items-center gap-2 text-lg sm:text-xl">
                     <Brain className="h-5 w-5 text-blue-400" />
                     Analysis Results
                   </Typography>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Confidence Score</span>
-                      <span className="numeric-text text-blue-400 font-bold" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
+                      <span className="text-gray-400 text-sm sm:text-base">Confidence Score</span>
+                      <span className="numeric-text text-blue-400 font-bold text-sm sm:text-base" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                         {verificationResult.confidence.toFixed(1)}%
                       </span>
                     </div>
                     
                     {verificationResult.aiProbability && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">AI Probability</span>
-                        <span className="numeric-text text-red-400" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
+                        <span className="text-gray-400 text-sm sm:text-base">AI Probability</span>
+                        <span className="numeric-text text-red-400 text-sm sm:text-base" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                           {verificationResult.aiProbability.toFixed(1)}%
                         </span>
                       </div>
@@ -658,23 +658,23 @@ const UnifiedVerify = () => {
                     
                     {verificationResult.humanProbability && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Human Probability</span>
-                        <span className="numeric-text text-green-400" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
+                        <span className="text-gray-400 text-sm sm:text-base">Human Probability</span>
+                        <span className="numeric-text text-green-400 text-sm sm:text-base" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                           {verificationResult.humanProbability.toFixed(1)}%
                         </span>
                       </div>
                     )}
                     
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Processing Time</span>
-                      <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
+                      <span className="text-gray-400 text-sm sm:text-base">Processing Time</span>
+                      <span className="numeric-text text-sm sm:text-base" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                         {verificationResult.processingTime.toFixed(1)}s
                       </span>
                     </div>
                     
                     <div className="flex justify-between">
-                      <span className="text-gray-400">File Size</span>
-                      <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
+                      <span className="text-gray-400 text-sm sm:text-base">File Size</span>
+                      <span className="numeric-text text-sm sm:text-base" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                         {verificationResult.fileSize}
                       </span>
                     </div>
@@ -682,25 +682,25 @@ const UnifiedVerify = () => {
                 </div>
 
                 {/* Detection Details */}
-                <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700">
-                  <Typography variant="h3" className="mb-6">
+                <div className="bg-gray-800/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700">
+                  <Typography variant="h3" className="mb-4 sm:mb-6 text-lg sm:text-xl">
                     Detection Analysis
                   </Typography>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {Object.entries(verificationResult.detectionDetails).map(([key, value]) => (
                       <div key={key}>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-gray-400 capitalize">
+                        <div className="flex justify-between mb-1 text-sm sm:text-base">
+                          <span className="text-gray-400 capitalize text-sm sm:text-base">
                             {key.replace(/([A-Z])/g, ' $1').trim()}
                           </span>
-                          <span className="text-sm numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
+                          <span className="text-xs sm:text-sm numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
                             {value.toFixed(1)}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="w-full bg-gray-700 rounded-full h-2 sm:h-3">
                           <div
-                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 sm:h-3 rounded-full"
                             style={{ width: `${value}%` }}
                           />
                         </div>
@@ -712,15 +712,15 @@ const UnifiedVerify = () => {
 
               {/* Risk Factors */}
               {verificationResult.riskFactors.length > 0 && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
-                  <Typography variant="h3" className="mb-4 text-red-400">
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <Typography variant="h3" className="mb-4 text-red-400 text-lg sm:text-xl">
                     Risk Factors Detected
                   </Typography>
-                  <div className="space-y-2">
+                  <div className="space-y-2 sm:space-y-3">
                     {verificationResult.riskFactors.map((factor, index) => (
                       <div key={index} className="flex items-start gap-2">
                         <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
-                        <Typography variant="body" className="text-red-300">
+                        <Typography variant="body" className="text-red-300 text-sm sm:text-base">
                           {factor}
                         </Typography>
                       </div>
@@ -731,15 +731,15 @@ const UnifiedVerify = () => {
 
               {/* Recommendations */}
               {verificationResult.recommendations.length > 0 && (
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
-                  <Typography variant="h3" className="mb-4 text-blue-400">
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <Typography variant="h3" className="mb-4 text-blue-400 text-lg sm:text-xl">
                     Recommendations
                   </Typography>
-                  <div className="space-y-2">
+                  <div className="space-y-2 sm:space-y-3">
                     {verificationResult.recommendations.map((rec, index) => (
                       <div key={index} className="flex items-start gap-2">
                         <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                        <Typography variant="body" className="text-blue-300">
+                        <Typography variant="body" className="text-blue-300 text-sm sm:text-base">
                           {rec}
                         </Typography>
                       </div>
@@ -749,23 +749,25 @@ const UnifiedVerify = () => {
               )}
 
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <button
                   onClick={resetForm}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105"
+                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 touch-manipulation"
                 >
-                  <Typography variant="button">Verify Another File</Typography>
+                  <Typography variant="button" className="text-sm sm:text-base">Verify Another File</Typography>
                 </button>
                 
-                <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors flex items-center justify-center gap-2">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <button className="px-4 sm:px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg sm:rounded-xl transition-colors flex items-center justify-center gap-2 touch-manipulation">
                   <Download className="h-4 w-4" />
-                  <Typography variant="button">Download Report</Typography>
+                  <Typography variant="button" className="text-xs sm:text-sm">Download</Typography>
                 </button>
                 
-                <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors flex items-center justify-center gap-2">
+                <button className="px-4 sm:px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg sm:rounded-xl transition-colors flex items-center justify-center gap-2 touch-manipulation">
                   <Share2 className="h-4 w-4" />
-                  <Typography variant="button">Share Results</Typography>
+                  <Typography variant="button" className="text-xs sm:text-sm">Share</Typography>
                 </button>
+                </div>
               </div>
             </div>
           )}

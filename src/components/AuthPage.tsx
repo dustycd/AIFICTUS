@@ -435,43 +435,44 @@ const AuthPage: React.FC = () => {
     <div className="min-h-screen bg-black text-white">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="particle w-2 h-2 bg-blue-400/30 top-1/4 left-1/4 float-animation"></div>
-        <div className="particle w-3 h-3 bg-cyan-400/20 top-3/4 left-3/4 float-animation"></div>
+        <div className="particle w-1 h-1 sm:w-2 sm:h-2 bg-blue-400/30 top-1/4 left-1/4 float-animation"></div>
+        <div className="particle w-2 h-2 sm:w-3 sm:h-3 bg-cyan-400/20 top-3/4 left-3/4 float-animation"></div>
         <div className="particle w-1 h-1 bg-purple-400/40 top-1/2 left-1/6 float-animation"></div>
-        <div className="particle w-2 h-2 bg-blue-500/25 top-1/6 right-1/4 float-animation"></div>
+        <div className="particle w-1 h-1 sm:w-2 sm:h-2 bg-blue-500/25 top-1/6 right-1/4 float-animation"></div>
         <div className="particle w-1 h-1 bg-cyan-500/30 bottom-1/4 right-1/6 float-animation"></div>
       </div>
 
       {/* Back Button */}
-      <div className="absolute top-8 left-8 z-10">
+      <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 rounded-lg transition-all duration-300 backdrop-blur-sm"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 rounded-lg transition-all duration-300 backdrop-blur-sm touch-manipulation"
         >
           <ArrowLeft className="h-4 w-4" />
-          <Typography variant="cardCaption">Back to Home</Typography>
+          <Typography variant="cardCaption" className="hidden sm:inline">Back to Home</Typography>
+          <Typography variant="cardCaption" className="sm:hidden">Back</Typography>
         </button>
       </div>
 
       {/* Main Content */}
-      <div className="flex items-center justify-center min-h-screen px-4 py-16">
+      <div className="flex items-center justify-center min-h-screen px-3 sm:px-4 py-12 sm:py-16">
         <div className="w-full max-w-md">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="mb-6">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="mb-4 sm:mb-6">
               <img 
                 src="/fictus.png" 
                 alt="Fictus AI" 
-                className="h-12 w-auto mx-auto object-contain filter drop-shadow-sm"
+                className="h-10 sm:h-12 w-auto mx-auto object-contain filter drop-shadow-sm"
                 style={{ imageRendering: 'crisp-edges' }}
               />
             </div>
             
-            <Heading level={2} className="mb-4">
+            <Heading level={2} className="mb-3 sm:mb-4 text-xl sm:text-2xl">
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </Heading>
             
-            <Typography variant="body" color="secondary" className="mb-6">
+            <Typography variant="body" color="secondary" className="mb-4 sm:mb-6 text-sm sm:text-base px-2">
               {isLogin 
                 ? 'Sign in to your Fictus AI account' 
                 : 'Join thousands of users verifying AI content'
@@ -479,11 +480,11 @@ const AuthPage: React.FC = () => {
             </Typography>
 
             {/* Tab Switcher */}
-            <div className="flex bg-gray-800 rounded-lg p-1 mb-8">
+            <div className="flex bg-gray-800 rounded-lg p-1 mb-6 sm:mb-8">
               <button
                 onClick={() => setIsLogin(true)}
                 disabled={isLoading}
-                className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
+                className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-md text-sm font-medium transition-all duration-200 disabled:opacity-50 touch-manipulation ${
                   isLogin 
                     ? 'bg-blue-500 text-white shadow-sm' 
                     : 'text-gray-400 hover:text-white'
@@ -494,7 +495,7 @@ const AuthPage: React.FC = () => {
               <button
                 onClick={() => setIsLogin(false)}
                 disabled={isLoading}
-                className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
+                className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-md text-sm font-medium transition-all duration-200 disabled:opacity-50 touch-manipulation ${
                   !isLogin 
                     ? 'bg-blue-500 text-white shadow-sm' 
                     : 'text-gray-400 hover:text-white'
@@ -506,10 +507,10 @@ const AuthPage: React.FC = () => {
           </div>
 
           {/* Form Card */}
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-8">
+          <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-gray-700 p-4 sm:p-8">
             {/* General Error/Success */}
             {errors.general && (
-              <div className={`mb-6 p-4 rounded-lg border ${
+              <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg border ${
                 errors.general.includes('reset') || errors.general.includes('sent') || errors.general.includes('check your email') || errors.general.includes('created successfully')
                   ? 'bg-blue-500/10 border-blue-500/30'
                   : 'bg-red-500/10 border-red-500/30'
@@ -520,23 +521,23 @@ const AuthPage: React.FC = () => {
                   ) : (
                     <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
                   )}
-                  <Typography variant="body" className={
+                  <Typography variant="body" className={`text-sm sm:text-base ${
                     errors.general.includes('reset') || errors.general.includes('sent') || errors.general.includes('check your email') || errors.general.includes('created successfully')
                       ? 'text-blue-400'
                       : 'text-red-400'
-                  }>
+                  }`}>
                     {errors.general}
                   </Typography>
                 </div>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Name Fields (Signup only) */}
               {!isLogin && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label htmlFor="firstName" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                       First Name
                     </label>
                     <div className="relative">
@@ -549,7 +550,7 @@ const AuthPage: React.FC = () => {
                         onFocus={() => setFocusedField('firstName')}
                         onBlur={() => setFocusedField(null)}
                         disabled={isLoading}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 ${
+                        className={`w-full pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base touch-manipulation ${
                           errors.firstName 
                             ? 'border-red-500' 
                             : focusedField === 'firstName'
@@ -561,14 +562,14 @@ const AuthPage: React.FC = () => {
                       />
                     </div>
                     {errors.firstName && (
-                      <Typography variant="caption" className="text-red-400 mt-1" id="firstName-error">
+                      <Typography variant="caption" className="text-red-400 mt-1 text-xs" id="firstName-error">
                         {errors.firstName}
                       </Typography>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label htmlFor="lastName" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                       Last Name
                     </label>
                     <div className="relative">
@@ -581,7 +582,7 @@ const AuthPage: React.FC = () => {
                         onFocus={() => setFocusedField('lastName')}
                         onBlur={() => setFocusedField(null)}
                         disabled={isLoading}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 ${
+                        className={`w-full pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base touch-manipulation ${
                           errors.lastName 
                             ? 'border-red-500' 
                             : focusedField === 'lastName'
@@ -593,7 +594,7 @@ const AuthPage: React.FC = () => {
                       />
                     </div>
                     {errors.lastName && (
-                      <Typography variant="caption" className="text-red-400 mt-1" id="lastName-error">
+                      <Typography variant="caption" className="text-red-400 mt-1 text-xs" id="lastName-error">
                         {errors.lastName}
                       </Typography>
                     )}
@@ -603,7 +604,7 @@ const AuthPage: React.FC = () => {
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
@@ -616,7 +617,7 @@ const AuthPage: React.FC = () => {
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField(null)}
                     disabled={isLoading}
-                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 ${
+                    className={`w-full pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base touch-manipulation ${
                       errors.email 
                         ? 'border-red-500' 
                         : focusedField === 'email'
@@ -629,7 +630,7 @@ const AuthPage: React.FC = () => {
                   />
                 </div>
                 {errors.email && (
-                  <Typography variant="caption" className="text-red-400 mt-1" id="email-error">
+                  <Typography variant="caption" className="text-red-400 mt-1 text-xs" id="email-error">
                     {errors.email}
                   </Typography>
                 )}
@@ -637,7 +638,7 @@ const AuthPage: React.FC = () => {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -650,7 +651,7 @@ const AuthPage: React.FC = () => {
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
                     disabled={isLoading}
-                    className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 ${
+                    className={`w-full pl-10 pr-12 py-2.5 sm:py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base touch-manipulation ${
                       errors.password 
                         ? 'border-red-500' 
                         : focusedField === 'password'
@@ -665,14 +666,14 @@ const AuthPage: React.FC = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors disabled:opacity-50 touch-manipulation"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <Typography variant="caption" className="text-red-400 mt-1" id="password-error">
+                  <Typography variant="caption" className="text-red-400 mt-1 text-xs" id="password-error">
                     {errors.password}
                   </Typography>
                 )}
@@ -681,7 +682,7 @@ const AuthPage: React.FC = () => {
               {/* Confirm Password (Signup only) */}
               {!isLogin && (
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="confirmPassword" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                     Confirm Password
                   </label>
                   <div className="relative">
@@ -694,7 +695,7 @@ const AuthPage: React.FC = () => {
                       onFocus={() => setFocusedField('confirmPassword')}
                       onBlur={() => setFocusedField(null)}
                       disabled={isLoading}
-                      className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 ${
+                      className={`w-full pl-10 pr-12 py-2.5 sm:py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base touch-manipulation ${
                         errors.confirmPassword 
                           ? 'border-red-500' 
                           : focusedField === 'confirmPassword'
@@ -709,14 +710,14 @@ const AuthPage: React.FC = () => {
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       disabled={isLoading}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors disabled:opacity-50 touch-manipulation"
                       aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <Typography variant="caption" className="text-red-400 mt-1" id="confirmPassword-error">
+                    <Typography variant="caption" className="text-red-400 mt-1 text-xs" id="confirmPassword-error">
                       {errors.confirmPassword}
                     </Typography>
                   )}
@@ -725,14 +726,14 @@ const AuthPage: React.FC = () => {
 
               {/* hCaptcha - REQUIRED */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-3">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-blue-400" />
                     Security Verification *
                   </div>
                 </label>
                 
-                <div className="flex justify-center mb-4">
+                <div className="flex justify-center mb-3 sm:mb-4">
                   {HCAPTCHA_SITE_KEY && (
                     <HCaptcha
                       ref={captchaRef}
@@ -750,18 +751,18 @@ const AuthPage: React.FC = () => {
                 {/* Captcha status indicators */}
                 <div className="text-center">
                   {captchaToken && (
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2 text-xs sm:text-sm">
                       <CheckCircle className="h-4 w-4 text-green-400" />
-                      <Typography variant="caption" className="text-green-400">
+                      <Typography variant="caption" className="text-green-400 text-xs sm:text-sm">
                         Verification completed ✓
                       </Typography>
                     </div>
                   )}
                   
                   {(errors.captcha || captchaError) && (
-                    <div className="flex items-center justify-center gap-2 mt-2">
+                    <div className="flex items-center justify-center gap-2 mt-2 text-xs sm:text-sm">
                       <AlertTriangle className="h-4 w-4 text-red-400" />
-                      <Typography variant="caption" className="text-red-400">
+                      <Typography variant="caption" className="text-red-400 text-xs sm:text-sm">
                         {errors.captcha || captchaError}
                       </Typography>
                     </div>
@@ -771,26 +772,26 @@ const AuthPage: React.FC = () => {
 
               {/* Remember Me & Forgot Password */}
               {isLogin && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-sm">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
                       checked={formData.rememberMe}
                       onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
                       disabled={isLoading}
-                      className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded transition-colors disabled:opacity-50"
+                      className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded transition-colors disabled:opacity-50 touch-manipulation"
                     />
-                    <Typography variant="body" className="ml-2 text-gray-300">
+                    <Typography variant="body" className="ml-2 text-gray-300 text-sm">
                       Remember me
                     </Typography>
                   </label>
                   <button
                     type="button"
-                    className="text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+                    className="text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 touch-manipulation"
                     onClick={handleForgotPassword}
                     disabled={isLoading}
                   >
-                    <Typography variant="body">
+                    <Typography variant="body" className="text-sm">
                       Forgot password?
                     </Typography>
                   </button>
@@ -801,10 +802,10 @@ const AuthPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading || !captchaToken}
-                className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                <ButtonText>
+                <ButtonText className="text-sm sm:text-base">
                   {isLoading 
                     ? (isLogin ? 'Signing In...' : 'Creating Account...') 
                     : (isLogin ? 'Sign In' : 'Create Account')
@@ -815,7 +816,7 @@ const AuthPage: React.FC = () => {
               {/* Divider */}
               <div className="flex items-center">
                 <div className="flex-1 border-t border-gray-700"></div>
-                <Typography variant="body" color="secondary" className="px-4">
+                <Typography variant="body" color="secondary" className="px-3 sm:px-4 text-xs sm:text-sm">
                   or continue with
                 </Typography>
                 <div className="flex-1 border-t border-gray-700"></div>
@@ -826,22 +827,22 @@ const AuthPage: React.FC = () => {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 sm:gap-3 py-3 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 <Chrome className="h-5 w-5" />
-                <Typography variant="body">Continue with Google</Typography>
+                <Typography variant="body" className="text-sm sm:text-base">Continue with Google</Typography>
               </button>
             </form>
 
             {/* Switch Mode */}
-            <div className="mt-6 text-center">
-              <Typography variant="body" color="secondary">
+            <div className="mt-4 sm:mt-6 text-center">
+              <Typography variant="body" color="secondary" className="text-sm">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
                 <button
                   type="button"
                   onClick={() => setIsLogin(!isLogin)}
                   disabled={isLoading}
-                  className="text-blue-400 hover:text-blue-300 transition-colors font-medium disabled:opacity-50"
+                  className="text-blue-400 hover:text-blue-300 transition-colors font-medium disabled:opacity-50 touch-manipulation"
                 >
                   {isLogin ? 'Sign up' : 'Sign in'}
                 </button>
@@ -849,10 +850,10 @@ const AuthPage: React.FC = () => {
             </div>
 
             {/* Security Notice */}
-            <div className="mt-6 pt-4 border-t border-gray-700">
+            <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-700">
               <div className="flex items-center gap-2 justify-center">
                 <Shield className="h-4 w-4 text-green-400" />
-                <Typography variant="caption" color="secondary" className="text-center">
+                <Typography variant="caption" color="secondary" className="text-center text-xs">
                   Protected by hCaptcha for enhanced security
                 </Typography>
               </div>
