@@ -740,6 +740,8 @@ input[type="checkbox"]:focus:not(:focus-visible) {
   animation: float 6s ease-in-out infinite;
 }
 
+@media (max-width: 768px) {
+  .particle {
     animation-duration: 8s; /* Slower to save battery */
   }
 }
