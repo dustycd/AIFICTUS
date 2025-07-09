@@ -845,36 +845,36 @@ const Library = () => {
         
         {/* Fixed Top Navigation Bar */}
         <div className="fixed top-0 left-0 right-0 z-60 bg-black/80 backdrop-blur-md border-b border-gray-700/50">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3">
+            <div className="flex items-center gap-3">
               <Typography variant="h3" className="text-lg font-semibold">Verification Analysis</Typography>
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="hidden sm:flex items-center gap-2 text-gray-400">
                 <Eye className="h-4 w-4" />
                 <span className="text-sm numeric-text">{selectedItem.view_count}</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              {/* Enhanced Navigation Controls */}
-              <div className="flex items-center bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-600/50 overflow-hidden">
+            <div className="flex items-center gap-3">
+              {/* Streamlined Navigation Controls */}
+              <div className="flex items-center bg-gray-800/60 backdrop-blur-sm rounded-lg border border-gray-600/40 overflow-hidden">
                 {/* Previous Button */}
                 <button
                   onClick={navigateToPrevious}
                   disabled={selectedIndex <= 0}
-                  className="group flex items-center justify-center w-12 h-10 hover:bg-blue-500/20 disabled:hover:bg-transparent transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed border-r border-gray-600/50"
+                  className="group flex items-center justify-center w-10 h-9 hover:bg-blue-500/20 disabled:hover:bg-transparent transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed border-r border-gray-600/40"
                   title="Previous item (← or swipe right)"
                 >
-                  <svg className="h-4 w-4 text-gray-300 group-hover:text-blue-400 group-disabled:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  <svg className="h-3.5 w-3.5 text-gray-300 group-hover:text-blue-400 group-disabled:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 
-                {/* Item Counter with Enhanced Styling */}
-                <div className="px-4 py-2 min-w-[80px] text-center bg-gray-700/30">
+                {/* Compact Item Counter */}
+                <div className="px-3 py-2 min-w-[60px] text-center bg-gray-700/20">
                   <div className="flex items-center justify-center gap-1">
-                    <span className="text-white font-bold text-sm numeric-text">{selectedIndex + 1}</span>
+                    <span className="text-white font-semibold text-sm numeric-text">{selectedIndex + 1}</span>
                     <span className="text-gray-400 text-xs">/</span>
-                    <span className="text-gray-300 text-sm numeric-text">{items.length}</span>
+                    <span className="text-gray-300 text-xs numeric-text">{items.length}</span>
                   </div>
                 </div>
                 
@@ -882,22 +882,22 @@ const Library = () => {
                 <button
                   onClick={navigateToNext}
                   disabled={selectedIndex >= items.length - 1}
-                  className="group flex items-center justify-center w-12 h-10 hover:bg-blue-500/20 disabled:hover:bg-transparent transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed border-l border-gray-600/50"
+                  className="group flex items-center justify-center w-10 h-9 hover:bg-blue-500/20 disabled:hover:bg-transparent transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed border-l border-gray-600/40"
                   title="Next item (→ or swipe left)"
                 >
-                  <svg className="h-4 w-4 text-gray-300 group-hover:text-blue-400 group-disabled:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  <svg className="h-3.5 w-3.5 text-gray-300 group-hover:text-blue-400 group-disabled:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
               
-              {/* Enhanced Close Button */}
+              {/* Compact Close Button */}
               <button
                 onClick={() => (setSelectedItem(null), setSelectedIndex(-1))}
-                className="group flex items-center justify-center w-10 h-10 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-xl transition-all duration-200 ml-3"
+                className="group flex items-center justify-center w-9 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-lg transition-all duration-200"
                 title="Close modal (Esc)"
               >
-                <X className="h-5 w-5 text-red-400 group-hover:text-red-300 transition-colors" />
+                <X className="h-4 w-4 text-red-400 group-hover:text-red-300 transition-colors" />
               </button>
             </div>
           </div>
