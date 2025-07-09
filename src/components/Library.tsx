@@ -720,11 +720,44 @@ const Library = () => {
                     <button
                       onClick={() => setViewMode('list')}
                       className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                        viewMode === 'list'
-                          ? 'bg-blue-500 text-white'
+                  <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800/50">
+                    <div className="flex items-center gap-3">
+                      <Typography variant="h3">Verification Library</Typography>
+                      <div className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-400 text-sm font-medium">
+                        {filteredItems.length} items
+                      </div>
+                    </div>
+                    
+                    {/* Desktop Navigation Controls */}
+                    <div className="hidden md:flex items-center gap-3">
+                      <button
+                        onClick={goToPrevious}
+                        disabled={currentIndex === 0}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="text-sm font-medium">Previous</span>
+                      </button>
+                      
+                      <div className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg">
+                        <Typography variant="caption" className="text-white font-medium">
+                          <span className="numeric-text">{currentIndex + 1}</span> / <span className="numeric-text">{filteredItems.length}</span>
+                        </Typography>
+                      </div>
+                      
+                      <button
+                        onClick={goToNext}
+                        disabled={currentIndex === filteredItems.length - 1}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200"
+                      >
+                        <span className="text-sm font-medium">Next</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                    
                           : 'text-gray-400 hover:text-white'
                       }`}
-                    >
+                      className="p-2 hover:bg-gray-700 rounded-lg transition-colors ml-3"
                       <List className="h-4 w-4" />
                       <span>List</span>
                     </button>
@@ -800,10 +833,11 @@ const Library = () => {
                     <div className="h-4 bg-gray-700 rounded mb-2" />
                     <div className="h-3 bg-gray-700 rounded w-2/3" />
                   </div>
-                </div>
+                                        className="w-full h-full object-cover cursor-pointer"
               ))}
             </div>
           ) : items.length === 0 ? (
+                                        onClick={(e) => e.stopPropagation()}
             <div className="text-center py-16">
               <Typography variant="h3" className="mb-4">
                 No items found
@@ -869,7 +903,7 @@ const Library = () => {
                   })()}
                 </div>
                 
-                <div className="flex items-center gap-2">
+                                <div className="xl:w-1/2 space-y-6">
                   {/* Navigation Arrows */}
                   <button
                     onClick={navigateToPrevious}
@@ -1012,46 +1046,8 @@ const Library = () => {
                     <Typography variant="body" color="secondary" className="text-sm">
                       Analysis completed in <span className="numeric-text text-white">{selectedItem.processing_time?.toFixed(1)}</span> seconds
                     </Typography>
-                  </div>
-
-                  {/* AI vs Human Probability */}
-                  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                    <Typography variant="h4" className="mb-4 flex items-center gap-2 text-sm">
-                      <Brain className="h-4 w-4 text-purple-400" />
-                      AI Detection Analysis
-                    </Typography>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="text-red-400">AI Generated</span>
-                          <span className="text-red-400 font-bold numeric-text">{Math.round(selectedItem.ai_probability || 0)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full transition-all duration-1000"
-                            style={{ width: `${selectedItem.ai_probability || 0}%` }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="text-green-400">Human Created</span>
-                          <span className="text-green-400 font-bold numeric-text">{Math.round(selectedItem.human_probability || 0)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-1000"
-                            style={{ width: `${selectedItem.human_probability || 0}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Detection Details */}
-                  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                  <div className="flex-1 overflow-hidden flex">
                     <Typography variant="h4" className="mb-4 flex items-center gap-2 text-sm">
                       <Activity className="h-4 w-4 text-cyan-400" />
                       Detection Analysis
@@ -1060,33 +1056,53 @@ const Library = () => {
                     <div className="space-y-3">
                       {Object.entries(selectedItem.detection_details || {}).map(([key, value]) => {
                         if (value === undefined) return null;
-                        const score = value as number;
-                        return (
-                          <div key={key}>
-                            <div className="flex justify-between mb-1 text-sm">
-                              <span className="text-gray-400 capitalize">
-                                {key.replace(/([A-Z])/g, ' $1').trim()}
-                              </span>
+                              {/* Main Content Area - Full Width Layout */}
+                              <div className="flex-1 flex flex-col xl:flex-row gap-6 p-6 h-full overflow-y-auto">
                               <span className="text-cyan-400 font-bold numeric-text">{score.toFixed(1)}%</span>
-                            </div>
+                                <div className="xl:w-1/2 space-y-6">
                             <div className="w-full bg-gray-700 rounded-full h-2">
-                              <div
+                                  <div className="relative bg-gray-800 rounded-xl overflow-hidden aspect-video group">
+                                    {/* Media Navigation Arrows - Overlay on Media */}
+                                    <button
+                                      onClick={goToPrevious}
+                                      disabled={currentIndex === 0}
+                                      className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/70 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100"
+                                    >
+                                      <ChevronLeft className="h-6 w-6 text-white" />
+                                    </button>
+                                    
+                                    <button
+                                      onClick={goToNext}
+                                      disabled={currentIndex === filteredItems.length - 1}
+                                      className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/70 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100"
+                                    >
+                                      <ChevronRight className="h-6 w-6 text-white" />
+                                    </button>
+                                    
+                                    {/* Progress Indicator */}
+                                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1 bg-black/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              {/* Mobile Navigation - Bottom Fixed */}
+                              <div className="md:hidden absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-4 pt-8 z-20">
+                                      </Typography>
+                                    </div>
+                                    
                                 className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-1000"
-                                style={{ width: `${score}%` }}
+                                    className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 border border-gray-600"
                               />
                             </div>
-                          </div>
+                                        className="w-full h-full object-cover cursor-pointer"
                         );
                       })}
-                    </div>
+                                  <div className="px-6 py-3 bg-gray-800 border border-gray-600 rounded-xl">
                   </div>
 
+                                        onClick={(e) => e.stopPropagation()}
                   {/* Generator Analysis */}
                   {selectedItem.generator_analysis && Object.keys(selectedItem.generator_analysis).length > 1 && (
                     <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
                       <Typography variant="h4" className="mb-3 flex items-center gap-2 text-sm">
                         <Zap className="h-4 w-4 text-orange-400" />
-                        Generator Analysis
+                                    className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 border border-gray-600"
                       </Typography>
                       
                       <div className="space-y-2">
