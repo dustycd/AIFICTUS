@@ -846,18 +846,12 @@ const Library = () => {
         {/* Fixed Top Navigation Bar */}
         <div className="fixed top-0 left-0 right-0 z-60 bg-black/80 backdrop-blur-md border-b border-gray-700/50">
           <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-3">
-              <Typography variant="h3" className="text-lg">AI Verification Report</Typography>
-              {(() => {
-                const statusInfo = getStatusInfo(selectedItem.verification_status);
-                const StatusIcon = statusInfo.icon;
-                return (
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border ${statusInfo.color} text-sm`}>
-                    <StatusIcon className="h-4 w-4" />
-                    <span className="font-bold">{statusInfo.label}</span>
-                  </div>
-                );
-              })()}
+            <div className="flex items-center gap-4">
+              <Typography variant="h3" className="text-lg font-semibold">Verification Analysis</Typography>
+              <div className="flex items-center gap-2 text-gray-400">
+                <Eye className="h-4 w-4" />
+                <span className="text-sm numeric-text">{selectedItem.view_count}</span>
+              </div>
             </div>
             
             <div className="flex items-center gap-2">
@@ -914,232 +908,237 @@ const Library = () => {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}>
           {/* Add top padding to account for fixed header */}
-          <div className="p-6 pt-20">
+          <div className="p-8 pt-24">
 
-             {/* Main Content Grid */}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-               {/* Left Column - Media and Basic Info */}
-               <div className="space-y-4">
-                 {/* Media Preview */}
-                 <div className="relative aspect-video bg-gray-800 rounded-xl overflow-hidden">
-                   {(() => {
-                     const mediaUrl = getMediaUrl(selectedItem);
-                     return mediaUrl ? (
-                       <>
-                         {isVideo(selectedItem.content_type) ? (
-                           <video
-                             src={mediaUrl}
-                             className="w-full h-full object-cover"
-                             controls
-                             preload="metadata"
-                           />
-                         ) : (
-                           <img
-                             src={mediaUrl}
-                             alt="Media content"
-                             className="w-full h-full object-cover"
-                           />
-                         )}
-                       </>
-                     ) : (
-                       <div className="w-full h-full flex items-center justify-center">
-                         <div className="text-center">
-                           {isVideo(selectedItem.content_type) ? (
-                             <Video className="h-12 w-12 text-gray-500 mx-auto mb-3" />
-                           ) : (
-                             <ImageIcon className="h-12 w-12 text-gray-500 mx-auto mb-3" />
-                           )}
-                           <Typography variant="body" color="secondary" className="text-sm">
-                             Media preview not available
-                           </Typography>
-                         </div>
-                       </div>
-                     );
-                   })()}
-                 </div>
+            {/* Professional AI Platform Layout */}
+            <div className="space-y-8">
+              {/* Media Preview - Full Width */}
+              <div className="relative aspect-video bg-gray-800 rounded-2xl overflow-hidden shadow-2xl">
+                {(() => {
+                  const mediaUrl = getMediaUrl(selectedItem);
+                  return mediaUrl ? (
+                    <>
+                      {isVideo(selectedItem.content_type) ? (
+                        <video
+                          src={mediaUrl}
+                          className="w-full h-full object-cover"
+                          controls
+                          preload="metadata"
+                        />
+                      ) : (
+                        <img
+                          src={mediaUrl}
+                          alt="Media content"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        {isVideo(selectedItem.content_type) ? (
+                          <Video className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                        ) : (
+                          <ImageIcon className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                        )}
+                        <Typography variant="body" color="secondary">
+                          Media preview not available
+                        </Typography>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
 
-                 {/* File Information */}
-                 <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                   <Typography variant="h4" className="mb-3 flex items-center gap-2 text-sm">
-                     <FileText className="h-4 w-4 text-blue-400" />
-                     File Information
-                   </Typography>
-                   
-                   <div className="space-y-2 text-sm">
-                     <div className="flex justify-between">
-                       <span className="text-gray-400">Type:</span>
-                       <span className="text-white">{isVideo(selectedItem.content_type) ? 'Video' : 'Image'}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-400">Size:</span>
-                       <span className="text-white numeric-text">{formatFileSize(selectedItem.file_size)}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-400">Format:</span>
-                       <span className="text-white">{selectedItem.content_type}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-400">Analyzed:</span>
-                       <span className="text-white">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-400">Views:</span>
-                       <span className="text-white numeric-text">{selectedItem.view_count}</span>
-                     </div>
-                     <div className="flex justify-between">
-                       <span className="text-gray-400">Report ID:</span>
-                       <span className="text-white text-xs font-mono">{selectedItem.report_id}</span>
-                     </div>
-                   </div>
-                 </div>
-               </div>
+              {/* Main Analysis Results - Equal Height Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Verification Status */}
+                <div className={`bg-gradient-to-br ${getStatusInfo(selectedItem.verification_status).bgGradient} rounded-2xl p-6 border border-gray-700 text-center h-full flex flex-col justify-center`}>
+                  <div className="mb-4">
+                    {(() => {
+                      const statusInfo = getStatusInfo(selectedItem.verification_status);
+                      const StatusIcon = statusInfo.icon;
+                      return <StatusIcon className="h-12 w-12 mx-auto text-current" />;
+                    })()}
+                  </div>
+                  
+                  <Typography variant="h3" className="mb-2 text-xl font-bold">
+                    {getStatusInfo(selectedItem.verification_status).label}
+                  </Typography>
+                  
+                  <Typography variant="h2" className="mb-2 text-3xl font-black">
+                    <span className="numeric-text">{Math.round(selectedItem.confidence_score)}%</span>
+                  </Typography>
+                  
+                  <Typography variant="body" color="secondary" className="text-sm">
+                    Confidence Score
+                  </Typography>
+                </div>
 
-               {/* Right Column - Verification Results */}
-               <div className="space-y-4">
-                 {/* Main Verification Result */}
-                 <div className={`bg-gradient-to-r ${getStatusInfo(selectedItem.verification_status).bgGradient} rounded-xl p-6 border border-gray-700 text-center`}>
-                   <div className="mb-4">
-                     {(() => {
-                       const statusInfo = getStatusInfo(selectedItem.verification_status);
-                       const StatusIcon = statusInfo.icon;
-                       return <StatusIcon className="h-12 w-12 mx-auto text-current" />;
-                     })()}
-                   </div>
-                   
-                   <Typography variant="h2" className="mb-3 text-2xl font-black">
-                     {getStatusInfo(selectedItem.verification_status).label}
-                   </Typography>
-                   
-                   <Typography variant="h3" className="mb-3 text-lg">
-                     <span className="numeric-text">{Math.round(selectedItem.confidence_score)}%</span> Confidence
-                   </Typography>
-                   
-                   <Typography variant="body" color="secondary" className="text-sm">
-                     Analysis completed in <span className="numeric-text text-white">{selectedItem.processing_time?.toFixed(1)}</span> seconds
-                   </Typography>
-                 </div>
+                {/* AI vs Human Probability */}
+                <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700 h-full flex flex-col justify-center">
+                  <div className="text-center mb-4">
+                    <Brain className="h-8 w-8 mx-auto text-purple-400 mb-2" />
+                    <Typography variant="h4" className="text-purple-400 font-semibold">
+                      AI Analysis
+                    </Typography>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300">AI Generated</span>
+                      <span className="text-red-400 font-bold numeric-text text-lg">
+                        {Math.round(selectedItem.ai_probability || 0)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full transition-all duration-1000"
+                        style={{ width: `${selectedItem.ai_probability || 0}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300">Human Created</span>
+                      <span className="text-green-400 font-bold numeric-text text-lg">
+                        {Math.round(selectedItem.human_probability || 0)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-1000"
+                        style={{ width: `${selectedItem.human_probability || 0}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                 {/* Detection Details */}
-                 <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                   <Typography variant="h4" className="mb-4 flex items-center gap-2 text-sm">
-                     <Activity className="h-4 w-4 text-cyan-400" />
-                     Detection Analysis
-                   </Typography>
-                   
-                   <div className="space-y-3">
-                     {Object.entries(selectedItem.detection_details || {}).map(([key, value]) => {
-                       if (value === undefined) return null;
-                       const score = typeof value === 'number' ? value : 0;
-                       const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                       
-                       return (
-                         <div key={key} className="space-y-1">
-                           <div className="flex justify-between text-sm">
-                             <span className="text-gray-300">{label}</span>
-                             <span className="text-cyan-400 font-bold numeric-text">{score.toFixed(1)}%</span>
-                           </div>
-                           <div className="w-full bg-gray-700 rounded-full h-2">
-                             <div 
-                               className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-1000"
-                               style={{ width: `${score}%` }}
-                             />
-                           </div>
-                         </div>
-                       );
-                     })}
-                   </div>
-                 </div>
+                {/* Processing Stats */}
+                <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700 h-full flex flex-col justify-center">
+                  <div className="text-center mb-4">
+                    <Clock className="h-8 w-8 mx-auto text-blue-400 mb-2" />
+                    <Typography variant="h4" className="text-blue-400 font-semibold">
+                      Analysis Stats
+                    </Typography>
+                  </div>
+                  
+                  <div className="space-y-3 text-center">
+                    <div>
+                      <Typography variant="h3" className="text-2xl font-bold numeric-text">
+                        {selectedItem.processing_time?.toFixed(1)}s
+                      </Typography>
+                      <Typography variant="caption" color="secondary">
+                        Processing Time
+                      </Typography>
+                    </div>
+                    
+                    <div className="pt-2 border-t border-gray-700">
+                      <Typography variant="body" className="text-lg font-semibold">
+                        {isVideo(selectedItem.content_type) ? 'Video' : 'Image'}
+                      </Typography>
+                      <Typography variant="caption" color="secondary">
+                        Content Type
+                      </Typography>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                 {/* Generator Analysis */}
-                 {selectedItem.generator_analysis && Object.keys(selectedItem.generator_analysis).length > 1 && (
-                   <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                     <Typography variant="h4" className="mb-3 flex items-center gap-2 text-sm">
-                       <Zap className="h-4 w-4 text-orange-400" />
-                       Generator Analysis
-                     </Typography>
-                     
-                     <div className="space-y-2">
-                       {Object.entries(selectedItem.generator_analysis).map(([generator, confidence]) => {
-                         if (generator === 'confidence' || typeof confidence !== 'number') return null;
-                         return (
-                           <div key={generator} className="flex justify-between text-sm">
-                             <span className="text-gray-400 capitalize">
-                               {generator.replace(/_/g, ' ')}
-                             </span>
-                             <span className="text-orange-400 font-bold numeric-text">
-                               {(confidence * 100).toFixed(1)}%
-                             </span>
-                           </div>
-                         );
-                       })}
-                     </div>
-                   </div>
-                 )}
-               </div>
-             </div>
+              {/* Detection Details - Professional Grid */}
+              <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700">
+                <div className="flex items-center gap-3 mb-6">
+                  <Activity className="h-6 w-6 text-cyan-400" />
+                  <Typography variant="h3" className="text-xl font-semibold">
+                    Detection Analysis
+                  </Typography>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Object.entries(selectedItem.detection_details || {}).map(([key, value]) => {
+                    if (value === undefined) return null;
+                    const score = typeof value === 'number' ? value : 0;
+                    const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    
+                    return (
+                      <div key={key} className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 font-medium">{label}</span>
+                          <span className="text-cyan-400 font-bold numeric-text text-lg">
+                            {score.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-cyan-500 to-blue-500 h-3 rounded-full transition-all duration-1000 shadow-lg"
+                            style={{ width: `${score}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-             {/* Risk Factors and Recommendations */}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-               {/* Risk Factors */}
-               {selectedItem.risk_factors && selectedItem.risk_factors.length > 0 && (
-                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                   <Typography variant="h4" className="mb-3 text-red-400 flex items-center gap-2 text-sm">
-                     <AlertTriangle className="h-4 w-4" />
-                     Risk Factors
-                   </Typography>
-                   <div className="space-y-2">
-                     {selectedItem.risk_factors.slice(0, 3).map((factor, index) => (
-                       <div key={index} className="flex items-start gap-2">
-                         <AlertTriangle className="h-3 w-3 text-red-400 mt-0.5 flex-shrink-0" />
-                         <Typography variant="body" className="text-red-300 text-sm">
-                           {factor}
-                         </Typography>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               )}
+              {/* Risk Factors and Recommendations - Side by Side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Risk Factors */}
+                {selectedItem.risk_factors && selectedItem.risk_factors.length > 0 && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <AlertTriangle className="h-6 w-6 text-red-400" />
+                      <Typography variant="h4" className="text-red-400 font-semibold">
+                        Risk Factors
+                      </Typography>
+                    </div>
+                    <div className="space-y-3">
+                      {selectedItem.risk_factors.slice(0, 4).map((factor, index) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-red-500/5 rounded-lg">
+                          <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                          <Typography variant="body" className="text-red-300">
+                            {factor}
+                          </Typography>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-               {/* Recommendations */}
-               {selectedItem.recommendations && selectedItem.recommendations.length > 0 && (
-                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-                   <Typography variant="h4" className="mb-3 text-blue-400 flex items-center gap-2 text-sm">
-                     <CheckCircle className="h-4 w-4" />
-                     Recommendations
-                   </Typography>
-                   <div className="space-y-2">
-                     {selectedItem.recommendations.slice(0, 3).map((rec, index) => (
-                       <div key={index} className="flex items-start gap-2">
-                         <CheckCircle className="h-3 w-3 text-blue-400 mt-0.5 flex-shrink-0" />
-                         <Typography variant="body" className="text-blue-300 text-sm">
-                           {rec}
-                         </Typography>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               )}
-             </div>
+                {/* Recommendations */}
+                {selectedItem.recommendations && selectedItem.recommendations.length > 0 && (
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <CheckCircle className="h-6 w-6 text-blue-400" />
+                      <Typography variant="h4" className="text-blue-400 font-semibold">
+                        Recommendations
+                      </Typography>
+                    </div>
+                    <div className="space-y-3">
+                      {selectedItem.recommendations.slice(0, 4).map((rec, index) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-500/5 rounded-lg">
+                          <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <Typography variant="body" className="text-blue-300">
+                            {rec}
+                          </Typography>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-             {/* Action Buttons */}
-             <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-4 border-t border-gray-700">
-               <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm">
-                 <Download className="h-4 w-4" />
-                 <Typography variant="button" className="text-sm">Download Report</Typography>
-               </button>
-               
-               <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
-                 <Share2 className="h-4 w-4" />
-                 <Typography variant="button" className="text-sm">Share Results</Typography>
-               </button>
-               
-               <button 
-                 onClick={() => (setSelectedItem(null), setSelectedIndex(-1))}
-                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm"
-               >
-                 <Typography variant="button" className="text-sm">Close</Typography>
-               </button>
-             </div>
+              {/* Action Buttons - Professional Style */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-700">
+                <button className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                  <Download className="h-5 w-5" />
+                  <Typography variant="button" className="font-semibold">Download Report</Typography>
+                </button>
+                
+                <button className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                  <Share2 className="h-5 w-5" />
+                  <Typography variant="button" className="font-semibold">Share Analysis</Typography>
+                </button>
+              </div>
+            </div>
            </div>
          </div>
        </div>
