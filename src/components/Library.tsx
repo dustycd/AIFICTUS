@@ -720,49 +720,16 @@ const Library = () => {
                     <button
                       onClick={() => setViewMode('list')}
                       className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                  <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800/50">
-                    <div className="flex items-center gap-3">
-                      <Typography variant="h3">Verification Library</Typography>
-                      <div className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-400 text-sm font-medium">
-                        {filteredItems.length} items
-                      </div>
-                    </div>
-                    
-                    {/* Desktop Navigation Controls */}
-                    <div className="hidden md:flex items-center gap-3">
-                      <button
-                        onClick={goToPrevious}
-                        disabled={currentIndex === 0}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        <span className="text-sm font-medium">Previous</span>
-                      </button>
-                      
-                      <div className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg">
-                        <Typography variant="caption" className="text-white font-medium">
-                          <span className="numeric-text">{currentIndex + 1}</span> / <span className="numeric-text">{filteredItems.length}</span>
-                        </Typography>
-                      </div>
-                      
-                      <button
-                        onClick={goToNext}
-                        disabled={currentIndex === filteredItems.length - 1}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200"
-                      >
-                        <span className="text-sm font-medium">Next</span>
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                         ? 'bg-blue-500 text-white'
-                         : 'text-gray-400 hover:text-white'
-                     }`}
-                   >
-                     <List className="h-4 w-4" />
-                     <span>List</span>
-                   </button>
-                 </div>
-               </div>
+                        viewMode === 'list'
+                          ? 'bg-blue-500 text-white'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <List className="h-4 w-4" />
+                      <span>List</span>
+                    </button>
+                  </div>
+                </div>
              </div>
 
              {/* Clear Filters Button */}
