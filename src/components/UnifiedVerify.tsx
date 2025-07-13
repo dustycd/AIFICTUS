@@ -1055,6 +1055,7 @@ const UnifiedVerify = () => {
                   <Typography variant="button">Verify Another File</Typography>
                 </button>
                 
+               <button
                   onClick={generatePDFReport}
                   className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
