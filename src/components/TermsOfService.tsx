@@ -317,7 +317,7 @@ const TermsOfService: React.FC = () => {
 
               <div className="space-y-3">
                 <Typography variant="body">
-                  <strong>Email:</strong> legal@fictus.ai
+                  <strong>Email:</strong> Team@fictus.io
                 </Typography>
                 <Typography variant="body">
                   <strong>Address:</strong> Fictus AI Legal Department, [Your Address]
