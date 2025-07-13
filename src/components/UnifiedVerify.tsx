@@ -50,6 +50,7 @@ const UnifiedVerify = () => {
   const [usageError, setUsageError] = useState<string | null>(null);
   const [isDragSupported, setIsDragSupported] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileThumbnail, setFileThumbnail] = useState<string | null>(null);
 
   // Load user's monthly usage on component mount
   useEffect(() => {
@@ -90,6 +91,7 @@ const UnifiedVerify = () => {
   const handleFileSelection = async (file: File) => {
     setError(null);
     setVerificationResult(null);
+    setFileThumbnail(null);
     
     // Validate file
     const validation = validateFile(file);
@@ -113,6 +115,15 @@ const UnifiedVerify = () => {
     }
 
     setSelectedFile(file);
+    
+    // Generate thumbnail for the file
+    try {
+      const thumbnail = await generateFileThumbnail(file);
+      setFileThumbnail(thumbnail);
+    } catch (err) {
+      console.warn('Failed to generate thumbnail:', err);
+      // Continue without thumbnail - not critical
+    }
   };
 
   // Handle drag events
@@ -372,6 +383,292 @@ const UnifiedVerify = () => {
     }
   };
 
+  // Generate thumbnail from file
+  const generateFileThumbnail = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (isImageFile(file)) {
+        // For images, create a data URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            resolve(e.target.result as string);
+          } else {
+            reject(new Error('Failed to read image file'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read image file'));
+        reader.readAsDataURL(file);
+      } else if (isVideoFile(file)) {
+        // For videos, capture a frame
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          reject(new Error('Canvas context not available'));
+          return;
+        }
+        
+        video.onloadedmetadata = () => {
+          // Set canvas size to video dimensions (max 400px width)
+          const maxWidth = 400;
+          const aspectRatio = video.videoHeight / video.videoWidth;
+          canvas.width = Math.min(video.videoWidth, maxWidth);
+          canvas.height = canvas.width * aspectRatio;
+          
+          // Seek to 10% of video duration for a good frame
+          video.currentTime = video.duration * 0.1;
+        };
+        
+        video.onseeked = () => {
+          try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
+            resolve(thumbnail);
+          } catch (err) {
+            reject(new Error('Failed to capture video frame'));
+          }
+        };
+        
+        video.onerror = () => reject(new Error('Failed to load video'));
+        video.src = URL.createObjectURL(file);
+        video.load();
+      } else {
+        reject(new Error('Unsupported file type for thumbnail'));
+      }
+    });
+  };
+
+  // Enhanced PDF generation with thumbnail
+  const generatePDFReport = async () => {
+    if (!verificationResult || !selectedFile) return;
+
+    try {
+      // Dynamic import to reduce bundle size
+      const html2pdf = (await import('html2pdf.js')).default;
+      
+      // Create a temporary container for the PDF content
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.width = '210mm'; // A4 width
+      container.style.fontFamily = 'Arial, sans-serif';
+      container.style.fontSize = '12px';
+      container.style.lineHeight = '1.4';
+      container.style.color = '#333';
+      document.body.appendChild(container);
+
+      // Build the HTML content with thumbnail
+      const thumbnailHtml = fileThumbnail ? `
+        <div style="text-align: center; margin: 20px 0;">
+          <img src="${fileThumbnail}" 
+               style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 8px;" 
+               alt="File thumbnail" />
+          <p style="margin: 10px 0 0 0; font-size: 10px; color: #666;">
+            ${selectedFile.name}
+          </p>
+        </div>
+      ` : '';
+
+      container.innerHTML = `
+        <div style="padding: 20px;">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3B82F6; padding-bottom: 20px;">
+            <h1 style="color: #3B82F6; margin: 0; font-size: 24px; font-weight: bold;">
+              Fictus AI Verification Report
+            </h1>
+            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
+              AI-Powered Content Authenticity Analysis
+            </p>
+          </div>
+
+          <!-- File Information with Thumbnail -->
+          <div style="margin-bottom: 25px;">
+            <h2 style="color: #1F2937; margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+              File Information
+            </h2>
+            ${thumbnailHtml}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold; width: 30%;">
+                  File Name
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${selectedFile.name}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold;">
+                  File Size
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${verificationResult.fileSize}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold;">
+                  Content Type
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${verificationResult.contentType === 'image' ? 'Image' : 'Video'}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold;">
+                  Analysis Date
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${new Date().toLocaleString()}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Verification Results -->
+          <div style="margin-bottom: 25px;">
+            <h2 style="color: #1F2937; margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+              Verification Results
+            </h2>
+            
+            <!-- Status Badge -->
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="display: inline-block; padding: 15px 30px; border-radius: 10px; font-size: 18px; font-weight: bold; 
+                          background: ${verificationResult.status === 'authentic' ? '#10B981' : 
+                                     verificationResult.status === 'suspicious' ? '#F59E0B' : '#EF4444'}; 
+                          color: white;">
+                ${verificationResult.status.toUpperCase()}
+              </div>
+              <p style="margin: 10px 0 0 0; font-size: 16px; font-weight: bold;">
+                Confidence Score: ${verificationResult.confidence.toFixed(1)}%
+              </p>
+            </div>
+
+            <!-- Analysis Metrics -->
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold; width: 40%;">
+                  AI Probability
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${verificationResult.aiProbability?.toFixed(1) || 'N/A'}%
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold;">
+                  Human Probability
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${verificationResult.humanProbability?.toFixed(1) || 'N/A'}%
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold;">
+                  Processing Time
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${verificationResult.processingTime.toFixed(1)} seconds
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold;">
+                  Report ID
+                </td>
+                <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                  ${verificationResult.reportId || 'N/A'}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Detection Analysis -->
+          <div style="margin-bottom: 25px;">
+            <h2 style="color: #1F2937; margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+              Detection Analysis
+            </h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              ${Object.entries(verificationResult.detectionDetails).map(([key, value]) => `
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; font-weight: bold; width: 40%;">
+                    ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </td>
+                  <td style="padding: 8px; border: 1px solid #E5E7EB;">
+                    ${value.toFixed(1)}%
+                  </td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+
+          <!-- Risk Factors -->
+          ${verificationResult.riskFactors.length > 0 ? `
+            <div style="margin-bottom: 25px;">
+              <h2 style="color: #1F2937; margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+                Risk Factors
+              </h2>
+              <ul style="margin: 0; padding-left: 20px;">
+                ${verificationResult.riskFactors.map(factor => `
+                  <li style="margin: 5px 0; color: #DC2626;">${factor}</li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          <!-- Recommendations -->
+          ${verificationResult.recommendations.length > 0 ? `
+            <div style="margin-bottom: 25px;">
+              <h2 style="color: #1F2937; margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+                Recommendations
+              </h2>
+              <ul style="margin: 0; padding-left: 20px;">
+                ${verificationResult.recommendations.map(rec => `
+                  <li style="margin: 5px 0; color: #059669;">${rec}</li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          <!-- Footer -->
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB; text-align: center; color: #6B7280; font-size: 10px;">
+            <p style="margin: 0;">
+              This report was generated by Fictus AI - Advanced AI Content Verification
+            </p>
+            <p style="margin: 5px 0 0 0;">
+              For more information, visit fictus.ai
+            </p>
+          </div>
+        </div>
+      `;
+
+      // Configure PDF options
+      const opt = {
+        margin: 0.5,
+        filename: `fictus-ai-report-${selectedFile.name.replace(/\.[^/.]+$/, '')}-${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        },
+        jsPDF: { 
+          unit: 'in', 
+          format: 'a4', 
+          orientation: 'portrait' 
+        }
+      };
+
+      // Generate and download PDF
+      await html2pdf().set(opt).from(container).save();
+      
+      // Clean up
+      document.body.removeChild(container);
+      
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      setError('Failed to generate PDF report. Please try again.');
+    }
+  };
+
   // Reset form
   const resetForm = () => {
     setSelectedFile(null);
@@ -379,6 +676,7 @@ const UnifiedVerify = () => {
     setError(null);
     setUploadProgress(0);
     setShareToLibrary(false);
+    setFileThumbnail(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -757,7 +1055,9 @@ const UnifiedVerify = () => {
                   <Typography variant="button">Verify Another File</Typography>
                 </button>
                 
-                <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors flex items-center justify-center gap-2">
+                  onClick={generatePDFReport}
+                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
                   <Download className="h-4 w-4" />
                   <Typography variant="button">Download Report</Typography>
                 </button>
