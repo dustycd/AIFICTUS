@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import html2pdf from 'html2pdf.js';
 import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, FileText, Download, Share2, Zap, Activity, BarChart3, TrendingUp } from 'lucide-react';
 import { Typography, Heading } from './Typography';
 import { db } from '../lib/database';
@@ -49,6 +50,7 @@ const Library = () => {
   const [hasMore, setHasMore] = useState(true);
  const [touchStart, setTouchStart] = useState<number | null>(null);
  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const reportRef = React.useRef<HTMLDivElement>(null);
   const itemsPerPage = 12;
 
   // Generate comprehensive AI or Not API data for demonstration
@@ -391,6 +393,68 @@ const Library = () => {
    }
  };
   // Render item card
+  // Handle PDF download
+  const handleDownloadReport = async () => {
+    if (!selectedItem || !reportRef.current) return;
+
+    try {
+      // Configure PDF options
+      const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `verification_report_${selectedItem.id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#111827' // Gray-900 background
+        },
+        jsPDF: { 
+          unit: 'in', 
+          format: 'letter', 
+          orientation: 'portrait' 
+        }
+      };
+
+      // Generate and download PDF
+      await html2pdf().set(opt).from(reportRef.current).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF report. Please try again.');
+    }
+  };
+
+  // Handle share analysis
+  const handleShareAnalysis = async () => {
+    if (!selectedItem) return;
+
+    const shareData = {
+      title: `Verification Analysis - ${selectedItem.verification_status.toUpperCase()}`,
+      text: `AI Content Verification: ${Math.round(selectedItem.confidence_score)}% confidence - ${selectedItem.verification_status}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to clipboard
+        const shareText = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+        await navigator.clipboard.writeText(shareText);
+        alert('Analysis details copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Final fallback - just copy URL
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      } catch (clipboardError) {
+        console.error('Clipboard error:', clipboardError);
+        alert('Unable to share. Please copy the URL manually.');
+      }
+    }
+  };
+
   const renderItemCard = (item: LibraryItem) => {
     const itemIndex = items.findIndex(i => i.id === item.id);
     const mediaUrl = getMediaUrl(item);
@@ -907,8 +971,8 @@ const Library = () => {
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}>
-          {/* Add top padding to account for fixed header */}
-          <div className="p-8 pt-24">
+          {/* PDF Report Content - Referenced for PDF generation */}
+          <div ref={reportRef} className="p-8 pt-24 bg-gray-900">
 
             {/* Professional AI Platform Layout */}
             <div className="space-y-8">
@@ -1128,12 +1192,18 @@ const Library = () => {
 
               {/* Action Buttons - Professional Style */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-700">
-                <button className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                <button 
+                  onClick={handleDownloadReport}
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
                   <Download className="h-5 w-5" />
                   <Typography variant="button" className="font-semibold">Download Report</Typography>
                 </button>
                 
-                <button className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                <button 
+                  onClick={handleShareAnalysis}
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
                   <Share2 className="h-5 w-5" />
                   <Typography variant="button" className="font-semibold">Share Analysis</Typography>
                 </button>
