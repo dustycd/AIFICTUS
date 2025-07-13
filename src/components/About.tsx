@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Brain, Users, Target, Zap, Globe, Heart, Github, Linkedin, Twitter, Sparkles, Cpu, Database, Network, ArrowRight, Star, Rocket, Code, Award, TrendingUp, Activity, BarChart3 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { Typography, Heading } from './Typography';
 
 const About = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeValue, setActiveValue] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -33,6 +37,25 @@ const About = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Handle "Start Verifying Videos" button click
+  const handleStartVerifying = () => {
+    if (user) {
+      // User is already signed in, go directly to verify
+      navigate('/verify');
+    } else {
+      // User needs to sign up/sign in first
+      navigate('/auth');
+    }
+  };
+
+  // Handle "Contact Our Team" button click
+  const handleContactTeam = () => {
+    const subject = encodeURIComponent('Inquiry about Fictus AI');
+    
+    const mailtoLink = `mailto:team@fictus.io?subject=${subject}&body=${body}`;
+    window.location.href = mailtoLink;
+  };
+    const body = encodeURIComponent(`Hello Fictus AI Team,
   const missionPoints = [
     {
       icon: <Shield className="h-8 w-8" />,
@@ -262,14 +285,18 @@ const About = () => {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <button className="group px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 relative overflow-hidden">
+              onClick={handleStartVerifying}
               <span className="relative z-10 flex items-center gap-2">
                 <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                <Typography variant="button">Start Verifying Videos</Typography>
+                <Typography variant="button">
+                  {user ? 'Start Verifying Videos' : 'Sign Up & Verify Videos'}
+                </Typography>
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
             
             <button className="group px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105 relative overflow-hidden">
+              onClick={handleContactTeam}
               <span className="relative z-10 flex items-center gap-2">
                 <Activity className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                 <Typography variant="button">Contact Our Team</Typography>
