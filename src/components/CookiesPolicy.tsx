@@ -311,7 +311,7 @@ const CookiesPolicy: React.FC = () => {
 
               <div className="space-y-3">
                 <Typography variant="body">
-                  <strong>Email:</strong> privacy@fictus.ai
+                  <strong>Email:</strong> privacy@fictus.io
                 </Typography>
                 <Typography variant="body">
                   <strong>Subject Line:</strong> Cookie Policy Inquiry
