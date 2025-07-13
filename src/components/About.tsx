@@ -51,11 +51,11 @@ const About = () => {
   // Handle "Contact Our Team" button click
   const handleContactTeam = () => {
     const subject = encodeURIComponent('Inquiry about Fictus AI');
-    
+    const body = encodeURIComponent(`Hello Fictus AI Team,`);
     const mailtoLink = `mailto:team@fictus.io?subject=${subject}&body=${body}`;
     window.location.href = mailtoLink;
   };
-    const body = encodeURIComponent(`Hello Fictus AI Team,
+
   const missionPoints = [
     {
       icon: <Shield className="h-8 w-8" />,
@@ -105,10 +105,10 @@ const About = () => {
             key={i}
             className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-pulse"
             style={{
-              left: \`${Math.random() * 100}%`,
-              top: \`${Math.random() * 100}%`,
-              animationDelay: \`${Math.random() * 3}s`,
-              animationDuration: \`${3 + Math.random() * 2}s`
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 2}s`
             }}
           />
         ))}
@@ -117,7 +117,7 @@ const About = () => {
         <div 
           className="absolute w-96 h-96 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"
           style={{
-            transform: \`translate(${mousePosition.x * 0.1}px, ${mousePosition.y * 0.1}px)`,
+            transform: `translate(${mousePosition.x * 0.1}px, ${mousePosition.y * 0.1}px)`,
             left: '10%',
             top: '20%'
           }}
@@ -125,7 +125,7 @@ const About = () => {
         <div 
           className="absolute w-80 h-80 bg-gradient-to-r from-cyan-500/10 to-green-500/10 rounded-full blur-3xl"
           style={{
-            transform: \`translate(${-mousePosition.x * 0.05}px, ${-mousePosition.y * 0.05}px)`,
+            transform: `translate(${-mousePosition.x * 0.05}px, ${-mousePosition.y * 0.05}px)`,
             right: '10%',
             bottom: '20%'
           }}
@@ -136,7 +136,7 @@ const About = () => {
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           
-          <div className={\`transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className={`transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <Heading level={1} className="mb-8 max-w-4xl mx-auto">
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
                 Building Trust in the Age of AI
@@ -144,7 +144,7 @@ const About = () => {
             </Heading>
           </div>
           
-          <div className={\`transition-all duration-1000 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className={`transition-all duration-1000 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <Typography variant="heroCaption" color="secondary" className="mb-12 max-w-3xl mx-auto text-lg leading-relaxed">
               We're on a mission to preserve digital truth and combat misinformation through 
               cutting-edge artificial intelligence and machine learning technologies.
@@ -156,15 +156,15 @@ const About = () => {
             {missionPoints.map((point, index) => (
               <div 
                 key={index} 
-                className={\`group relative overflow-hidden rounded-2xl border border-gray-700 hover:border-gray-500 transition-all duration-500 hover:transform hover:scale-105 hover:rotate-1`}
+                className={`group relative overflow-hidden rounded-2xl border border-gray-700 hover:border-gray-500 transition-all duration-500 hover:transform hover:scale-105 hover:rotate-1`}
                 style={{ animationDelay: point.delay }}
               >
                 {/* Animated Background */}
-                <div className={\`absolute inset-0 bg-gradient-to-br ${point.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${point.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
                 
                 {/* Content */}
                 <div className="relative bg-gray-800/30 backdrop-blur-sm p-6 h-full">
-                  <div className={\`text-transparent bg-gradient-to-r ${point.color} bg-clip-text mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`text-transparent bg-gradient-to-r ${point.color} bg-clip-text mb-4 group-hover:scale-110 transition-transform duration-300`}>
                     {point.icon}
                   </div>
                   <Typography variant="cardTitle" className="mb-3 group-hover:text-white transition-colors">
@@ -207,7 +207,7 @@ const About = () => {
                 <div 
                   key={index}
                   className="opacity-0 animate-fade-in-up"
-                  style={{ animationDelay: \`${index * 0.3}s`, animationFillMode: 'forwards' }}
+                  style={{ animationDelay: `${index * 0.3}s`, animationFillMode: 'forwards' }}
                 >
                   <Typography variant="body" color="secondary" className="text-lg leading-relaxed">
                     {text}
@@ -249,8 +249,8 @@ const About = () => {
                     <div 
                       className="h-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-1000 ease-out"
                       style={{ 
-                        width: \`${tech.progress}%`,
-                        animationDelay: \`${index * 0.2}s`
+                        width: `${tech.progress}%`,
+                        animationDelay: `${index * 0.2}s`
                       }}
                     />
                   </div>
@@ -284,8 +284,10 @@ const About = () => {
           </Typography>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button className="group px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 relative overflow-hidden">
+            <button 
               onClick={handleStartVerifying}
+              className="group px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 relative overflow-hidden"
+            >
               <span className="relative z-10 flex items-center gap-2">
                 <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
                 <Typography variant="button">
@@ -295,8 +297,10 @@ const About = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
             
-            <button className="group px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105 relative overflow-hidden">
+            <button 
               onClick={handleContactTeam}
+              className="group px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
+            >
               <span className="relative z-10 flex items-center gap-2">
                 <Activity className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                 <Typography variant="button">Contact Our Team</Typography>
@@ -328,5 +332,3 @@ const About = () => {
 };
 
 export default About;
-    )
-}
