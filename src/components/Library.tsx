@@ -1135,9 +1135,6 @@ const Library = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-              </div>
 
               {/* Action Buttons - Professional Style */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-700">
