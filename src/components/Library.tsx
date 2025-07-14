@@ -6,6 +6,11 @@ import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
 import { getVerificationDisplay, getStatusBadgeClasses, formatConfidence, getRecommendationText } from '../utils/verificationDisplayUtils';
 
+// Helper function to format dates
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString();
+};
+
 interface LibraryItem {
   id: string;
   file_name: string;
