@@ -21,8 +21,6 @@ interface LibraryItem {
   risk_factors: string[];
   recommendations: string[];
   created_at: string;
-  uploader_name: string;
-  view_count: number;
   file_url: string;
   storage_bucket: string;
   storage_path: string;
@@ -666,16 +664,8 @@ const Library = () => {
                 <Typography variant="caption" className="text-xs font-bold">
                   {displayResult.displayStatus.toUpperCase()}
                 </Typography>
-              </div>
+              <span>{formatFileSize(item.file_size)}</span>
             </div>
-
-            <div className="flex items-center gap-4 text-xs text-gray-400 mb-2">
-              <div className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                <span className="numeric-text">{item.view_count}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
                 <span>{new Date(item.created_at).toLocaleDateString()}</span>
               </div>
               <div className="flex items-center gap-1">
@@ -956,10 +946,6 @@ const Library = () => {
           <div className="flex items-center justify-between px-4 sm:px-6 py-3">
             <div className="flex items-center gap-3">
               <Typography variant="h3" className="text-lg font-semibold">Verification Analysis</Typography>
-              <div className="hidden sm:flex items-center gap-2 text-gray-400">
-                <Eye className="h-4 w-4" />
-                <span className="text-sm numeric-text">{selectedItem.view_count}</span>
-              </div>
             </div>
             
             <div className="flex items-center gap-3">

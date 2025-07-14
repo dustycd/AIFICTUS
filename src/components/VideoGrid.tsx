@@ -18,8 +18,6 @@ interface LibraryItem {
   risk_factors: string[];
   recommendations: string[];
   created_at: string;
-  uploader_name: string;
-  view_count: number;
   file_url: string;
   storage_bucket: string;
   storage_path: string;

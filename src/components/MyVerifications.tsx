@@ -19,7 +19,6 @@ interface UserVerification {
   detection_details: any;
   risk_factors: string[];
   recommendations: string[];
-  created_at: string;
   is_public_library_item: boolean;
   report_id?: string;
   file_url?: string;
