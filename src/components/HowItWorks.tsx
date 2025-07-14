@@ -7,25 +7,25 @@ const HowItWorks = () => {
     {
       icon: <Film className="h-8 w-8" />,
       title: "Upload Your Video",
-      description: "Simply drag and drop your video file or browse to select from your device storage. We support all major video formats including MP4, MOV, AVI, WebM, MKV, FLV, WMV, and many additional formats. Our platform ensures comprehensive compatibility across all devices and operating systems for seamless upload experience.",
+      description: "Simply drag and drop your video file or browse to select from your device. We support all major video formats including MP4, MOV, AVI, WebM, MKV, and many more for comprehensive compatibility.",
       color: "text-blue-400"
     },
     {
       icon: <Eye className="h-8 w-8" />,
       title: "AI Analysis Engine",
-      description: "Our advanced neural networks analyze facial movements, temporal consistency, lighting patterns, and compression artifacts in real-time. We utilize sophisticated machine learning algorithms and deep learning models trained on millions of samples to ensure accurate detection and comprehensive verification results.",
+      description: "Our advanced neural networks analyze facial movements, temporal consistency, lighting patterns, and compression artifacts in real-time using sophisticated machine learning algorithms for accurate detection.",
       color: "text-cyan-400"
     },
     {
       icon: <Volume2 className="h-8 w-8" />,
       title: "Multi-Layer Detection",
-      description: "We employ multiple AI models including deepfake detection, face swap identification, audio-visual synchronization, temporal analysis, and metadata examination. Our multi-layered approach provides comprehensive verification coverage with detailed analysis and thorough examination of all content elements.",
+      description: "We use multiple AI models including deepfake detection, face swap identification, audio-visual synchronization, and temporal analysis to provide comprehensive verification coverage.",
       color: "text-purple-400"
     },
     {
       icon: <Shield className="h-8 w-8" />,
       title: "Verification Report",
-      description: "Receive a detailed confidence score, highlighted suspicious regions, risk factor analysis, and comprehensive authenticity certificate within seconds. Our reports include complete verification documentation, professional analysis summaries, and actionable recommendations for informed decision making.",
+      description: "Get a detailed confidence score, highlighted suspicious regions, and a comprehensive authenticity certificate within seconds for complete verification documentation.",
       color: "text-green-400"
     }
   ];
@@ -69,7 +69,7 @@ const HowItWorks = () => {
                 <Typography variant="cardTitle" className="mb-4">
                   {step.title}
                 </Typography>
-                <Typography variant="cardCaption" color="secondary" className="leading-relaxed">
+                <Typography variant="cardCaption" color="secondary" className="leading-relaxed text-justify flex-1 flex items-center">
                   {step.description}
                 </Typography>
               </div>
