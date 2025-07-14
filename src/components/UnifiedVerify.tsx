@@ -9,6 +9,9 @@ import { usageLimits } from '../lib/usageLimits';
 import UsageLimitsDisplay from './UsageLimitsDisplay';
 import verifyWithAIOrNot from '../workflows/verifyWithAIOrNot';
 
+// Local storage key for session persistence
+const LOCAL_STORAGE_KEY = 'fictus_verification_session';
+
 interface VerificationResult {
   id: string;
   confidence: number;
@@ -55,6 +58,39 @@ const UnifiedVerify = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileThumbnail, setFileThumbnail] = useState<string | null>(null);
   const [isLoadingExisting, setIsLoadingExisting] = useState(false);
+
+  // Load verification session from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedSession) {
+        const parsedSession = JSON.parse(savedSession);
+        console.log('📂 Loading saved verification session:', parsedSession.fileName);
+        setVerificationResult(parsedSession);
+        setShareToLibrary(parsedSession.isPublicLibraryItem || false);
+      }
+    } catch (error) {
+      console.error('❌ Error loading saved session:', error);
+      // Clear corrupted data
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
+  }, []);
+
+  // Save verification session to localStorage when result changes
+  useEffect(() => {
+    if (verificationResult) {
+      try {
+        console.log('💾 Saving verification session to localStorage:', verificationResult.fileName);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(verificationResult));
+      } catch (error) {
+        console.error('❌ Error saving session:', error);
+      }
+    } else {
+      // Clear session when result is null (new verification)
+      console.log('🗑️ Clearing saved verification session');
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
+  }, [verificationResult]);
 
   // Load user's monthly usage on component mount
   useEffect(() => {
@@ -184,6 +220,7 @@ const UnifiedVerify = () => {
   // Handle file selection
   const handleFileSelection = async (file: File) => {
     setError(null);
+    // Clear previous verification result and session when new file is selected
     setVerificationResult(null);
     setFileThumbnail(null);
     
@@ -209,6 +246,7 @@ const UnifiedVerify = () => {
     }
 
     setSelectedFile(file);
+    setShareToLibrary(false);
     
     // Generate thumbnail for the file
     try {
@@ -776,9 +814,9 @@ const UnifiedVerify = () => {
   const resetForm = () => {
     setSelectedFile(null);
     setVerificationResult(null);
+    setShareToLibrary(false);
     setError(null);
     setUploadProgress(0);
-    setShareToLibrary(false);
     setFileThumbnail(null);
     setIsLoadingExisting(false);
     if (fileInputRef.current) {
