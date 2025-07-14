@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
+import { getVerificationDisplay } from '../utils/verificationDisplayUtils';
 
 interface LibraryItem {
   id: string;
   file_name: string;
   original_filename: string;
   content_type: string;
-  verification_status: 'authentic' | 'suspicious' | 'fake';
+  verification_status: 'authentic' | 'fake';
   confidence_score: number;
   ai_probability?: number;
   human_probability?: number;
@@ -131,24 +132,56 @@ const VideoGrid = () => {
 
   // Generate random verification data for placeholders
   const generateRandomVerification = (index: number) => {
-    const statuses = ['authentic', 'suspicious', 'fake'];
-    const status = statuses[index % 3];
-    const confidence = Math.floor(Math.random() * 40) + 60; // 60-99%
+    // Generate realistic AI and Human probabilities
+    const aiProbability = Math.random() * 100; // 0-100%
+    const humanProbability = 100 - aiProbability; // Remaining percentage
+    
+    // Determine status based on which probability is higher
+    const status = aiProbability > humanProbability ? 'fake' : 'authentic';
     
     return {
       status,
-      confidence,
-      isVideo: index % 4 === 0 // Every 4th item is a video
+      aiProbability,
+      humanProbability,
+      isVideo: index % 4 === 0, // Every 4th item is a video
+      confidence: Math.max(aiProbability, humanProbability) // Confidence is the higher probability
     };
   };
 
   // Render media preview
   const renderMediaPreview = (item: LibraryItem | null, index: number, columnIndex: number) => {
-    const verification = item ? {
-      status: item.verification_status,
-      confidence: item.confidence_score,
-      isVideo: isVideo(item.content_type)
-    } : generateRandomVerification(index);
+    let displayData;
+    
+    if (item) {
+      // Use actual data from database
+      const verificationDisplay = getVerificationDisplay(
+        item.ai_probability,
+        item.human_probability,
+        item.verification_status
+      );
+      
+      displayData = {
+        displayStatus: verificationDisplay.displayStatus,
+        confidence: verificationDisplay.confidence,
+        statusColor: verificationDisplay.statusColor,
+        isVideo: isVideo(item.content_type)
+      };
+    } else {
+      // Use generated placeholder data
+      const placeholderData = generateRandomVerification(index);
+      const verificationDisplay = getVerificationDisplay(
+        placeholderData.aiProbability,
+        placeholderData.humanProbability,
+        placeholderData.status
+      );
+      
+      displayData = {
+        displayStatus: verificationDisplay.displayStatus,
+        confidence: verificationDisplay.confidence,
+        statusColor: verificationDisplay.statusColor,
+        isVideo: placeholderData.isVideo
+      };
+    }
 
     const mediaUrl = item ? getMediaUrl(item) : PLACEHOLDER_MEDIA[index % PLACEHOLDER_MEDIA.length];
     
@@ -171,10 +204,10 @@ const VideoGrid = () => {
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
               <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-1">
-                <span className="text-lg">{verification.isVideo ? '🎥' : '🖼️'}</span>
+                <span className="text-lg">{displayData.isVideo ? '🎥' : '🖼️'}</span>
               </div>
               <div className="text-xs text-gray-500">
-                {verification.isVideo ? 'Video' : 'Image'}
+                {displayData.isVideo ? 'Video' : 'Image'}
               </div>
             </div>
           </div>
@@ -183,7 +216,7 @@ const VideoGrid = () => {
       );
     }
 
-    if (verification.isVideo) {
+    if (displayData.isVideo) {
       return (
         <div 
           key={item?.id || `video-${index}`}
@@ -219,10 +252,16 @@ const VideoGrid = () => {
             </div>
           </div>
           
-          {/* Confidence score - FIXED: Using Inter font for numbers */}
+          {/* Status and confidence display */}
           <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white opacity-90">
-            <span className="font-numeric font-bold" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
-              {Math.round(verification.confidence)}%
+            <div className="text-center">
+              <div className={`text-xs font-bold ${displayData.statusColor} mb-1`}>
+                {displayData.displayStatus}
+              </div>
+              <span className="numeric-text font-bold">
+                {Math.round(displayData.confidence)}%
+              </span>
+            </div>
             </span>
           </div>
         </div>
@@ -249,10 +288,16 @@ const VideoGrid = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           
-          {/* Confidence score - FIXED: Using Inter font for numbers */}
+          {/* Status and confidence display */}
           <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white opacity-90">
-            <span className="font-numeric font-bold" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
-              {Math.round(verification.confidence)}%
+            <div className="text-center">
+              <div className={`text-xs font-bold ${displayData.statusColor} mb-1`}>
+                {displayData.displayStatus}
+              </div>
+              <span className="numeric-text font-bold">
+                {Math.round(displayData.confidence)}%
+              </span>
+            </div>
             </span>
           </div>
         </div>
