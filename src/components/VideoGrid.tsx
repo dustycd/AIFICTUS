@@ -262,7 +262,6 @@ const VideoGrid = () => {
                 {Math.round(displayData.confidence)}%
               </span>
             </div>
-            </span>
           </div>
         </div>
       );
@@ -298,7 +297,6 @@ const VideoGrid = () => {
                 {Math.round(displayData.confidence)}%
               </span>
             </div>
-            </span>
           </div>
         </div>
       );
