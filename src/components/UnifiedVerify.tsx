@@ -48,6 +48,7 @@ const UnifiedVerify = () => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -216,6 +217,20 @@ const UnifiedVerify = () => {
 
     checkDragSupport();
   }, []);
+
+  // Clear verification session
+  const clearVerificationSession = () => {
+    console.log('🧹 Clearing verification session...');
+    setSelectedFile(null);
+    setVerificationResult(null);
+    setError(null);
+    setIsVerifying(false);
+    setShowResultModal(false);
+    setUploadProgress(0);
+    setShareToLibrary(false);
+    setFileThumbnail(null);
+    console.log('✅ Verification session cleared');
+  };
 
   // Handle file selection
   const handleFileSelection = async (file: File) => {
@@ -515,13 +530,21 @@ const UnifiedVerify = () => {
 
       setUploadProgress(100);
       setVerificationResult(result);
+      setShowResultModal(true);
 
     } catch (err: any) {
       console.error('Verification failed:', err);
       setError(err.message || 'Verification failed. Please try again.');
+      setShowResultModal(true);
     } finally {
       setIsVerifying(false);
     }
+  };
+
+  // Handle closing the result modal and resetting to upload state
+  const handleCloseResultModal = () => {
+    setShowResultModal(false);
+    clearVerificationSession();
   };
 
   // Generate thumbnail from file
@@ -850,6 +873,30 @@ const UnifiedVerify = () => {
         return 'from-red-500/20 to-pink-500/20 border-red-500/30';
       default:
         return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
+    }
+  };
+
+  // Get status info for modal
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'authentic':
+        return {
+          label: 'Human Created',
+          icon: CheckCircle,
+          bgGradient: 'from-green-500/20 to-emerald-500/20'
+        };
+      case 'fake':
+        return {
+          label: 'AI Generated',
+          icon: AlertTriangle,
+          bgGradient: 'from-red-500/20 to-pink-500/20'
+        };
+      default:
+        return {
+          label: 'Unknown',
+          icon: Clock,
+          bgGradient: 'from-gray-500/20 to-gray-600/20'
+        };
     }
   };
 
@@ -1243,6 +1290,174 @@ const UnifiedVerify = () => {
           )}
         </div>
       </section>
+
+      {/* Result Modal */}
+      {showResultModal && (verificationResult || error) && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-8">
+              {/* Close Button */}
+              <div className="flex justify-end mb-6">
+                <button
+                  onClick={handleCloseResultModal}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                  <span>Close & Upload New</span>
+                </button>
+              </div>
+
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-6 w-6 text-red-400 mt-1 flex-shrink-0" />
+                    <div>
+                      <Typography variant="h4" className="text-red-400 mb-2">
+                        Verification Failed
+                      </Typography>
+                      <Typography variant="body" className="text-red-300">
+                        {error}
+                      </Typography>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Success Result Display */}
+              {verificationResult && (
+                <div className="space-y-8">
+                  {/* Status Header */}
+                  <div className={`bg-gradient-to-br ${getStatusInfo(verificationResult.status).bgGradient} rounded-2xl p-8 border border-gray-700 text-center`}>
+                    <div className="mb-4">
+                      {(() => {
+                        const statusInfo = getStatusInfo(verificationResult.status);
+                        const StatusIcon = statusInfo.icon;
+                        return <StatusIcon className="h-16 w-16 mx-auto text-current" />;
+                      })()}
+                    </div>
+                    
+                    <Typography variant="h2" className="mb-2 text-2xl font-bold">
+                      {getStatusInfo(verificationResult.status).label}
+                    </Typography>
+                    
+                    <Typography variant="h1" className="mb-2 text-4xl font-black">
+                      <span className="numeric-text">{Math.round(verificationResult.confidence)}%</span>
+                    </Typography>
+                    
+                    <Typography variant="body" color="secondary">
+                      Confidence Score
+                    </Typography>
+                  </div>
+
+                  {/* Analysis Results */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* AI vs Human Probability */}
+                    <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+                      <div className="text-center mb-4">
+                        <Brain className="h-8 w-8 mx-auto text-purple-400 mb-2" />
+                        <Typography variant="h4" className="text-purple-400 font-semibold">
+                          AI Analysis
+                        </Typography>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300">AI Generated</span>
+                          <span className="text-red-400 font-bold numeric-text text-lg">
+                            {Math.round(verificationResult.aiProbability || 0)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full transition-all duration-1000"
+                            style={{ width: `${verificationResult.aiProbability || 0}%` }}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300">Human Created</span>
+                          <span className="text-green-400 font-bold numeric-text text-lg">
+                            {Math.round(verificationResult.humanProbability || 0)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-1000"
+                            style={{ width: `${verificationResult.humanProbability || 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Processing Stats */}
+                    <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+                      <div className="text-center mb-4">
+                        <Clock className="h-8 w-8 mx-auto text-blue-400 mb-2" />
+                        <Typography variant="h4" className="text-blue-400 font-semibold">
+                          Analysis Stats
+                        </Typography>
+                      </div>
+                      
+                      <div className="space-y-4 text-center">
+                        <div>
+                          <Typography variant="h3" className="text-2xl font-bold numeric-text">
+                            {verificationResult.processingTime?.toFixed(1)}s
+                          </Typography>
+                          <Typography variant="caption" color="secondary">
+                            Processing Time
+                          </Typography>
+                        </div>
+                        
+                        <div className="pt-2 border-t border-gray-700">
+                          <Typography variant="body" className="text-lg font-semibold">
+                            {verificationResult.contentType === 'video' ? 'Video' : 'Image'}
+                          </Typography>
+                          <Typography variant="caption" color="secondary">
+                            Content Type
+                          </Typography>
+                        </div>
+                        
+                        <div className="pt-2 border-t border-gray-700">
+                          <Typography variant="body" className="text-lg font-semibold">
+                            {verificationResult.fileSize}
+                          </Typography>
+                          <Typography variant="caption" color="secondary">
+                            File Size
+                          </Typography>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recommendations */}
+                  {verificationResult.recommendations && verificationResult.recommendations.length > 0 && (
+                    <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+                      <div className="flex items-center gap-3 mb-4">
+                        <CheckCircle className="h-6 w-6 text-blue-400" />
+                        <Typography variant="h4" className="text-blue-400 font-semibold">
+                          Recommendations
+                        </Typography>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {verificationResult.recommendations.slice(0, 4).map((rec, index) => (
+                          <div key={index} className="flex items-start gap-3 p-3 bg-blue-500/5 rounded-lg">
+                            <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                            <Typography variant="body" className="text-blue-300">
+                              {rec}
+                            </Typography>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
