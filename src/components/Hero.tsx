@@ -29,7 +29,7 @@ const Hero: React.FC = () => {
         
         {/* Subtitle */}
         <Typography variant="heroSubtitle" className="mb-6">
-          VERIFY ANY VIDEO OR IMAGE. INSTANTLY.
+          VERIFY ANY VIDEO<span className="text-6xl lg:text-7xl font-black text-blue-400 mx-2 relative top-1">/</span>IMAGE. INSTANTLY.
         </Typography>
         
         {/* Subtext */}
