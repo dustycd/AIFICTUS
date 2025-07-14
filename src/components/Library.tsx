@@ -562,55 +562,55 @@ const Library = () => {
             </div>
 
             {/* Filters Button */}
-            <div className="bg-gray-800/30 rounded-2xl border border-gray-700 overflow-hidden">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full flex items-center justify-between p-6 hover:bg-gray-700/30 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <SlidersHorizontal className="h-5 w-5 text-gray-400" />
-                  <Typography variant="cardTitle">Filters</Typography>
-                </div>
-                <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
-              </button>
+            <div className="flex justify-center">
+              <div className="bg-gray-800/30 rounded-xl border border-gray-700 overflow-hidden">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700/30 transition-colors"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-gray-400" />
+                  <Typography variant="cardCaption">Filters</Typography>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+                </button>
 
-              {/* Expanded Filters */}
-              {showFilters && (
-                <div className="px-6 pb-6 border-t border-gray-700/50">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Verification Status
-                      </label>
-                      <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
-                      >
-                        <option value="all">All Statuses</option>
-                        <option value="authentic">Authentic</option>
-                        <option value="fake">AI Generated</option>
-                        <option value="suspicious">Suspicious</option>
-                      </select>
-                    </div>
+                {/* Expanded Filters */}
+                {showFilters && (
+                  <div className="px-4 pb-4 border-t border-gray-700/50 min-w-[400px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Verification Status
+                        </label>
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="all">All Statuses</option>
+                          <option value="authentic">Authentic</option>
+                          <option value="fake">AI Generated</option>
+                          <option value="suspicious">Suspicious</option>
+                        </select>
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Content Type
-                      </label>
-                      <select
-                        value={contentTypeFilter}
-                        onChange={(e) => setContentTypeFilter(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
-                      >
-                        <option value="all">All Types</option>
-                        <option value="video">Videos</option>
-                        <option value="image">Images</option>
-                      </select>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Content Type
+                        </label>
+                        <select
+                          value={contentTypeFilter}
+                          onChange={(e) => setContentTypeFilter(e.target.value)}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="all">All Types</option>
+                          <option value="video">Videos</option>
+                          <option value="image">Images</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
