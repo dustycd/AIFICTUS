@@ -159,6 +159,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/verify" element={<ProtectedVerify />} />
+          <Route path="/verify/:verificationId" element={<ProtectedVerify />} />
           <Route path="/about" element={<About />} />
           <Route path="/library" element={<Library />} />
           <Route path="/my-verifications" element={<MyVerifications />} />

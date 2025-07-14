@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, FileVideo, FileImage, AlertTriangle, CheckCircle, Clock, Shield, Zap, Brain, Download, Share2, X, User, LogIn, UserPlus } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Heading } from './Typography';
 import { useAuth } from '../hooks/useAuth';
 import { validateFile, uploadFile, isVideoFile, isImageFile, getContentType, formatFileSize } from '../lib/storage';
@@ -39,6 +40,8 @@ interface VerificationResult {
 
 const UnifiedVerify = () => {
   const { user, loading } = useAuth();
+  const { verificationId } = useParams<{ verificationId: string }>();
+  const navigate = useNavigate();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -51,6 +54,7 @@ const UnifiedVerify = () => {
   const [isDragSupported, setIsDragSupported] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileThumbnail, setFileThumbnail] = useState<string | null>(null);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
   // Load user's monthly usage on component mount
   useEffect(() => {
@@ -70,6 +74,82 @@ const UnifiedVerify = () => {
     loadUsageInfo();
   }, [user]);
 
+  // Load existing verification if verificationId is provided
+  useEffect(() => {
+    const loadExistingVerification = async () => {
+      if (!verificationId || !user) return;
+      
+      setIsLoadingExisting(true);
+      setError(null);
+      
+      try {
+        console.log('🔍 Loading existing verification:', verificationId);
+        
+        const { data: verification, error: fetchError } = await db.verifications.get(verificationId);
+        
+        if (fetchError) {
+          console.error('❌ Failed to load verification:', fetchError);
+          setError('Failed to load verification. The report may not exist or you may not have permission to view it.');
+          return;
+        }
+        
+        if (!verification) {
+          setError('Verification not found.');
+          return;
+        }
+        
+        // Check if user owns this verification
+        if (verification.user_id !== user.id) {
+          setError('You do not have permission to view this verification.');
+          return;
+        }
+        
+        console.log('✅ Loaded verification:', verification);
+        
+        // Convert database record to VerificationResult format
+        const result: VerificationResult = {
+          id: verification.id,
+          confidence: verification.confidence_score || 0,
+          status: verification.verification_status as 'authentic' | 'fake',
+          processingTime: verification.processing_time || 0,
+          fileSize: formatFileSize(verification.file_size || 0),
+          resolution: '1920x1080', // This would be stored in metadata
+          duration: verification.content_type.startsWith('video/') ? '0:45' : undefined,
+          aiProbability: verification.ai_probability || 0,
+          humanProbability: verification.human_probability || 0,
+          detectionDetails: verification.detection_details || {
+            faceAnalysis: 0,
+            compressionArtifacts: 0
+          },
+          riskFactors: verification.risk_factors || [],
+          recommendations: verification.recommendations || [],
+          reportId: verification.report_id,
+          storagePath: verification.storage_path,
+          storageUrl: verification.file_url,
+          contentType: verification.content_type.startsWith('image/') ? 'image' : 'video'
+        };
+        
+        setVerificationResult(result);
+        
+        // Set the original filename for display
+        if (verification.original_filename) {
+          // Create a mock file object for display purposes
+          const mockFile = new File([''], verification.original_filename, {
+            type: verification.content_type
+          });
+          setSelectedFile(mockFile);
+        }
+        
+      } catch (err: any) {
+        console.error('❌ Exception loading verification:', err);
+        setError('An error occurred while loading the verification.');
+      } finally {
+        setIsLoadingExisting(false);
+      }
+    };
+    
+    loadExistingVerification();
+  }, [verificationId, user]);
   // Check if device supports drag and drop
   useEffect(() => {
     const checkDragSupport = () => {
@@ -677,8 +757,14 @@ const UnifiedVerify = () => {
     setUploadProgress(0);
     setShareToLibrary(false);
     setFileThumbnail(null);
+    setIsLoadingExisting(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    
+    // Navigate back to base verify route if we were viewing a specific verification
+    if (verificationId) {
+      navigate('/verify');
     }
   };
 
@@ -722,26 +808,41 @@ const UnifiedVerify = () => {
           
           <Heading level={1} className="mb-8 text-5xl lg:text-6xl font-black">
             <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              Verify Media Content
+              {verificationId ? 'Verification Report' : 'Verify Media Content'}
             </span>
           </Heading>
           
           <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto text-xl mb-8 leading-relaxed">
-            Upload your video or image to verify its authenticity using our advanced AI detection technology.
-            Get detailed analysis results in seconds.
+            {verificationId 
+              ? 'View your saved verification results and analysis details below.'
+              : 'Upload your video or image to verify its authenticity using our advanced AI detection technology. Get detailed analysis results in seconds.'
+            }
           </Typography>
 
           {/* Usage Limits Display */}
-          <div className="mb-8">
-            <UsageLimitsDisplay compact={true} showTitle={false} />
-          </div>
+          {!verificationId && (
+            <div className="mb-8">
+              <UsageLimitsDisplay compact={true} showTitle={false} />
+            </div>
+          )}
         </div>
       </section>
 
       {/* Main Verification Interface */}
       <section className="pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          {!verificationResult ? (
+          {isLoadingExisting ? (
+            /* Loading Existing Verification */
+            <div className="text-center py-20">
+              <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+              <Typography variant="h3" className="mb-4">
+                Loading Verification Report
+              </Typography>
+              <Typography variant="body" color="secondary">
+                Retrieving your saved verification results...
+              </Typography>
+            </div>
+          ) : !verificationResult ? (
             <div className="space-y-8">
               {/* File Upload Area */}
               <div
@@ -1048,7 +1149,7 @@ const UnifiedVerify = () => {
                   onClick={resetForm}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105"
                 >
-                  <Typography variant="button">Verify Another File</Typography>
+                  <Typography variant="button">{verificationId ? 'Verify New File' : 'Verify Another File'}</Typography>
                 </button>
                 
                <button
