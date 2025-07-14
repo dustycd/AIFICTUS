@@ -302,6 +302,7 @@ const processApiResponse = (
   const generator = report.generator || {};
   const facets = apiResult.facets || {};
   const mediaInfo = report.media_info || {};
+  const aiVideo = report.ai_video || {};
 
   // Calculate probabilities - handle both direct values and nested objects
   let aiConfidence = 0;
@@ -317,6 +318,12 @@ const processApiResponse = (
     humanConfidence = humanData.confidence;
   } else if (typeof humanData === 'number') {
     humanConfidence = humanData;
+  }
+
+  // For videos, check ai_video.confidence as shown in the API response
+  if (aiVideo.confidence !== undefined && typeof aiVideo.confidence === 'number') {
+    aiConfidence = aiVideo.confidence;
+    console.log('📹 Using ai_video.confidence from API:', aiConfidence);
   }
 
   // For images, the API might return direct probability values
