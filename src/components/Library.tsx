@@ -664,17 +664,6 @@ const Library = () => {
                 <Typography variant="caption" className="text-xs font-bold">
                   {displayResult.displayStatus.toUpperCase()}
                 </Typography>
-            </div>
-            <span>{formatFileSize(item.file_size)}</span>
-                <span>{new Date(item.created_at).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{item.processing_time?.toFixed(1)}s</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">{formatFileSize(item.file_size)}</span>
               <div className="flex items-center gap-4">
                 <Typography variant="caption" className="text-xs">
