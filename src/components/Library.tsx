@@ -522,36 +522,6 @@ const Library = () => {
             </Typography>
           </div>
 
-          {/* Stats */}
-          {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-gray-800/30 rounded-xl p-6 text-center border border-gray-700">
-                <Typography variant="h2" color="accent" className="mb-2 numeric-text">
-                  {stats.total_public_items || 0}
-                </Typography>
-                <Typography variant="caption" color="secondary">Total Items</Typography>
-              </div>
-              <div className="bg-gray-800/30 rounded-xl p-6 text-center border border-gray-700">
-                <Typography variant="h2" className="mb-2 text-green-400 numeric-text">
-                  {stats.authentic_count || 0}
-                </Typography>
-                <Typography variant="caption" color="secondary">Authentic</Typography>
-              </div>
-              <div className="bg-gray-800/30 rounded-xl p-6 text-center border border-gray-700">
-                <Typography variant="h2" className="mb-2 text-red-400 numeric-text">
-                  {stats.fake_count || 0}
-                </Typography>
-                <Typography variant="caption" color="secondary">AI Generated</Typography>
-              </div>
-              <div className="bg-gray-800/30 rounded-xl p-6 text-center border border-gray-700">
-                <Typography variant="h2" color="accent" className="mb-2 numeric-text">
-                  {stats.avg_confidence_score ? `${stats.avg_confidence_score.toFixed(1)}%` : '0%'}
-                </Typography>
-                <Typography variant="caption" color="secondary">Avg Confidence</Typography>
-              </div>
-            </div>
-          )}
-
           {/* Search and Filters */}
           <div className="space-y-4">
             {/* Search Bar */}
