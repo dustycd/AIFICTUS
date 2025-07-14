@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, FileText, Download, Share2, Zap, Activity, BarChart3, TrendingUp } from 'lucide-react';
-import { Typography, Heading } from './Typography';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, Download, Share2 } from 'lucide-react';
+import { Typography, Heading, CardSubtitle } from './Typography';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
 import { getVerificationDisplay, getStatusBadgeClasses, formatConfidence } from '../utils/verificationDisplayUtils';
@@ -125,14 +125,6 @@ const Library = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Format date
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   // Generate PDF report
   const generatePDFReport = async (item: LibraryItem) => {
@@ -151,8 +143,8 @@ const Library = () => {
         
         <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
           <h2 style="color: #333; margin-top: 0;">File Information</h2>
-          <p><strong>Original Filename:</strong> ${item.original_filename || item.file_name}</p>
-          <p><strong>File Type:</strong> ${item.content_type}</p>
+          <p><strong>Content Type:</strong> ${item.content_type}</p>
+          <p><strong>Original Filename:</strong> ${item.original_filename || 'N/A'}</p>
           <p><strong>File Size:</strong> ${formatFileSize(item.file_size)}</p>
           <p><strong>Verification Date:</strong> ${formatDate(item.created_at)}</p>
           <p><strong>Report ID:</strong> ${item.report_id || item.id}</p>
@@ -319,23 +311,6 @@ const Library = () => {
 
         {/* Content */}
         <div className="p-6">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1 min-w-0">
-              <Typography variant="cardTitle" className="truncate mb-1">
-                {item.original_filename || item.file_name}
-              </Typography>
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                {isVideo(item.content_type) ? (
-                  <Video className="h-4 w-4" />
-                ) : (
-                  <ImageIcon className="h-4 w-4" />
-                )}
-                <span>{formatFileSize(item.file_size)}</span>
-              </div>
-            </div>
-          </div>
-
           {/* Status Badge */}
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium mb-4 ${getStatusBadgeClasses(verificationDisplay.status)}`}>
             {verificationDisplay.status === 'authentic' ? (
@@ -346,17 +321,65 @@ const Library = () => {
             {verificationDisplay.displayStatus}
           </div>
 
-          {/* Metrics */}
-          <div className="space-y-2">
+          {/* Overall Assessment */}
+          <Typography variant="cardTitle" className="mb-2">
+            {verificationDisplay.qualitativeStatus}
+          </Typography>
+          <Typography variant="cardCaption" color="secondary" className="mb-4">
+            {getRecommendationText(verificationDisplay.status, verificationDisplay.qualitativeStatus)}
+          </Typography>
+
+          {/* Risk Factors (if any) */}
+          {item.risk_factors && item.risk_factors.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-red-400" />
+                <CardSubtitle className="text-red-400">
+                  Detected Risk Factors:
+                </CardSubtitle>
+              </div>
+              <ul className="list-disc list-inside text-sm text-gray-400 space-y-1">
+                {item.risk_factors.slice(0, 2).map((factor, idx) => ( // Limit to 2 for brevity in grid view
+                  <li key={idx} className="truncate">{factor}</li>
+                ))}
+                {item.risk_factors.length > 2 && (
+                  <li className="text-blue-400 cursor-pointer">...view all</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Recommendations (if any) */}
+          {item.recommendations && item.recommendations.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="h-4 w-4 text-green-400" />
+                <CardSubtitle className="text-green-400">
+                  Recommendations:
+                </CardSubtitle>
+              </div>
+              <ul className="list-disc list-inside text-sm text-gray-400 space-y-1">
+                {item.recommendations.slice(0, 2).map((rec, idx) => ( // Limit to 2 for brevity
+                  <li key={idx} className="truncate">{rec}</li>
+                ))}
+                {item.recommendations.length > 2 && (
+                  <li className="text-blue-400 cursor-pointer">...view all</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Metrics (Confidence and Processing Time) */}
+          <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-2">
             <div className="flex justify-between items-center">
               <Typography variant="caption" color="secondary">Confidence</Typography>
-              <Typography variant="caption" className="font-medium">
+              <Typography variant="caption" className="font-medium numeric-text">
                 {formatConfidence(item.confidence_score)}
               </Typography>
             </div>
             <div className="flex justify-between items-center">
               <Typography variant="caption" color="secondary">Processing Time</Typography>
-              <Typography variant="caption" className="font-medium">
+              <Typography variant="caption" className="font-medium numeric-text">
                 {item.processing_time.toFixed(2)}s
               </Typography>
             </div>
@@ -398,10 +421,8 @@ const Library = () => {
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <Typography variant="cardTitle" className="truncate">
-                {item.original_filename || item.file_name}
-              </Typography>
+            <div className="flex items-start justify-between mb-2 gap-4">
+              {/* Status Badge */}
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusBadgeClasses(verificationDisplay.status)}`}>
                 {verificationDisplay.status === 'authentic' ? (
                   <CheckCircle className="h-4 w-4" />
@@ -410,30 +431,70 @@ const Library = () => {
                 )}
                 {verificationDisplay.displayStatus}
               </div>
+              {/* Date */}
+              <div className="flex items-center gap-1 text-sm text-gray-400 flex-shrink-0">
+                <Calendar className="h-4 w-4" />
+                <span>{formatDate(item.created_at)}</span>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm text-gray-400">
-                <div className="flex items-center gap-1">
-                  {isVideo(item.content_type) ? (
-                    <Video className="h-4 w-4" />
-                  ) : (
-                    <ImageIcon className="h-4 w-4" />
+            {/* Overall Assessment */}
+            <Typography variant="cardTitle" className="mb-2">
+              {verificationDisplay.qualitativeStatus}
+            </Typography>
+            <Typography variant="cardCaption" color="secondary" className="mb-4">
+              {getRecommendationText(verificationDisplay.status, verificationDisplay.qualitativeStatus)}
+            </Typography>
+
+            {/* Risk Factors (if any) */}
+            {item.risk_factors && item.risk_factors.length > 0 && (
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-red-400" />
+                  <CardSubtitle className="text-red-400">
+                    Detected Risk Factors:
+                  </CardSubtitle>
+                </div>
+                <ul className="list-disc list-inside text-sm text-gray-400 space-y-1">
+                  {item.risk_factors.slice(0, 1).map((factor, idx) => ( // Limit to 1 for brevity in list view
+                    <li key={idx} className="truncate">{factor}</li>
+                  ))}
+                  {item.risk_factors.length > 1 && (
+                    <li className="text-blue-400 cursor-pointer">...view all</li>
                   )}
-                  <span>{formatFileSize(item.file_size)}</span>
+                </ul>
+              </div>
+            )}
+
+            {/* Recommendations (if any) */}
+            {item.recommendations && item.recommendations.length > 0 && (
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-4 w-4 text-green-400" />
+                  <CardSubtitle className="text-green-400">
+                    Recommendations:
+                  </CardSubtitle>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>{formatDate(item.created_at)}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Brain className="h-4 w-4" />
-                  <span>{formatConfidence(item.confidence_score)} confidence</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>{item.processing_time.toFixed(2)}s</span>
-                </div>
+                <ul className="list-disc list-inside text-sm text-gray-400 space-y-1">
+                  {item.recommendations.slice(0, 1).map((rec, idx) => ( // Limit to 1 for brevity
+                    <li key={idx} className="truncate">{rec}</li>
+                  ))}
+                  {item.recommendations.length > 1 && (
+                    <li className="text-blue-400 cursor-pointer">...view all</li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            {/* Metrics (Confidence and Processing Time) */}
+            <div className="flex items-center gap-4 text-sm text-gray-400 mt-4 pt-4 border-t border-gray-700/50">
+              <div className="flex items-center gap-1">
+                <Brain className="h-4 w-4" />
+                <span className="numeric-text">{formatConfidence(item.confidence_score)} confidence</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span className="numeric-text">{item.processing_time.toFixed(2)}s</span>
               </div>
             </div>
           </div>
@@ -633,7 +694,7 @@ const Library = () => {
         {/* Modal */}
         {selectedItem && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in-scale">
               {/* Modal Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-700">
                 <div className="flex-1 min-w-0">
@@ -642,16 +703,10 @@ const Library = () => {
                   </Typography>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <div className="flex items-center gap-1">
-                      {isVideo(selectedItem.content_type) ? (
-                        <Video className="h-4 w-4" />
-                      ) : (
-                        <ImageIcon className="h-4 w-4" />
-                      )}
-                      <span>{formatFileSize(selectedItem.file_size)}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{formatDate(selectedItem.created_at)}</span>
+                      <Typography variant="caption">
+                        {formatDate(selectedItem.created_at)}
+                      </Typography>
                     </div>
                   </div>
                 </div>
@@ -669,6 +724,18 @@ const Library = () => {
                   {/* Media Preview */}
                   <div>
                     <div className="w-full h-64 lg:h-80">
+                      {/* File Type and Size */}
+                      <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                        {isVideo(selectedItem.content_type) ? (
+                          <Video className="h-4 w-4" />
+                        ) : (
+                          <ImageIcon className="h-4 w-4" />
+                        )}
+                        <Typography variant="caption">
+                          {formatFileSize(selectedItem.file_size)}
+                        </Typography>
+                      </div>
+
                       {renderMediaPreview(selectedItem)}
                     </div>
                   </div>
@@ -696,13 +763,35 @@ const Library = () => {
                         );
                       })()}
                     </div>
+                    
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+                        <Typography variant="cardCaption" color="secondary" className="mb-1">
+                          Confidence Score
+                        </Typography>
+                        <Typography variant="cardTitle" className="numeric-text">
+                          {formatConfidence(selectedItem.confidence_score)}
+                        </Typography>
+                      </div>
+                      <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+                        <Typography variant="cardCaption" color="secondary" className="mb-1">
+                          Processing Time
+                        </Typography>
+                        <Typography variant="cardTitle" className="numeric-text">
+                          {selectedItem.processing_time.toFixed(2)}s
+                        </Typography>
+                      </div>
+                    </div>
+
+
 
                     {/* Risk Factors */}
                     {selectedItem.risk_factors && selectedItem.risk_factors.length > 0 && (
                       <div>
                         <Typography variant="h4" className="mb-3">Risk Factors</Typography>
                         <div className="space-y-2">
-                          {selectedItem.risk_factors.map((factor, index) => (
+                          {selectedItem.risk_factors.map((factor: string, index: number) => (
                             <div key={index} className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                               <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
                               <Typography variant="cardCaption" className="text-red-400">
@@ -719,7 +808,7 @@ const Library = () => {
                       <div>
                         <Typography variant="h4" className="mb-3">Recommendations</Typography>
                         <div className="space-y-2">
-                          {selectedItem.recommendations.map((rec, index) => (
+                          {selectedItem.recommendations.map((rec: string, index: number) => (
                             <div key={index} className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                               <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
                               <Typography variant="cardCaption" className="text-blue-400">
