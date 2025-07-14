@@ -697,29 +697,6 @@ const Library = () => {
                       })()}
                     </div>
 
-                    {/* Metrics */}
-                    <div>
-                      <Typography variant="h4" className="mb-3">Analysis Results</Typography>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                          <span>Confidence Score</span>
-                          <span className="font-medium">{formatConfidence(selectedItem.confidence_score)}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                          <span>AI Probability</span>
-                          <span className="font-medium">{formatConfidence(selectedItem.ai_probability)}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                          <span>Human Probability</span>
-                          <span className="font-medium">{formatConfidence(selectedItem.human_probability)}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                          <span>Processing Time</span>
-                          <span className="font-medium">{selectedItem.processing_time.toFixed(2)}s</span>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Risk Factors */}
                     {selectedItem.risk_factors && selectedItem.risk_factors.length > 0 && (
                       <div>
