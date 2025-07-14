@@ -4,6 +4,7 @@ import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, 
 import { Typography, Heading } from './Typography';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
+import { getVerificationDisplay, getStatusBadgeClasses, formatConfidence } from '../utils/verificationDisplayUtils';
 
 interface LibraryItem {
   id: string;
@@ -456,10 +457,15 @@ const Library = () => {
   };
 
   const renderItemCard = (item: LibraryItem) => {
+    // Get definite display status based on AI/Human probabilities
+    const displayResult = getVerificationDisplay(
+      item.ai_probability,
+      item.human_probability,
+      item.verification_status
+    );
+
     const itemIndex = items.findIndex(i => i.id === item.id);
     const mediaUrl = getMediaUrl(item);
-    const statusInfo = getStatusInfo(item.verification_status);
-    const StatusIcon = statusInfo.icon;
 
     return (
       <div
@@ -512,10 +518,14 @@ const Library = () => {
 
           {/* Status Badge */}
           <div className="absolute top-3 left-3">
-            <div className={`flex items-center gap-2 px-2 py-1 rounded-lg border ${statusInfo.color} backdrop-blur-sm`}>
-              <StatusIcon className="h-3 w-3" />
+            <div className={`flex items-center gap-2 px-2 py-1 rounded-lg border ${displayResult.bgColor} ${displayResult.borderColor} backdrop-blur-sm`}>
+              {displayResult.statusIcon === 'CheckCircle' ? (
+                <CheckCircle className={`h-3 w-3 ${displayResult.statusColor}`} />
+              ) : (
+                <AlertTriangle className={`h-3 w-3 ${displayResult.statusColor}`} />
+              )}
               <Typography variant="caption" className="text-xs font-bold">
-                {statusInfo.label}
+                {displayResult.displayStatus.toUpperCase()}
               </Typography>
             </div>
           </div>
@@ -523,8 +533,8 @@ const Library = () => {
           {/* Confidence score */}
           <div className="absolute top-3 right-3">
             <div className="bg-black/80 px-2 py-1 rounded-lg backdrop-blur-sm">
-              <Typography variant="caption" className="text-white text-xs font-bold numeric-text">
-                {Math.round(item.confidence_score)}%
+              <Typography variant="caption" className={`font-bold text-xs numeric-text ${displayResult.statusColor}`}>
+                {formatConfidence(displayResult.confidence)}
               </Typography>
             </div>
           </div>
@@ -579,10 +589,15 @@ const Library = () => {
 
   // Render list item
   const renderListItem = (item: LibraryItem) => {
+    // Get definite display status based on AI/Human probabilities
+    const displayResult = getVerificationDisplay(
+      item.ai_probability,
+      item.human_probability,
+      item.verification_status
+    );
+
     const itemIndex = items.findIndex(i => i.id === item.id);
     const mediaUrl = getMediaUrl(item);
-    const statusInfo = getStatusInfo(item.verification_status);
-    const StatusIcon = statusInfo.icon;
 
     return (
       <div
@@ -638,10 +653,14 @@ const Library = () => {
               </Typography>
               
               {/* Status badge */}
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border ${statusInfo.color} flex-shrink-0`}>
-                <StatusIcon className="h-3 w-3" />
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border ${displayResult.bgColor} ${displayResult.borderColor} flex-shrink-0`}>
+                {displayResult.statusIcon === 'CheckCircle' ? (
+                  <CheckCircle className={`h-3 w-3 ${displayResult.statusColor}`} />
+                ) : (
+                  <AlertTriangle className={`h-3 w-3 ${displayResult.statusColor}`} />
+                )}
                 <Typography variant="caption" className="text-xs font-bold">
-                  {statusInfo.label}
+                  {displayResult.displayStatus.toUpperCase()}
                 </Typography>
               </div>
             </div>
@@ -668,8 +687,8 @@ const Library = () => {
                   {item.verification_status === 'fake' ? 'AI' : 'Human'}: {Math.round(item.verification_status === 'fake' ? item.ai_probability || 0 : item.human_probability || 0)}%
                 </Typography>
                 <div className="bg-black/60 px-2 py-1 rounded-full">
-                  <Typography variant="caption" className="text-white text-xs font-bold numeric-text">
-                    {Math.round(item.confidence_score)}%
+                  <Typography variant="caption" className={`font-bold text-xs numeric-text ${displayResult.statusColor}`}>
+                    {formatConfidence(displayResult.confidence)}
                   </Typography>
                 </div>
               </div>
