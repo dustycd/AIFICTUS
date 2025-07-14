@@ -880,6 +880,19 @@ const UnifiedVerify = () => {
             }
           </Typography>
 
+          {/* Clear Verification Button - Show when there's content to clear */}
+          {(selectedFile || verificationResult || error) && !isVerifying && (
+            <div className="text-center">
+              <button
+                onClick={clearVerificationSession}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-xl transition-all duration-300 transform hover:scale-105"
+              >
+                <X className="h-4 w-4" />
+                <Typography variant="button">Clear Verification</Typography>
+              </button>
+            </div>
+          )}
+
           {/* Usage Limits Display */}
           {!verificationId && (
             <div className="mb-8">
