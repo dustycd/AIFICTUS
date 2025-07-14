@@ -69,7 +69,7 @@ const HowItWorks = () => {
                 <Typography variant="cardTitle" className="mb-4">
                   {step.title}
                 </Typography>
-                <Typography variant="body" color="secondary" className="leading-relaxed text-justify">
+                <Typography variant="cardCaption" color="secondary" className="leading-relaxed">
                   {step.description}
                 </Typography>
               </div>
