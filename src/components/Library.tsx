@@ -40,7 +40,7 @@ const Library: React.FC = () => {
   const loadLibraryItems = async () => {
     try {
       setLoading(true);
-      const allItems = await db.verifications.toArray();
+      const allItems = await db.verifications.getPublicLibraryItems();
       
       // Generate AI/Human data for items that don't have it
       const itemsWithData = allItems.map(generateAIOrNotData);
