@@ -7,25 +7,25 @@ const HowItWorks = () => {
     {
       icon: <Film className="h-8 w-8" />,
       title: "Upload Your Video",
-      description: "Simply drag and drop your video file or browse to select. We support all major formats including MP4, MOV, AVI, WebM, and more.",
+      description: "Simply drag and drop your video file or browse to select from your device. We support all major video formats including MP4, MOV, AVI, WebM, MKV, and many more for comprehensive compatibility.",
       color: "text-blue-400"
     },
     {
       icon: <Eye className="h-8 w-8" />,
       title: "AI Analysis Engine",
-      description: "Our advanced neural networks analyze facial movements, temporal consistency, lighting patterns, and compression artifacts in real-time.",
+      description: "Our advanced neural networks analyze facial movements, temporal consistency, lighting patterns, and compression artifacts in real-time using sophisticated machine learning algorithms for accurate detection.",
       color: "text-cyan-400"
     },
     {
       icon: <Volume2 className="h-8 w-8" />,
       title: "Multi-Layer Detection",
-      description: "We use multiple AI models including deepfake detection, face swap identification, audio-visual synchronization, and temporal analysis.",
+      description: "We use multiple AI models including deepfake detection, face swap identification, audio-visual synchronization, and temporal analysis to provide comprehensive verification coverage.",
       color: "text-purple-400"
     },
     {
       icon: <Shield className="h-8 w-8" />,
       title: "Verification Report",
-      description: "Get a detailed confidence score, highlighted suspicious regions, and a comprehensive authenticity certificate within seconds.",
+      description: "Get a detailed confidence score, highlighted suspicious regions, and a comprehensive authenticity certificate within seconds for complete verification documentation.",
       color: "text-green-400"
     }
   ];
@@ -54,7 +54,7 @@ const HowItWorks = () => {
               )}
               
               {/* Step Card */}
-              <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all duration-300 group-hover:transform group-hover:scale-105">
+              <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all duration-300 group-hover:transform group-hover:scale-105 h-64 flex flex-col">
                 {/* Step Number */}
                 <div className="absolute -top-3 -left-3 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-sm font-bold">
                   {index + 1}
@@ -66,10 +66,10 @@ const HowItWorks = () => {
                 </div>
                 
                 {/* Content */}
-                <Typography variant="cardTitle" className="mb-3">
+                <Typography variant="cardTitle" className="mb-4">
                   {step.title}
                 </Typography>
-                <Typography variant="cardCaption" color="secondary" className="leading-relaxed text-justify">
+                <Typography variant="cardCaption" color="secondary" className="leading-relaxed text-justify flex-1 flex items-center">
                   {step.description}
                 </Typography>
               </div>
