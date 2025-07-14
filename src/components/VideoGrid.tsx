@@ -253,16 +253,6 @@ const VideoGrid = () => {
           </div>
           
           {/* Status and confidence display */}
-          <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white opacity-90">
-            <div className="text-center">
-              <div className={`text-xs font-bold ${displayData.statusColor} mb-1`}>
-                {displayData.displayStatus}
-              </div>
-              <span className="numeric-text font-bold">
-                {Math.round(displayData.confidence)}%
-              </span>
-            </div>
-          </div>
         </div>
       );
     } else {
@@ -287,17 +277,6 @@ const VideoGrid = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           
-          {/* Status and confidence display */}
-          <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white opacity-90">
-            <div className="text-center">
-              <div className={`text-xs font-bold ${displayData.statusColor} mb-1`}>
-                {displayData.displayStatus}
-              </div>
-              <span className="numeric-text font-bold">
-                {Math.round(displayData.confidence)}%
-              </span>
-            </div>
-          </div>
         </div>
       );
     }
