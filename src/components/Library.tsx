@@ -149,8 +149,6 @@ const Library = () => {
         <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
           <h2 style="color: #333; margin-top: 0;">File Information</h2>
           <p><strong>Content Type:</strong> ${item.content_type}</p>
-          <p><strong>Original Filename:</strong> ${item.original_filename || 'N/A'}</p>
-          <p><strong>File Size:</strong> ${formatFileSize(item.file_size)}</p>
           <p><strong>Verification Date:</strong> ${formatDate(item.created_at)}</p>
           <p><strong>Report ID:</strong> ${item.report_id || item.id}</p>
         </div>
