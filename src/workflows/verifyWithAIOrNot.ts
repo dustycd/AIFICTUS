@@ -304,32 +304,59 @@ const processApiResponse = (
   const mediaInfo = report.media_info || {};
   const aiVideo = report.ai_video || {};
 
-  // Calculate probabilities - handle both direct values and nested objects
   let aiConfidence = 0;
   let humanConfidence = 0;
 
-  if (typeof aiData.confidence === 'number') {
-    aiConfidence = aiData.confidence;
-  } else if (typeof aiData === 'number') {
-    aiConfidence = aiData;
-  }
-
-  if (typeof humanData.confidence === 'number') {
-    humanConfidence = humanData.confidence;
-  } else if (typeof humanData === 'number') {
-    humanConfidence = humanData;
-  }
-
-  // For videos, check ai_video.confidence as shown in the API response
-  if (aiVideo.confidence !== undefined && typeof aiVideo.confidence === 'number') {
-    aiConfidence = aiVideo.confidence;
-    console.log('📹 Using ai_video.confidence from API:', aiConfidence);
-  }
-
-  // For images, the API might return direct probability values
-  if (isImage && apiResult.ai_probability !== undefined) {
-    aiConfidence = apiResult.ai_probability;
-    humanConfidence = apiResult.human_probability || (1 - aiConfidence);
+  // Prioritize probabilities from the most specific fields
+  if (isImage) {
+    // For images, probabilities are often directly in apiResult
+    if (apiResult.ai_probability !== undefined && typeof apiResult.ai_probability === 'number') {
+      aiConfidence = apiResult.ai_probability;
+      humanConfidence = apiResult.human_probability !== undefined && typeof apiResult.human_probability === 'number'
+        ? apiResult.human_probability
+        : (1 - aiConfidence); // Fallback if human_probability is missing
+      console.log('📸 Using direct probabilities from API for image:', { aiConfidence, humanConfidence });
+    } else {
+      // Fallback to general aiData/humanData if direct probabilities are not found
+      if (typeof aiData.confidence === 'number') {
+        aiConfidence = aiData.confidence;
+      } else if (typeof aiData === 'number') {
+        aiConfidence = aiData;
+      }
+      if (typeof humanData.confidence === 'number') {
+        humanConfidence = humanData.confidence;
+      } else if (typeof humanData === 'number') {
+        humanConfidence = humanData;
+      }
+      console.warn('⚠️ Image API did not provide direct probabilities, falling back to aiData/humanData:', { aiConfidence, humanConfidence });
+    }
+  } else { // It's a video
+    // For videos, probabilities are typically in report.ai_video
+    if (aiVideo.ai_probability !== undefined && typeof aiVideo.ai_probability === 'number') {
+      aiConfidence = aiVideo.ai_probability;
+      humanConfidence = aiVideo.human_probability !== undefined && typeof aiVideo.human_probability === 'number'
+        ? aiVideo.human_probability
+        : (1 - aiConfidence); // Fallback if human_probability is missing
+      console.log('📹 Using ai_video probabilities from API for video:', { aiConfidence, humanConfidence });
+    } else if (aiVideo.confidence !== undefined && typeof aiVideo.confidence === 'number') {
+      // Fallback if only aiVideo.confidence is provided, assume it's AI confidence
+      aiConfidence = aiVideo.confidence;
+      humanConfidence = 1 - aiConfidence; // Infer human confidence
+      console.warn('⚠️ Video API provided only ai_video.confidence, inferring human confidence:', { aiConfidence, humanConfidence });
+    } else {
+      // Fallback to general aiData/humanData if ai_video probabilities are not found
+      if (typeof aiData.confidence === 'number') {
+        aiConfidence = aiData.confidence;
+      } else if (typeof aiData === 'number') {
+        aiConfidence = aiData;
+      }
+      if (typeof humanData.confidence === 'number') {
+        humanConfidence = humanData.confidence;
+      } else if (typeof humanData === 'number') {
+        humanConfidence = humanData;
+      }
+      console.warn('⚠️ Video API did not provide ai_video probabilities or confidence, falling back to aiData/humanData:', { aiConfidence, humanConfidence });
+    }
   }
 
   // Log extracted probabilities from API
@@ -340,7 +367,6 @@ const processApiResponse = (
     hasAiData: !!aiData,
     hasHumanData: !!humanData
   });
-
   // If API doesn't provide probabilities, warn and keep them as zero
   if (aiConfidence === 0 && humanConfidence === 0) {
     console.warn('⚠️ API did not provide confidence values - using zero values (no fallback)');
