@@ -58,65 +58,60 @@ const Library = () => {
   const generateAIOrNotData = (item: LibraryItem) => {
     const isVideo = item.content_type.startsWith('video/');
 
-    // Preserve original verification status as a hint for probability generation
-    const originalStatusHint = item.verification_status;
-
+    // Use database values directly for consistent results
+    const dbConfidence = item.confidence_score || 0;
+    const dbStatus = item.verification_status;
+    
+    // Derive probabilities from database values
     let finalAiProb: number;
     let finalHumanProb: number;
-    let determinedStatus: 'authentic' | 'fake';
-    let confidenceForDisplay: number;
-
-    if (originalStatusHint === 'authentic') {
-      // For authentic content, keep low AI probability
-      finalAiProb = Math.random() * 15 + 5; // 5-20% AI probability
-      finalHumanProb = 100 - finalAiProb;
-    } else if (originalStatusHint === 'fake') {
-      // For fake content, high AI probability
-      finalAiProb = Math.random() * 25 + 70; // 70-95% AI probability
-      finalHumanProb = 100 - finalAiProb;
+    
+    if (dbStatus === 'fake') {
+      finalAiProb = dbConfidence;
+      finalHumanProb = 100 - dbConfidence;
+    } else if (dbStatus === 'authentic') {
+      finalHumanProb = dbConfidence;
+      finalAiProb = 100 - dbConfidence;
     } else {
-      // For suspicious content, moderate AI probability
-      finalAiProb = Math.random() * 30 + 35; // 35-65% AI probability
+      // For suspicious or other statuses, split evenly around 50%
+      finalAiProb = 50 + (dbConfidence - 50) * 0.5;
       finalHumanProb = 100 - finalAiProb;
     }
-
-    // Determine the actual status and confidence based on the generated probabilities
-    if (finalAiProb > finalHumanProb) {
-      determinedStatus = 'fake';
-      confidenceForDisplay = finalAiProb;
-    } else {
-      determinedStatus = 'authentic';
-      confidenceForDisplay = finalHumanProb;
-    }
+    
+    // Use database status and confidence directly
+    const determinedStatus = dbStatus === 'fake' ? 'fake' : 'authentic';
+    const confidenceForDisplay = dbConfidence;
 
     // Generate detection details based on AI or Not API structure
     const detectionDetails = {
-      faceAnalysis: item.verification_status === 'authentic' ? 85 + Math.random() * 10 : 60 + Math.random() * 25,
-      compressionArtifacts: item.verification_status === 'authentic' ? 90 + Math.random() * 8 : 70 + Math.random() * 20,
+      faceAnalysis: dbStatus === 'authentic' ? 85 + (dbConfidence / 100) * 10 : 60 + (finalAiProb / 100) * 25,
+      compressionArtifacts: dbStatus === 'authentic' ? 90 + (dbConfidence / 100) * 8 : 70 + (finalAiProb / 100) * 20,
       ...(isVideo && {
-        temporalConsistency: item.verification_status === 'authentic' ? 88 + Math.random() * 10 : 65 + Math.random() * 25,
-        audioAnalysis: item.verification_status === 'authentic' ? 85 + Math.random() * 12 : 60 + Math.random() * 30,
+        temporalConsistency: dbStatus === 'authentic' ? 88 + (dbConfidence / 100) * 10 : 65 + (finalAiProb / 100) * 25,
+        audioAnalysis: dbStatus === 'authentic' ? 85 + (dbConfidence / 100) * 12 : 60 + (finalAiProb / 100) * 30,
       }),
       ...(!isVideo && {
-        metadataAnalysis: item.verification_status === 'authentic' ? 92 + Math.random() * 6 : 75 + Math.random() * 18,
-        pixelAnalysis: item.verification_status === 'authentic' ? 89 + Math.random() * 8 : 70 + Math.random() * 20,
+        metadataAnalysis: dbStatus === 'authentic' ? 92 + (dbConfidence / 100) * 6 : 75 + (finalAiProb / 100) * 18,
+        pixelAnalysis: dbStatus === 'authentic' ? 89 + (dbConfidence / 100) * 8 : 70 + (finalAiProb / 100) * 20,
       }),
     };
 
     // Generate generator analysis (common AI generators)
     const generators = ['midjourney', 'dall_e', 'stable_diffusion', 'gpt_generated', 'deepfake_app'];
-    const topGenerator = generators[Math.floor(Math.random() * generators.length)];
-    const generatorConfidence = determinedStatus === 'fake' ? 0.6 + Math.random() * 0.3 : Math.random() * 0.2;
+    // Use item ID to consistently select the same generator
+    const generatorIndex = parseInt(item.id.slice(-1), 16) % generators.length;
+    const topGenerator = generators[generatorIndex];
+    const generatorConfidence = determinedStatus === 'fake' ? 0.6 + (finalAiProb / 100) * 0.3 : (finalAiProb / 100) * 0.2;
     
     // Generate facets (AI or Not API structure)
     const facets = {
       quality: {
-        is_detected: Math.random() > 0.3,
-        confidence: 0.7 + Math.random() * 0.25
+        is_detected: dbConfidence > 30,
+        confidence: 0.7 + (dbConfidence / 100) * 0.25
       },
       nsfw: {
-        is_detected: Math.random() > 0.9, // Rarely NSFW
-        confidence: Math.random() * 0.1
+        is_detected: false, // Rarely NSFW
+        confidence: 0.05
       }
     };
 
@@ -124,18 +119,18 @@ const Library = () => {
     const riskFactors = [];
     if (determinedStatus === 'fake') {
       riskFactors.push('AI-generated content detected');
-      if (generatorConfidence > 0.7) {
+      if (finalAiProb > 70) {
         riskFactors.push(`Likely generated by ${topGenerator.replace(/_/g, ' ')}`);
       } 
-      if (detectionDetails.faceAnalysis < 80) {
+      if (detectionDetails.faceAnalysis && detectionDetails.faceAnalysis < 80) {
         riskFactors.push('Inconsistent facial features detected');
       }
-      if (isVideo && detectionDetails.temporalConsistency < 75) {
+      if (isVideo && detectionDetails.temporalConsistency && detectionDetails.temporalConsistency < 75) {
         riskFactors.push('Temporal inconsistencies found');
       }
-    } else if (item.verification_status === 'suspicious') {
-      riskFactors.push('Some AI indicators detected'); // This branch will likely not be hit due to determinedStatus logic
-      if (Math.random() > 0.5) {
+    } else if (dbStatus === 'suspicious') {
+      riskFactors.push('Some AI indicators detected');
+      if (finalAiProb > 40) {
         riskFactors.push('Requires additional verification');
       }
     }
@@ -173,25 +168,25 @@ const Library = () => {
       human_probability: finalHumanProb,
       confidence_score: confidenceForDisplay,
       verification_status: determinedStatus, // Use the determined status
-      processing_time: 1.5 + Math.random() * 8,
+      processing_time: 1.5 + ((parseInt(item.id.slice(-2), 16) % 100) / 100) * 8, // Consistent based on item ID
       detection_details: detectionDetails,
       risk_factors: riskFactors,
       recommendations: recommendations,
-      report_id: `rpt_${Math.random().toString(36).substr(2, 9)}`,
-      api_verdict: item.verification_status === 'fake' ? 'ai' : 'human',
+      report_id: `rpt_${item.id.slice(-9)}`, // Consistent report ID based on item ID
+      api_verdict: determinedStatus === 'fake' ? 'ai' : 'human',
       generator_analysis: {
-        [topGenerator]: item.verification_status === 'fake' ? generatorConfidence : Math.random() * 0.2,
+        [topGenerator]: determinedStatus === 'fake' ? generatorConfidence : (finalAiProb / 100) * 0.2,
         confidence: generatorConfidence
       },
       facets: facets,
       raw_api_response: {
-        id: `rpt_${Math.random().toString(36).substr(2, 9)}`,
+        id: `rpt_${item.id.slice(-9)}`,
         status: 'completed',
         report: {
           verdict: determinedStatus === 'fake' ? 'ai' : 'human',
           ai: { confidence: finalAiProb / 100 },
           human: { confidence: finalHumanProb / 100 },
-          generator: { [topGenerator]: item.verification_status === 'fake' ? generatorConfidence : Math.random() * 0.2 }
+          generator: { [topGenerator]: determinedStatus === 'fake' ? generatorConfidence : (finalAiProb / 100) * 0.2 }
         },
         facets: facets
       }
