@@ -3,7 +3,7 @@ import { isImageFile, formatFileSize } from '../utils/fileUtils';
 export interface VerificationResult {
   id: string;
   confidence: number;
-  status: 'authentic' | 'suspicious' | 'fake';
+  status: 'authentic' | 'fake';
   processingTime: number;
   fileSize: string;
   resolution: string;
@@ -343,29 +343,23 @@ const processApiResponse = (
     verdict: report.verdict
   });
 
-  // Determine status based on verdict and confidence
-  let status: 'authentic' | 'suspicious' | 'fake' = 'authentic';
+  // Determine status based on which probability is higher - definite answer only
+  let status: 'authentic' | 'fake' = 'authentic';
+  let finalConfidence = humanProbability;
   
-  if (report.verdict === 'ai' || aiConfidence > 0.7) {
+  if (aiProbability > humanProbability) {
     status = 'fake';
-  } else if (report.verdict === 'ai' || aiConfidence > 0.3) {
-    status = 'suspicious';
-  } else if (humanConfidence > 0.7) {
-    status = 'authentic';
+    finalConfidence = aiProbability;
   } else {
-    // Default based on confidence levels
-    if (aiConfidence > humanConfidence) {
-      status = aiConfidence > 0.5 ? 'fake' : 'suspicious';
-    } else {
-      status = 'authentic';
-    }
+    status = 'authentic';
+    finalConfidence = humanProbability;
   }
 
-  console.log(`🎯 Final status: ${status}`);
+  console.log(`🎯 Final status: ${status} with ${finalConfidence.toFixed(1)}% confidence`);
 
-  // Build risk factors based on detection
+  // Build risk factors based on definite detection
   const riskFactors = [];
-  if (status === 'fake' || status === 'suspicious') {
+  if (status === 'fake') {
     riskFactors.push('AI-generated content detected');
     
     // Find top generator if available
@@ -418,11 +412,14 @@ const processApiResponse = (
   if (status === 'fake' || status === 'suspicious') {
     recommendations.push('Exercise caution when sharing this content');
     recommendations.push('Seek additional verification from trusted sources');
+  } else {
+    recommendations.push('Content appears to be human-created');
+    recommendations.push('Standard verification practices still recommended');
   }
 
   const result = {
     id: apiResult.id || `temp-${Date.now()}`,
-    confidence: Math.max(0, Math.min(100, humanProbability)),
+    confidence: Math.max(0, Math.min(100, finalConfidence)),
     status: status,
     processingTime: Math.max(0.1, processingTime),
     fileSize: formatFileSize(file.size),

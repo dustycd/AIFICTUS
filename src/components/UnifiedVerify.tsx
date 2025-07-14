@@ -11,7 +11,7 @@ import verifyWithAIOrNot from '../workflows/verifyWithAIOrNot';
 interface VerificationResult {
   id: string;
   confidence: number;
-  status: 'authentic' | 'suspicious' | 'fake';
+  status: 'authentic' | 'fake';
   processingTime: number;
   fileSize: string;
   resolution: string;
@@ -687,10 +687,8 @@ const UnifiedVerify = () => {
     switch (status) {
       case 'authentic':
         return <CheckCircle className="h-8 w-8 text-green-400" />;
-      case 'suspicious':
-        return <AlertTriangle className="h-8 w-8 text-yellow-400" />;
       case 'fake':
-        return <Shield className="h-8 w-8 text-red-400" />;
+        return <AlertTriangle className="h-8 w-8 text-red-400" />;
       default:
         return <Clock className="h-8 w-8 text-gray-400" />;
     }
@@ -701,8 +699,6 @@ const UnifiedVerify = () => {
     switch (status) {
       case 'authentic':
         return 'from-green-500/20 to-emerald-500/20 border-green-500/30';
-      case 'suspicious':
-        return 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30';
       case 'fake':
         return 'from-red-500/20 to-pink-500/20 border-red-500/30';
       default:
@@ -914,7 +910,7 @@ const UnifiedVerify = () => {
                   {getStatusIcon(verificationResult.status)}
                 </div>
                 <Typography variant="h2" className="mb-2 capitalize">
-                  {verificationResult.status}
+                  {verificationResult.status === 'authentic' ? 'Human Created' : 'AI Generated'}
                 </Typography>
                 <Typography variant="h3" className="mb-4">
                   <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
