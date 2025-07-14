@@ -815,6 +815,27 @@ const Library = () => {
                 </div>
              </div>
 
+              {/* Recommendations Section */}
+              <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="h-6 w-6 text-blue-400" />
+                  <Typography variant="h4" className="text-blue-400 font-semibold">
+                    Recommendations
+                  </Typography>
+                </div>
+                
+                <div className="space-y-3">
+                  {selectedItem.recommendations.slice(0, 4).map((rec, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-blue-500/5 rounded-lg">
+                      <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                      <Typography variant="body" className="text-blue-300">
+                        {rec}
+                      </Typography>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
              {/* Clear Filters Button */}
              <div className="mt-6 pt-6 border-t border-gray-700">
                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -1126,15 +1147,6 @@ const Library = () => {
                   </div>
                 </div>
               </div>
-                      {selectedItem.recommendations.slice(0, 4).map((rec, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-500/5 rounded-lg">
-                          <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                          <Typography variant="body" className="text-blue-300">
-                            {rec}
-                          </Typography>
-                        </div>
-                      ))}
-                    </div>
 
               {/* Action Buttons - Professional Style */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-700">
