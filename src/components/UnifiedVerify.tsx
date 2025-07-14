@@ -107,14 +107,16 @@ const UnifiedVerify = () => {
         console.log('✅ Loaded verification:', verification);
         
         // Convert database record to VerificationResult format
+        const metadata = verification.metadata || {};
+        
         const result: VerificationResult = {
           id: verification.id,
           confidence: verification.confidence_score || 0,
           status: verification.verification_status as 'authentic' | 'fake',
           processingTime: verification.processing_time || 0,
           fileSize: formatFileSize(verification.file_size || 0),
-          resolution: '1920x1080', // This would be stored in metadata
-          duration: verification.content_type.startsWith('video/') ? '0:45' : undefined,
+          resolution: metadata.resolution || '1920x1080',
+          duration: metadata.duration || (verification.content_type.startsWith('video/') ? '0:45' : undefined),
           aiProbability: verification.ai_probability || 0,
           humanProbability: verification.human_probability || 0,
           detectionDetails: verification.detection_details || {
@@ -126,8 +128,20 @@ const UnifiedVerify = () => {
           reportId: verification.report_id,
           storagePath: verification.storage_path,
           storageUrl: verification.file_url,
+          rawApiResponse: metadata.rawApiResponse,
+          generatorAnalysis: metadata.generatorAnalysis,
+          apiVerdict: metadata.apiVerdict,
           contentType: verification.content_type.startsWith('image/') ? 'image' : 'video'
         };
+        
+        console.log('📊 Loaded verification with metadata:', {
+          id: result.id,
+          resolution: result.resolution,
+          duration: result.duration,
+          hasRawApiResponse: !!result.rawApiResponse,
+          hasGeneratorAnalysis: !!result.generatorAnalysis,
+          apiVerdict: result.apiVerdict
+        });
         
         setVerificationResult(result);
         
@@ -441,7 +455,16 @@ const UnifiedVerify = () => {
         risk_factors: result.riskFactors,
         recommendations: result.recommendations,
         report_id: result.reportId,
-        upload_progress: 100
+        upload_progress: 100,
+        metadata: {
+          resolution: result.resolution,
+          duration: result.duration,
+          rawApiResponse: result.rawApiResponse,
+          generatorAnalysis: result.generatorAnalysis,
+          apiVerdict: result.apiVerdict,
+          contentType: result.contentType,
+          fileSize: result.fileSize
+        }
       });
 
       // Update usage limits

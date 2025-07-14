@@ -287,6 +287,8 @@ const processApiResponse = (
     hasReport: !!apiResult.report,
     reportKeys: apiResult.report ? Object.keys(apiResult.report) : [],
     hasFacets: !!apiResult.facets,
+    hasMediaInfo: !!apiResult.report?.media_info,
+    facetKeys: apiResult.facets ? Object.keys(apiResult.facets) : [],
     isImage
   });
 
@@ -296,6 +298,7 @@ const processApiResponse = (
   const humanData = report.human || {};
   const generator = report.generator || {};
   const facets = apiResult.facets || {};
+  const mediaInfo = report.media_info || {};
 
   // Calculate probabilities - handle both direct values and nested objects
   let aiConfidence = 0;
@@ -357,10 +360,38 @@ const processApiResponse = (
 
   console.log(`🎯 Final status: ${status} with ${finalConfidence.toFixed(1)}% confidence`);
 
-  // Build risk factors based on definite detection
+  // Extract resolution and duration from API media info
+  let resolution = '1920x1080'; // Default fallback
+  let duration = undefined;
+  
+  if (mediaInfo.width && mediaInfo.height) {
+    resolution = `${mediaInfo.width}x${mediaInfo.height}`;
+    console.log('📐 Extracted resolution from API:', resolution);
+  }
+  
+  if (!isImage && mediaInfo.duration_seconds) {
+    const minutes = Math.floor(mediaInfo.duration_seconds / 60);
+    const seconds = Math.floor(mediaInfo.duration_seconds % 60);
+    duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    console.log('⏱️ Extracted duration from API:', duration);
+  }
+  // Extract risk factors from API first, then add derived ones
   const riskFactors = [];
+  
+  // Use API-provided risk factors if available
+  if (report.risk_factors && Array.isArray(report.risk_factors)) {
+    riskFactors.push(...report.risk_factors);
+    console.log('🚨 Using API risk factors:', report.risk_factors);
+  } else {
+    // Fallback to derived risk factors
+    console.log('🚨 Using derived risk factors');
+  }
+  
+  // Add additional derived risk factors
   if (status === 'fake') {
-    riskFactors.push('AI-generated content detected');
+    if (!riskFactors.some(factor => factor.toLowerCase().includes('ai'))) {
+      riskFactors.push('AI-generated content detected');
+    }
     
     // Find top generator if available
     if (generator && Object.keys(generator).length > 0) {
@@ -382,39 +413,91 @@ const processApiResponse = (
     riskFactors.push('Low quality content detected');
   }
 
-  // Build detection details
-  const detectionDetails: any = {
-    faceAnalysis: Math.max(0, Math.min(100, humanProbability)),
-    compressionArtifacts: Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)))
-  };
-
-  if (isImage) {
-    detectionDetails.metadataAnalysis = facets.quality?.is_detected !== false ? 85 : 65;
-    detectionDetails.pixelAnalysis = Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)));
+  // Extract recommendations from API first, then add derived ones
+  const recommendations = [];
+  
+  // Use API-provided recommendations if available
+  if (report.recommendations && Array.isArray(report.recommendations)) {
+    recommendations.push(...report.recommendations);
+    console.log('💡 Using API recommendations:', report.recommendations);
   } else {
-    detectionDetails.temporalConsistency = Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)));
-    detectionDetails.audioAnalysis = Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)));
+    // Fallback to derived recommendations
+    console.log('💡 Using derived recommendations');
+    recommendations.push('Cross-reference with original source');
+    recommendations.push('Verify metadata timestamps');
+    recommendations.push('Check for additional context');
   }
 
-  // Generate recommendations based on results
-  const recommendations = [
-    'Cross-reference with original source',
-    'Verify metadata timestamps',
-    'Check for additional context'
-  ];
-
-  if (isImage) {
-    recommendations.push('Consider reverse image search');
+  // Build enhanced detection details from API facets and report details
+  const detectionDetails: any = {};
+  
+  // Extract from API facets if available
+  if (facets.face_detection?.score !== undefined) {
+    detectionDetails.faceAnalysis = Math.round(facets.face_detection.score * 100);
+  } else if (aiData.details?.face_analysis !== undefined) {
+    detectionDetails.faceAnalysis = Math.round(aiData.details.face_analysis * 100);
   } else {
-    recommendations.push('Analyze audio-visual consistency');
+    detectionDetails.faceAnalysis = Math.max(0, Math.min(100, humanProbability));
+  }
+  
+  if (facets.quality?.score !== undefined) {
+    detectionDetails.compressionArtifacts = Math.round(facets.quality.score * 100);
+  } else {
+    detectionDetails.compressionArtifacts = Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)));
+  }
+  if (isImage) {
+    if (facets.metadata?.score !== undefined) {
+      detectionDetails.metadataAnalysis = Math.round(facets.metadata.score * 100);
+    } else {
+      detectionDetails.metadataAnalysis = facets.quality?.is_detected !== false ? 85 : 65;
+    }
+    
+    if (aiData.details?.pixel_analysis !== undefined) {
+      detectionDetails.pixelAnalysis = Math.round(aiData.details.pixel_analysis * 100);
+    } else {
+      detectionDetails.pixelAnalysis = Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)));
+    }
+  } else {
+    if (aiData.details?.temporal_consistency !== undefined) {
+      detectionDetails.temporalConsistency = Math.round(aiData.details.temporal_consistency * 100);
+    } else {
+      detectionDetails.temporalConsistency = Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)));
+    }
+    
+    if (facets.audio_analysis?.score !== undefined) {
+      detectionDetails.audioAnalysis = Math.round(facets.audio_analysis.score * 100);
+    } else {
+      detectionDetails.audioAnalysis = Math.max(0, Math.min(100, humanProbability + (Math.random() * 10 - 5)));
+    }
+  }
+
+  console.log('🔍 Enhanced detection details:', detectionDetails);
+
+  // Add content-type specific recommendations if not already provided by API
+  if (isImage) {
+    if (!recommendations.some(rec => rec.toLowerCase().includes('reverse'))) {
+      recommendations.push('Consider reverse image search');
+    }
+  } else {
+    if (!recommendations.some(rec => rec.toLowerCase().includes('audio'))) {
+      recommendations.push('Analyze audio-visual consistency');
+    }
   }
 
   if (status === 'fake' || status === 'suspicious') {
-    recommendations.push('Exercise caution when sharing this content');
-    recommendations.push('Seek additional verification from trusted sources');
+    if (!recommendations.some(rec => rec.toLowerCase().includes('caution'))) {
+      recommendations.push('Exercise caution when sharing this content');
+    }
+    if (!recommendations.some(rec => rec.toLowerCase().includes('verification'))) {
+      recommendations.push('Seek additional verification from trusted sources');
+    }
   } else {
-    recommendations.push('Content appears to be human-created');
-    recommendations.push('Standard verification practices still recommended');
+    if (!recommendations.some(rec => rec.toLowerCase().includes('human'))) {
+      recommendations.push('Content appears to be human-created');
+    }
+    if (!recommendations.some(rec => rec.toLowerCase().includes('standard'))) {
+      recommendations.push('Standard verification practices still recommended');
+    }
   }
 
   const result = {
@@ -423,8 +506,8 @@ const processApiResponse = (
     status: status,
     processingTime: Math.max(0.1, processingTime),
     fileSize: formatFileSize(file.size),
-    resolution: '1920x1080', // This would be extracted from actual file metadata
-    duration: isImage ? undefined : '0:45', // This would be extracted from actual video
+    resolution: resolution,
+    duration: duration,
     aiProbability: Math.max(0, Math.min(100, aiProbability)),
     humanProbability: Math.max(0, Math.min(100, humanProbability)),
     detectionDetails: detectionDetails,
@@ -441,7 +524,11 @@ const processApiResponse = (
     id: result.id,
     status: result.status,
     confidence: result.confidence,
-    contentType: result.contentType
+    contentType: result.contentType,
+    resolution: result.resolution,
+    duration: result.duration,
+    riskFactorsCount: result.riskFactors.length,
+    recommendationsCount: result.recommendations.length
   });
 
   return result;
