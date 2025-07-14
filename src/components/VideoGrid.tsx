@@ -219,14 +219,6 @@ const VideoGrid = () => {
             </div>
           </div>
           
-          {/* Status indicator */}
-          <div className="absolute top-2 left-2 opacity-90">
-            <div className={`w-3 h-3 rounded-full ${
-              verification.status === 'authentic' ? 'bg-green-400' :
-              verification.status === 'suspicious' ? 'bg-yellow-400' : 'bg-red-400'
-            }`} />
-          </div>
-          
           {/* Confidence score - FIXED: Using Inter font for numbers */}
           <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white opacity-90">
             <span className="font-numeric font-bold" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
@@ -256,14 +248,6 @@ const VideoGrid = () => {
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-          
-          {/* Status indicator */}
-          <div className="absolute top-2 left-2 opacity-90">
-            <div className={`w-3 h-3 rounded-full ${
-              verification.status === 'authentic' ? 'bg-green-400' :
-              verification.status === 'suspicious' ? 'bg-yellow-400' : 'bg-red-400'
-            }`} />
-          </div>
           
           {/* Confidence score - FIXED: Using Inter font for numbers */}
           <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white opacity-90">
