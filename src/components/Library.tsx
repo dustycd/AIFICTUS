@@ -4,7 +4,7 @@ import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, 
 import { Typography, Heading, CardSubtitle } from './Typography';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
-import { getVerificationDisplay, getStatusBadgeClasses, formatConfidence } from '../utils/verificationDisplayUtils';
+import { getVerificationDisplay, getStatusBadgeClasses, formatConfidence, getRecommendationText } from '../utils/verificationDisplayUtils';
 
 interface LibraryItem {
   id: string;
