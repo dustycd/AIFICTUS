@@ -91,15 +91,15 @@ const Library = () => {
 
     // Generate detection details based on AI or Not API structure
     const detectionDetails = {
-      faceAnalysis: originalStatus === 'authentic' ? 85 + Math.random() * 10 : 60 + Math.random() * 25,
-      compressionArtifacts: originalStatus === 'authentic' ? 90 + Math.random() * 8 : 70 + Math.random() * 20,
+      faceAnalysis: item.verification_status === 'authentic' ? 85 + Math.random() * 10 : 60 + Math.random() * 25,
+      compressionArtifacts: item.verification_status === 'authentic' ? 90 + Math.random() * 8 : 70 + Math.random() * 20,
       ...(isVideo && {
-        temporalConsistency: originalStatus === 'authentic' ? 88 + Math.random() * 10 : 65 + Math.random() * 25,
-        audioAnalysis: originalStatus === 'authentic' ? 85 + Math.random() * 12 : 60 + Math.random() * 30,
+        temporalConsistency: item.verification_status === 'authentic' ? 88 + Math.random() * 10 : 65 + Math.random() * 25,
+        audioAnalysis: item.verification_status === 'authentic' ? 85 + Math.random() * 12 : 60 + Math.random() * 30,
       }),
       ...(!isVideo && {
-        metadataAnalysis: originalStatus === 'authentic' ? 92 + Math.random() * 6 : 75 + Math.random() * 18,
-        pixelAnalysis: originalStatus === 'authentic' ? 89 + Math.random() * 8 : 70 + Math.random() * 20,
+        metadataAnalysis: item.verification_status === 'authentic' ? 92 + Math.random() * 6 : 75 + Math.random() * 18,
+        pixelAnalysis: item.verification_status === 'authentic' ? 89 + Math.random() * 8 : 70 + Math.random() * 20,
       }),
     };
 
@@ -133,7 +133,7 @@ const Library = () => {
       if (isVideo && detectionDetails.temporalConsistency < 75) {
         riskFactors.push('Temporal inconsistencies found');
       }
-    } else if (originalStatus === 'suspicious') {
+    } else if (item.verification_status === 'suspicious') {
       riskFactors.push('Some AI indicators detected'); // This branch will likely not be hit due to determinedStatus logic
       if (Math.random() > 0.5) {
         riskFactors.push('Requires additional verification');
@@ -178,9 +178,9 @@ const Library = () => {
       risk_factors: riskFactors,
       recommendations: recommendations,
       report_id: `rpt_${Math.random().toString(36).substr(2, 9)}`,
-      api_verdict: originalStatus === 'fake' ? 'ai' : 'human',
+      api_verdict: item.verification_status === 'fake' ? 'ai' : 'human',
       generator_analysis: {
-        [topGenerator]: determinedStatus === 'fake' ? generatorConfidence : Math.random() * 0.2,
+        [topGenerator]: item.verification_status === 'fake' ? generatorConfidence : Math.random() * 0.2,
         confidence: generatorConfidence
       },
       facets: facets,
@@ -191,7 +191,7 @@ const Library = () => {
           verdict: determinedStatus === 'fake' ? 'ai' : 'human',
           ai: { confidence: finalAiProb / 100 },
           human: { confidence: finalHumanProb / 100 },
-          generator: { [topGenerator]: originalStatus === 'fake' ? generatorConfidence : Math.random() * 0.2 }
+          generator: { [topGenerator]: item.verification_status === 'fake' ? generatorConfidence : Math.random() * 0.2 }
         },
         facets: facets
       }

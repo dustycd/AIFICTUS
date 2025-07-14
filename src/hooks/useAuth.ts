@@ -18,7 +18,7 @@ export const useAuth = () => {
   })
 
   // Function to load user profile with timeout
-  const loadUserProfile = async (userId: string, timeout = 5000) => {
+  const loadUserProfile = async (userId: string, timeout = 10000) => {
     try {
       console.log('Loading profile for user:', userId)
       
@@ -51,7 +51,7 @@ export const useAuth = () => {
       console.log('Checking profile for user:', user.email)
       
       // Try to load existing profile first with longer timeout
-      const profile = await loadUserProfile(user.id, 5000)
+      const profile = await loadUserProfile(user.id, 10000)
       
       if (profile) {
         console.log('Profile already exists:', profile)
@@ -91,7 +91,7 @@ export const useAuth = () => {
             try {
               const existingProfile = await loadUserProfile(user.id, 3000)
               if (existingProfile) {
-                console.log('Successfully retrieved existing profile:', existingProfile)
+                const existingProfile = await loadUserProfile(user.id, 10000)
                 return existingProfile
               }
             } catch (fetchErr) {
@@ -110,7 +110,7 @@ export const useAuth = () => {
         // If creation timed out, try to fetch existing profile as fallback
         try {
           console.log('Attempting to fetch profile after creation timeout')
-          const existingProfile = await loadUserProfile(user.id, 3000)
+          const existingProfile = await loadUserProfile(user.id, 10000)
           if (existingProfile) {
             console.log('Found existing profile after timeout:', existingProfile)
             return existingProfile
