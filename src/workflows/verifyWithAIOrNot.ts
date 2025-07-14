@@ -10,6 +10,7 @@ export interface VerificationResult {
   duration?: string;
   aiProbability?: number;
   humanProbability?: number;
+  confidenceScore?: number; // Add confidenceScore to the interface
   detectionDetails: {
     faceAnalysis: number;
     temporalConsistency?: number;
@@ -32,7 +33,7 @@ export interface VerificationResult {
 export const verifyWithAIOrNot = async (
   file: File,
   apiKey: string
-): Promise<VerificationResult> => {
+): Promise<VerificationResult> => { // Changed return type to Promise<VerificationResult>
   console.log('🚀 Starting AI or Not verification...');
   
   if (!file) throw new Error('No file provided');
@@ -40,6 +41,7 @@ export const verifyWithAIOrNot = async (
   
   const isImage = isImageFile(file);
   const isVideo = file.type.startsWith('video/') || (!isImage && file.name.match(/\.(mp4|mov|avi|webm|mkv|m4v|3gp|flv|wmv)$/i));
+  console.log(`File type detected: ${file.type}, isImage: ${isImage}, isVideo: ${isVideo}`);
   
   if (!isImage && !isVideo) {
     throw new Error(`Unsupported file type: ${file.type}. Please upload an image or video file.`);
@@ -54,8 +56,8 @@ export const verifyWithAIOrNot = async (
   const paramName = isImage ? 'object' : 'video';
   const formData = new FormData();
   formData.append(paramName, file);
-
-  console.log(`🌐 Submitting to: ${endpoint}`);
+  
+  console.log(`🌐 Submitting to endpoint: ${endpoint}`);
   console.log(`🎯 Parameter name: ${paramName}`);
 
   const startTime = Date.now();
@@ -71,6 +73,7 @@ export const verifyWithAIOrNot = async (
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
+        'Accept': 'application/json', // Explicitly request JSON
         'Authorization': `Bearer ${apiKey}`,
         // Remove Content-Type header to let browser set it with boundary for FormData
       },
@@ -83,6 +86,7 @@ export const verifyWithAIOrNot = async (
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      console.error(`❌ API Response not OK: ${response.status} ${response.statusText}`);
       let errorText = '';
       try {
         errorText = await response.text();
@@ -115,6 +119,7 @@ export const verifyWithAIOrNot = async (
     let finalResult = apiResult;
     if (!isImage && apiResult.report_id && !apiResult.report) {
       console.log('⏳ Video submitted for processing - polling for results...');
+      console.log('Initial API response for video (polling needed):', JSON.stringify(apiResult, null, 2));
       finalResult = await pollForVideoResults(apiResult.report_id, apiKey);
     }
 
@@ -122,6 +127,7 @@ export const verifyWithAIOrNot = async (
 
     // Process the API response into our standard format
     const result = processApiResponse(finalResult, file, processingTime, isImage);
+    console.log('Final processed verification result:', JSON.stringify(result, null, 2));
     
     console.log('✅ Verification completed successfully');
     return result;
@@ -166,6 +172,7 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
   const maxAttempts = 60; // 10 minutes max (10 seconds * 60)
   const pollInterval = 10000; // 10 seconds between polls
   let attempts = 0;
+  console.log(`Polling for report ID: ${reportId}`);
 
   while (attempts < maxAttempts) {
     attempts++;
@@ -182,6 +189,7 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
 
       const statusResponse = await fetch(`https://api.aiornot.com/v1/reports/${reportId}`, {
         headers: {
+          'Accept': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
         },
         signal: controller.signal,
@@ -192,6 +200,7 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
       clearTimeout(timeoutId);
 
       if (!statusResponse.ok) {
+        console.error(`❌ Status check failed for report ${reportId}: ${statusResponse.status} ${statusResponse.statusText}`);
         console.error(`❌ Status check failed: ${statusResponse.status}`);
         
         if (statusResponse.status === 404) {
@@ -204,7 +213,7 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
         
         // For other errors, continue polling unless it's the last attempt
         if (attempts >= maxAttempts) {
-          throw new Error(`Status check failed with error ${statusResponse.status}`);
+          throw new Error(`Status check failed with error ${statusResponse.status}: ${await statusResponse.text()}`);
         }
         
         console.warn(`⚠️ Status check failed (${statusResponse.status}), retrying...`);
@@ -286,7 +295,7 @@ const processApiResponse = (
   console.log('📊 Processing API response:', {
     hasReport: !!apiResult.report,
     reportKeys: apiResult.report ? Object.keys(apiResult.report) : [],
-    hasFacets: !!apiResult.facets,
+    hasFacets: !!apiResult.facets, // This might be apiResult.report.facets
     hasMediaInfo: !!apiResult.report?.media_info,
     facetKeys: apiResult.facets ? Object.keys(apiResult.facets) : [],
     isImage
@@ -303,18 +312,18 @@ const processApiResponse = (
   const facets = apiResult.facets || {};
   const mediaInfo = report.media_info || {};
   const aiVideo = report.ai_video || {};
-
+  
   let aiConfidence = 0;
   let humanConfidence = 0;
-
+  
   // Prioritize probabilities from the most specific fields
   if (isImage) {
     // For images, probabilities are often directly in apiResult
     if (apiResult.ai_probability !== undefined && typeof apiResult.ai_probability === 'number') {
       aiConfidence = apiResult.ai_probability;
       humanConfidence = apiResult.human_probability !== undefined && typeof apiResult.human_probability === 'number'
-        ? apiResult.human_probability
-        : (1 - aiConfidence); // Fallback if human_probability is missing
+      ? apiResult.human_probability
+      : (1 - aiConfidence); // Fallback if human_probability is missing
       console.log('📸 Using direct probabilities from API for image:', { aiConfidence, humanConfidence });
     } else {
       // Fallback to general aiData/humanData if direct probabilities are not found
@@ -328,37 +337,37 @@ const processApiResponse = (
       } else if (typeof humanData === 'number') {
         humanConfidence = humanData;
       }
-      console.warn('⚠️ Image API did not provide direct probabilities, falling back to aiData/humanData:', { aiConfidence, humanConfidence });
+      console.warn('⚠️ Image API did not provide direct probabilities, falling back to aiData/humanData:', { aiConfidence: aiData.confidence, humanConfidence: humanData.confidence });
     }
   } else { // It's a video
     // For videos, probabilities are typically in report.ai_video
     if (aiVideo.ai_probability !== undefined && typeof aiVideo.ai_probability === 'number') {
       aiConfidence = aiVideo.ai_probability;
       humanConfidence = aiVideo.human_probability !== undefined && typeof aiVideo.human_probability === 'number'
-        ? aiVideo.human_probability
-        : (1 - aiConfidence); // Fallback if human_probability is missing
+      ? aiVideo.human_probability
+      : (1 - aiConfidence); // Fallback if human_probability is missing
       console.log('📹 Using ai_video probabilities from API for video:', { aiConfidence, humanConfidence });
     } else if (aiVideo.confidence !== undefined && typeof aiVideo.confidence === 'number') {
       // Fallback if only aiVideo.confidence is provided, assume it's AI confidence
       aiConfidence = aiVideo.confidence;
       humanConfidence = 1 - aiConfidence; // Infer human confidence
       console.warn('⚠️ Video API provided only ai_video.confidence, inferring human confidence:', { aiConfidence, humanConfidence });
-    } else {
+    } else { // Fallback to general aiData/humanData if ai_video probabilities are not found
       // Fallback to general aiData/humanData if ai_video probabilities are not found
       if (typeof aiData.confidence === 'number') {
         aiConfidence = aiData.confidence;
       } else if (typeof aiData === 'number') {
         aiConfidence = aiData;
       }
-      if (typeof humanData.confidence === 'number') {
+      if (typeof humanData.confidence === 'number') { // Check humanData.confidence
         humanConfidence = humanData.confidence;
       } else if (typeof humanData === 'number') {
         humanConfidence = humanData;
       }
-      console.warn('⚠️ Video API did not provide ai_video probabilities or confidence, falling back to aiData/humanData:', { aiConfidence, humanConfidence });
+      console.warn('⚠️ Video API did not provide ai_video probabilities or confidence, falling back to aiData/humanData:', { aiConfidence: aiData.confidence, humanConfidence: humanData.confidence });
     }
   }
-
+  
   // Log extracted probabilities from API
   console.log('📈 API Probabilities:', {
     aiConfidence,
@@ -371,33 +380,37 @@ const processApiResponse = (
   if (aiConfidence === 0 && humanConfidence === 0) {
     console.warn('⚠️ API did not provide confidence values - using zero values (no fallback)');
   }
-
+  
   const aiProbability = aiConfidence * 100;
   const humanProbability = humanConfidence * 100;
-
+  
   console.log('📈 Calculated probabilities:', {
     aiProbability: aiProbability.toFixed(1),
     humanProbability: humanProbability.toFixed(1),
     verdict: report.verdict
   });
-
+  
   // Determine status based on API verdict or probabilities - no defaults
   let status: 'authentic' | 'fake';
-  let finalConfidence = humanProbability;
+  let finalConfidence: number;
   
   // Use API verdict if available
   if (report.verdict === 'ai') {
     status = 'fake';
     finalConfidence = aiProbability;
+    console.log(`Verdict 'ai' detected. Status: ${status}, Final Confidence: ${finalConfidence}`);
   } else if (report.verdict === 'human') {
     status = 'authentic';
     finalConfidence = humanProbability;
+    console.log(`Verdict 'human' detected. Status: ${status}, Final Confidence: ${finalConfidence}`);
   } else if (aiProbability > humanProbability && aiProbability > 0) {
     status = 'fake';
     finalConfidence = aiProbability;
+    console.log(`AI probability (${aiProbability}) > Human probability (${humanProbability}). Status: ${status}, Final Confidence: ${finalConfidence}`);
   } else if (humanProbability > aiProbability && humanProbability > 0) {
     status = 'authentic';
     finalConfidence = humanProbability;
+    console.log(`Human probability (${humanProbability}) > AI probability (${aiProbability}). Status: ${status}, Final Confidence: ${finalConfidence}`);
   } else {
     // No clear signal from API - use verdict or default to authentic
     status = report.verdict === 'ai' ? 'fake' : 'authentic';
@@ -405,19 +418,19 @@ const processApiResponse = (
     console.warn('⚠️ API provided no clear status signal - using verdict or defaulting to authentic with 0% confidence');
   }
 
-  console.log(`🎯 Final status: ${status} with ${finalConfidence.toFixed(1)}% confidence`);
-
+  console.log(`🎯 Final determined status: ${status} with ${finalConfidence.toFixed(1)}% confidence`);
+  
   // Extract resolution and duration ONLY from API media info - no defaults
   let resolution = undefined;
   let duration = undefined;
   
   if (mediaInfo.width && mediaInfo.height) {
     resolution = `${mediaInfo.width}x${mediaInfo.height}`;
-    console.log('📐 Extracted resolution from API:', resolution);
+    console.log(`📐 Extracted resolution from API: ${resolution}`);
   } else {
     console.log('📐 No resolution data provided by API');
   }
-  
+
   if (!isImage && mediaInfo.duration_seconds) {
     const minutes = Math.floor(mediaInfo.duration_seconds / 60);
     const seconds = Math.floor(mediaInfo.duration_seconds % 60);
@@ -426,17 +439,17 @@ const processApiResponse = (
   } else if (!isImage) {
     console.log('⏱️ No duration data provided by API');
   }
-  
+
   // Extract risk factors ONLY from API - no derived values
   const riskFactors = [];
   
   if (report.risk_factors && Array.isArray(report.risk_factors)) {
     riskFactors.push(...report.risk_factors);
-    console.log('🚨 Using API risk factors:', report.risk_factors);
+    console.log('🚨 Using API risk factors:', JSON.stringify(report.risk_factors));
   } else {
     console.log('🚨 No risk factors provided by API');
   }
-  
+
 
   // Extract recommendations ONLY from API - no derived values
   const recommendations = [];
@@ -444,13 +457,14 @@ const processApiResponse = (
   if (report.recommendations && Array.isArray(report.recommendations)) {
     recommendations.push(...report.recommendations);
     console.log('💡 Using API recommendations:', report.recommendations);
+    console.log('💡 Using API recommendations:', JSON.stringify(report.recommendations));
   } else {
     console.log('💡 No recommendations provided by API');
   }
-
+  
   // Build detection details ONLY from API facets and report details - no fallbacks
   const detectionDetails: any = {};
-  
+
   // Only set values if API provides them
   if (facets.face_detection?.score !== undefined) {
     detectionDetails.faceAnalysis = Math.round(facets.face_detection.score * 100);
@@ -458,11 +472,11 @@ const processApiResponse = (
     detectionDetails.faceAnalysis = Math.round(aiData.details.face_analysis * 100);
   }
   
-  if (facets.quality?.score !== undefined) {
+  if (facets.quality?.score !== undefined) { // This might be report.facets.quality
     detectionDetails.compressionArtifacts = Math.round(facets.quality.score * 100);
   }
   
-  if (isImage) {
+  if (isImage) { // Image specific detection details
     if (facets.metadata?.score !== undefined) {
       detectionDetails.metadataAnalysis = Math.round(facets.metadata.score * 100);
     }
@@ -470,7 +484,7 @@ const processApiResponse = (
     if (aiData.details?.pixel_analysis !== undefined) {
       detectionDetails.pixelAnalysis = Math.round(aiData.details.pixel_analysis * 100);
     }
-  } else {
+  } else { // Video specific detection details
     if (aiData.details?.temporal_consistency !== undefined) {
       detectionDetails.temporalConsistency = Math.round(aiData.details.temporal_consistency * 100);
     }
@@ -479,12 +493,13 @@ const processApiResponse = (
       detectionDetails.audioAnalysis = Math.round(facets.audio_analysis.score * 100);
     }
   }
-
+  
   console.log('🔍 Enhanced detection details:', detectionDetails);
-
+  
   const result = {
     id: apiResult.id || `temp-${Date.now()}`,
     confidence: finalConfidence,
+    confidenceScore: finalConfidence, // Add confidenceScore to the result
     status: status,
     processingTime: Math.max(0.1, processingTime),
     fileSize: formatFileSize(file.size),
@@ -500,7 +515,7 @@ const processApiResponse = (
     generatorAnalysis: generator,
     apiVerdict: report.verdict,
     contentType: isImage ? 'image' : 'video'
-  };
+  }; // Changed to const result
 
   console.log('✅ Processed API response into result:', {
     id: result.id,
