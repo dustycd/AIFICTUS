@@ -161,6 +161,6 @@ export const getRecommendationText = (status: 'authentic' | 'fake', qualitativeS
 /**
  * Format confidence score as percentage string
  */
-export const formatConfidence = (confidence: number): string => {
-  return `${confidence.toFixed(1)}%`;
+export const formatConfidence = (confidence: number | undefined | null): string => {
+  return `${(confidence ?? 0).toFixed(1)}%`;
 };
