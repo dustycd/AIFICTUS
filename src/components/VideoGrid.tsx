@@ -144,7 +144,6 @@ const VideoGrid = () => {
       aiProbability,
       humanProbability,
       isVideo: index % 4 === 0, // Every 4th item is a video
-      confidence: Math.max(aiProbability, humanProbability) // Confidence is the higher probability
     };
   };
 
@@ -162,7 +161,7 @@ const VideoGrid = () => {
       
       displayData = {
         displayStatus: verificationDisplay.displayStatus,
-        confidence: verificationDisplay.confidence,
+        qualitativeStatus: verificationDisplay.qualitativeStatus,
         statusColor: verificationDisplay.statusColor,
         isVideo: isVideo(item.content_type)
       };
@@ -177,7 +176,7 @@ const VideoGrid = () => {
       
       displayData = {
         displayStatus: verificationDisplay.displayStatus,
-        confidence: verificationDisplay.confidence,
+        qualitativeStatus: verificationDisplay.qualitativeStatus,
         statusColor: verificationDisplay.statusColor,
         isVideo: placeholderData.isVideo
       };
@@ -252,7 +251,6 @@ const VideoGrid = () => {
             </div>
           </div>
           
-          {/* Status and confidence display */}
         </div>
       );
     } else {
