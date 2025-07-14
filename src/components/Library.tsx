@@ -489,86 +489,95 @@ const Library = () => {
           )}
 
           {/* Search and Filters */}
-          <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700">
-            <div className="flex flex-col lg:flex-row gap-4 items-center">
-              {/* Search */}
-              <div className="relative flex-1 w-full lg:w-auto">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by filename..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700">
+              <div className="flex items-center gap-4">
+                {/* Expanded Search */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by filename..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
 
-              {/* Filters Toggle */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg transition-colors"
-              >
-                <SlidersHorizontal className="h-5 w-5" />
-                <span>Filters</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* View Mode */}
-              <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode === 'grid' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode === 'list' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <List className="h-4 w-4" />
-                </button>
+                {/* View Mode */}
+                <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded transition-colors ${
+                      viewMode === 'grid' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded transition-colors ${
+                      viewMode === 'list' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Expanded Filters */}
-            {showFilters && (
-              <div className="mt-6 pt-6 border-t border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Verification Status
-                  </label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="authentic">Authentic</option>
-                    <option value="fake">AI Generated</option>
-                    <option value="suspicious">Suspicious</option>
-                  </select>
+            {/* Filters Button */}
+            <div className="bg-gray-800/30 rounded-2xl border border-gray-700 overflow-hidden">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full flex items-center justify-between p-6 hover:bg-gray-700/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <SlidersHorizontal className="h-5 w-5 text-gray-400" />
+                  <Typography variant="cardTitle">Filters</Typography>
                 </div>
+                <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Content Type
-                  </label>
-                  <select
-                    value={contentTypeFilter}
-                    onChange={(e) => setContentTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="video">Videos</option>
-                    <option value="image">Images</option>
-                  </select>
+              {/* Expanded Filters */}
+              {showFilters && (
+                <div className="px-6 pb-6 border-t border-gray-700/50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Verification Status
+                      </label>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="all">All Statuses</option>
+                        <option value="authentic">Authentic</option>
+                        <option value="fake">AI Generated</option>
+                        <option value="suspicious">Suspicious</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Content Type
+                      </label>
+                      <select
+                        value={contentTypeFilter}
+                        onChange={(e) => setContentTypeFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="all">All Types</option>
+                        <option value="video">Videos</option>
+                        <option value="image">Images</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
