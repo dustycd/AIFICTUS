@@ -418,7 +418,7 @@ const processApiResponse = (
   console.log('🎯 Starting confidence extraction process...');
   
   if (isImage) {
-    // Existing image processing logic (unchanged)
+    // IMAGE PROCESSING - EXISTING LOGIC (UNCHANGED)
     console.log('📸 Processing IMAGE confidence values (unchanged logic)...');
     if (typeof apiResult.ai_probability === 'number' && typeof apiResult.human_probability === 'number') {
       aiConfidence = apiResult.ai_probability;
@@ -446,35 +446,72 @@ const processApiResponse = (
       console.warn('❌ Image: No confidence values found.');
     }
   } else {
-    console.log('📹 Processing VIDEO confidence values...');
+    // VIDEO PROCESSING - UPDATED LOGIC TO STRICTLY USE AI OR NOT VIDEO API
+    console.log('📹 Processing VIDEO confidence values - STRICT AI OR NOT API USAGE...');
+    console.log('📹 Available video API data:', {
+      hasAiVideo: !!aiVideo,
+      aiVideoKeys: aiVideo ? Object.keys(aiVideo) : [],
+      hasIsDetected: typeof aiVideo.is_detected === 'boolean',
+      isDetectedValue: aiVideo.is_detected,
+      hasConfidence: typeof aiVideo.confidence === 'number',
+      confidenceValue: aiVideo.confidence,
+      hasAiProbability: typeof aiVideo.ai_probability === 'number',
+      aiProbabilityValue: aiVideo.ai_probability,
+      hasHumanProbability: typeof aiVideo.human_probability === 'number',
+      humanProbabilityValue: aiVideo.human_probability,
+      reportVerdict: report.verdict
+    });
     
-    // Prioritize ai_video.is_detected and ai_video.confidence for video
+    // PRIMARY: Use ai_video.is_detected and ai_video.confidence (STRICT AI OR NOT VIDEO API)
     if (typeof aiVideo.is_detected === 'boolean' && typeof aiVideo.confidence === 'number') {
-      console.log('✅ Video: Using ai_video.is_detected and ai_video.confidence.');
+      console.log('✅ VIDEO PRIMARY: Using ai_video.is_detected and ai_video.confidence (STRICT API)');
+      console.log('📹 Raw API values:', {
+        is_detected: aiVideo.is_detected,
+        confidence: aiVideo.confidence
+      });
+      
       if (aiVideo.is_detected) {
-        status = 'fake';
+        // AI detected - confidence represents how confident we are it's AI-generated
         aiConfidence = aiVideo.confidence;
         humanConfidence = 1 - aiConfidence;
-        console.log('  -> Detected as FAKE:', { aiConfidence, humanConfidence });
+        console.log('📹 AI DETECTED (FAKE):', {
+          aiConfidence: aiConfidence.toFixed(4),
+          humanConfidence: humanConfidence.toFixed(4),
+          interpretation: 'ai_video.confidence represents confidence in AI detection'
+        });
       } else {
-        status = 'authentic';
+        // AI NOT detected - confidence represents how confident we are it's human-created
         humanConfidence = aiVideo.confidence;
         aiConfidence = 1 - humanConfidence;
-        console.log('  -> Detected as AUTHENTIC:', { aiConfidence, humanConfidence });
+        console.log('📹 AI NOT DETECTED (AUTHENTIC):', {
+          humanConfidence: humanConfidence.toFixed(4),
+          aiConfidence: aiConfidence.toFixed(4),
+          interpretation: 'ai_video.confidence represents confidence in human creation'
+        });
       }
-    } else if (typeof aiVideo.ai_probability === 'number' && typeof aiVideo.human_probability === 'number') {
-      // Fallback to ai_video.ai_probability/human_probability
+    } 
+    // SECONDARY: Use ai_video.ai_probability and ai_video.human_probability
+    else if (typeof aiVideo.ai_probability === 'number' && typeof aiVideo.human_probability === 'number') {
       aiConfidence = aiVideo.ai_probability;
       humanConfidence = aiVideo.human_probability;
-      console.log('⚠️ Video: Using ai_video.ai_probability/human_probability fallback:', { aiConfidence, humanConfidence });
-    } else if (typeof aiVideo.confidence === 'number') {
-      // Fallback to general ai_video.confidence (inferring human)
+      console.log('⚠️ VIDEO SECONDARY: Using ai_video.ai_probability/human_probability:', {
+        aiConfidence: aiConfidence.toFixed(4),
+        humanConfidence: humanConfidence.toFixed(4)
+      });
+    } 
+    // TERTIARY: Use ai_video.confidence only (infer the other)
+    else if (typeof aiVideo.confidence === 'number') {
+      console.log('⚠️ VIDEO TERTIARY: Using ai_video.confidence only (inferring complement)');
       aiConfidence = aiVideo.confidence;
       humanConfidence = 1 - aiConfidence;
-      console.log('⚠️ Video: Using ai_video.confidence fallback (human inferred):', { aiConfidence, humanConfidence });
-    } else if (typeof aiData.confidence === 'number' || typeof aiData === 'number') {
-      // Final fallback to general aiData/humanData
-      console.log('⚠️ Video: Using general aiData/humanData fallback.');
+      console.log('📹 Inferred values:', {
+        aiConfidence: aiConfidence.toFixed(4),
+        humanConfidence: humanConfidence.toFixed(4)
+      });
+    } 
+    // FALLBACK: Use general aiData/humanData (last resort)
+    else if (typeof aiData.confidence === 'number' || typeof aiData === 'number') {
+      console.log('⚠️ VIDEO FALLBACK: ai_video data not available, using general aiData/humanData');
       if (typeof aiData.confidence === 'number') {
         aiConfidence = aiData.confidence;
       } else if (typeof aiData === 'number') {
@@ -486,51 +523,110 @@ const processApiResponse = (
       } else if (typeof humanData === 'number') {
         humanConfidence = humanData;
       } else {
-        humanConfidence = 1 - aiConfidence; // Infer if not provided
+        humanConfidence = 1 - aiConfidence;
       }
-      console.log('  -> Fallback results:', { aiConfidence, humanConfidence });
+      console.log('📹 Fallback results:', {
+        aiConfidence: aiConfidence.toFixed(4),
+        humanConfidence: humanConfidence.toFixed(4)
+      });
     } else {
-      console.warn('❌ Video: No confidence values found for video.');
+      console.error('❌ VIDEO ERROR: No confidence values found in AI or Not API response');
+      console.error('📹 This indicates a problem with the API response structure');
     }
   }
   
   const aiProbability = aiConfidence * 100;
   const humanProbability = humanConfidence * 100;
   
-  // Determine status and final confidence
+  console.log('📊 Calculated probabilities:', {
+    aiProbability: aiProbability.toFixed(1) + '%',
+    humanProbability: humanProbability.toFixed(1) + '%',
+    contentType: isImage ? 'image' : 'video'
+  });
+  
+  // Determine status and final confidence - SEPARATE LOGIC FOR IMAGE VS VIDEO
   console.log('🎯 Determining final status and confidence...');
   let status: 'authentic' | 'fake';
   let finalConfidence: number;
   
   if (!isImage) {
-    // Video-specific status determination
+    // VIDEO STATUS DETERMINATION - STRICT AI OR NOT API USAGE
+    console.log('📹 VIDEO STATUS DETERMINATION:');
     if (typeof aiVideo.is_detected === 'boolean') {
+      // PRIMARY: Use is_detected flag directly from AI or Not API
       status = aiVideo.is_detected ? 'fake' : 'authentic';
-      finalConfidence = aiVideo.confidence * 100;
-      console.log('✅ Video: Status and confidence from ai_video.is_detected/confidence:', { status, finalConfidence });
+      finalConfidence = (aiVideo.confidence || 0) * 100;
+      console.log('✅ VIDEO PRIMARY STATUS: Using ai_video.is_detected:', {
+        is_detected: aiVideo.is_detected,
+        status,
+        finalConfidence: finalConfidence.toFixed(1) + '%',
+        source: 'ai_video.is_detected + ai_video.confidence'
+      });
+    } else if (typeof aiVideo.ai_probability === 'number' && typeof aiVideo.human_probability === 'number') {
+      // SECONDARY: Use probabilities to determine status
+      if (aiVideo.ai_probability > aiVideo.human_probability) {
+        status = 'fake';
+        finalConfidence = aiVideo.ai_probability * 100;
+      } else {
+        status = 'authentic';
+        finalConfidence = aiVideo.human_probability * 100;
+      }
+      console.log('⚠️ VIDEO SECONDARY STATUS: Using ai_video probabilities:', {
+        aiProbability: (aiVideo.ai_probability * 100).toFixed(1) + '%',
+        humanProbability: (aiVideo.human_probability * 100).toFixed(1) + '%',
+        status,
+        finalConfidence: finalConfidence.toFixed(1) + '%',
+        source: 'ai_video.ai_probability vs ai_video.human_probability'
+      });
     } else if (report.verdict === 'ai') {
+      // TERTIARY: Use report verdict
       status = 'fake';
       finalConfidence = aiProbability;
-      console.log('✅ Video: Status determined by API verdict "ai":', { status, finalConfidence });
+      console.log('⚠️ VIDEO TERTIARY STATUS: Using report.verdict "ai":', {
+        verdict: report.verdict,
+        status,
+        finalConfidence: finalConfidence.toFixed(1) + '%',
+        source: 'report.verdict'
+      });
     } else if (report.verdict === 'human') {
       status = 'authentic';
       finalConfidence = humanProbability;
-      console.log('✅ Video: Status determined by API verdict "human":', { status, finalConfidence });
+      console.log('⚠️ VIDEO TERTIARY STATUS: Using report.verdict "human":', {
+        verdict: report.verdict,
+        status,
+        finalConfidence: finalConfidence.toFixed(1) + '%',
+        source: 'report.verdict'
+      });
     } else if (aiProbability > humanProbability && aiProbability > 0) {
+      // FALLBACK: Use calculated probabilities
       status = 'fake';
       finalConfidence = aiProbability;
-      console.log('✅ Video: Status determined by AI probability dominance:', { status, finalConfidence });
+      console.log('⚠️ VIDEO FALLBACK STATUS: AI probability dominance:', {
+        aiProbability: aiProbability.toFixed(1) + '%',
+        humanProbability: humanProbability.toFixed(1) + '%',
+        status,
+        finalConfidence: finalConfidence.toFixed(1) + '%',
+        source: 'calculated probabilities'
+      });
     } else if (humanProbability > aiProbability && humanProbability > 0) {
       status = 'authentic';
       finalConfidence = humanProbability;
-      console.log('✅ Video: Status determined by human probability dominance:', { status, finalConfidence });
+      console.log('⚠️ VIDEO FALLBACK STATUS: Human probability dominance:', {
+        aiProbability: aiProbability.toFixed(1) + '%',
+        humanProbability: humanProbability.toFixed(1) + '%',
+        status,
+        finalConfidence: finalConfidence.toFixed(1) + '%',
+        source: 'calculated probabilities'
+      });
     } else {
-      status = 'authentic'; // Default fallback
+      // LAST RESORT: Default to authentic with 0 confidence
+      status = 'authentic';
       finalConfidence = 0;
-      console.warn('⚠️ Video: No clear status signal from API, defaulting to authentic.');
+      console.error('❌ VIDEO ERROR: No clear status signal from AI or Not API, defaulting to authentic with 0% confidence');
+      console.error('📹 This indicates a serious problem with the API response structure');
     }
   } else {
-    // Existing image-specific status determination (unchanged)
+    // IMAGE STATUS DETERMINATION - EXISTING LOGIC (UNCHANGED)
     if (report.verdict === 'ai') {
       status = 'fake';
       finalConfidence = aiProbability;
@@ -548,7 +644,7 @@ const processApiResponse = (
       finalConfidence = humanProbability;
       console.log('✅ Image: Status determined by human probability dominance:', { status, finalConfidence });
     } else {
-      status = report.verdict === 'ai' ? 'fake' : 'authentic'; // Fallback to verdict or default
+      status = report.verdict === 'ai' ? 'fake' : 'authentic';
       finalConfidence = 0;
       console.warn('⚠️ Image: No clear status signal from API, using verdict or defaulting.');
     }
