@@ -347,7 +347,7 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
           status: statusResult.status,
           progress: `${progressPercent.toFixed(1)}%`,
           attempt: attempts,
-          maxAttempts
+          maxAttempts,
           timeElapsed: `${(attempts * pollInterval / 1000 / 60).toFixed(1)} minutes`,
           timeRemaining: `${((maxAttempts - attempts) * pollInterval / 1000 / 60).toFixed(1)} minutes`
         });
