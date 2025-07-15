@@ -218,12 +218,12 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
   console.log(`🔄 Starting video polling workflow`);
   console.log('📋 Polling configuration:', {
     reportId,
-    maxAttempts: 60,
+    maxAttempts: 120,
     pollInterval: '10s',
-    maxDuration: '10 minutes'
+    maxDuration: '20 minutes'
   });
   
-  const maxAttempts = 60; // 10 minutes max (10 seconds * 60)
+  const maxAttempts = 120; // 20 minutes max (10 seconds * 120)
   const pollInterval = 10000; // 10 seconds between polls
   let attempts = 0;
 
@@ -306,6 +306,19 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
         return statusResult;
       }
       
+      // Check for completed status but missing report
+      if (statusResult.status === 'completed' && !statusResult.report) {
+        console.warn('⚠️ Video marked as completed but report is missing:', {
+          reportId,
+          status: statusResult.status,
+          hasReport: !!statusResult.report,
+          attempt: attempts,
+          willContinuePolling: true
+        });
+        // Continue polling as the report might appear in the next check
+        continue;
+      }
+      
       // Check for failure states
       if (statusResult.status === 'failed') {
         console.error('❌ Video analysis failed:', {
@@ -335,6 +348,8 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
           progress: `${progressPercent.toFixed(1)}%`,
           attempt: attempts,
           maxAttempts
+          timeElapsed: `${(attempts * pollInterval / 1000 / 60).toFixed(1)} minutes`,
+          timeRemaining: `${((maxAttempts - attempts) * pollInterval / 1000 / 60).toFixed(1)} minutes`
         });
         continue;
       }
@@ -381,9 +396,9 @@ const pollForVideoResults = async (reportId: string, apiKey: string): Promise<an
   }
 
   // If we get here, we've exceeded max attempts
-  const totalTime = (maxAttempts * pollInterval) / 1000 / 60; // Convert to minutes
+  const totalTime = (maxAttempts * pollInterval) / 1000 / 60; // Convert to minutes (20 minutes)
   console.error(`❌ Video polling timeout after ${totalTime} minutes`);
-  throw new Error(`Video processing timeout after ${totalTime} minutes. The video may be too large or complex to process. Please try with a smaller or shorter video file.`);
+  throw new Error(`Video processing timeout after ${totalTime} minutes. The video may be too large or complex to process. Please try with a smaller or shorter video file, or try again later as the service may be experiencing high load.`);
 };
 
 // Process API response into our standard format
