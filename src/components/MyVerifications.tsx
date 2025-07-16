@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Grid, List, Play, Shield, AlertTriangle, CheckCircle, Clock, Eye, Download, Share2, Calendar, User, Trash2, MoreVertical, Film, Image as ImageIcon, Zap, Brain, Globe, Lock, X } from 'lucide-react';
 import { Typography, Heading } from './Typography';
+import ConfirmationModal from './ConfirmationModal';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/database';
 import { formatFileSize, getPublicUrl } from '../lib/storage';
@@ -42,6 +43,9 @@ const MyVerifications = () => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedItem, setSelectedItem] = useState<UserVerification | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [verificationToDelete, setVerificationToDelete] = useState<UserVerification | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const ITEMS_PER_PAGE = 20;
 
@@ -167,12 +171,21 @@ const MyVerifications = () => {
 
   // Delete verification
   const deleteVerification = async (verificationId: string) => {
-    if (!user || !confirm('Are you sure you want to delete this verification? This action cannot be undone.')) {
-      return;
-    }
+    const verification = verifications.find(v => v.id === verificationId);
+    if (!verification) return;
+    
+    setVerificationToDelete(verification);
+    setShowDeleteModal(true);
+  };
+
+  // Confirm delete verification
+  const confirmDeleteVerification = async () => {
+    if (!verificationToDelete) return;
 
     try {
-      const { error } = await db.verifications.delete(verificationId);
+      setDeleteLoading(true);
+      
+      const { error } = await db.verifications.delete(verificationToDelete.id);
 
       if (error) {
         console.error('Error deleting verification:', error);
@@ -180,9 +193,23 @@ const MyVerifications = () => {
       }
 
       // Remove from local state
-      setVerifications(prev => prev.filter(v => v.id !== verificationId));
+      setVerifications(prev => prev.filter(v => v.id !== verificationToDelete.id));
+      
+      // Close modal
+      setShowDeleteModal(false);
+      setVerificationToDelete(null);
     } catch (err) {
       console.error('Exception deleting verification:', err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Close delete modal
+  const closeDeleteModal = () => {
+    if (!deleteLoading) {
+      setShowDeleteModal(false);
+      setVerificationToDelete(null);
     }
   };
 
@@ -1086,6 +1113,19 @@ const MyVerifications = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteVerification}
+        title="Delete Verification"
+        message={`Are you sure you want to delete "${verificationToDelete?.original_filename || verificationToDelete?.file_name}"? This action cannot be undone and will permanently remove the verification from your account.`}
+        confirmText="Delete Verification"
+        cancelText="Keep Verification"
+        type="danger"
+        loading={deleteLoading}
+      />
     </div>
   );
 };
