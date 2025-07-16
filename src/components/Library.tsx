@@ -507,16 +507,16 @@ const Library = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-24 pb-12">
+    <div className="min-h-screen bg-black text-white pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-12">
-          <div className="text-center mb-8">
+        <div className="mb-8">
+          <div className="text-center mb-6">
             <div className="mb-8">
               <img 
                 src="/fictus archive.png" 
                 alt="Fictus Archive" 
-                className="mx-auto h-32 sm:h-40 lg:h-48 w-auto object-contain filter drop-shadow-lg"
+                className="mx-auto h-40 sm:h-52 lg:h-64 xl:h-72 w-auto object-contain filter drop-shadow-lg"
                 style={{ imageRendering: 'crisp-edges' }}
               />
             </div>
