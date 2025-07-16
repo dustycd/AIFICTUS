@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, Trash2, Download, Share2, AlertTriangle, CheckCircle, Clock, Shield, Brain, Film, Image as ImageIcon, Video, SlidersHorizontal, ChevronDown } from 'lucide-react';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, Download, Share2, Trash2, Globe } from 'lucide-react';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, Trash2, Download, Share2, AlertTriangle, CheckCircle, Clock, Shield, Brain, Film, Image as ImageIcon, Video, SlidersHorizontal, ChevronDown, X, Globe } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/database';
