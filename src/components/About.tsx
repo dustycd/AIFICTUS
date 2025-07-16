@@ -199,17 +199,17 @@ const About = () => {
             
             <div className="space-y-8">
               {[
-                "Fictus AI started with a simple but urgent insight: as AI becomes more powerful, so does the risk of it being misused. Our founders saw firsthand how deepfakes and other AI-generated content could threaten public trust, journalism, and personal privacy.",
-                "What began as a research project has now grown into a full platform designed to help creators, journalists, and organizations verify the authenticity of video content. We're building the tools needed to protect trust in our digital world.",
-                "Our team brings together decades of experience in AI, machine learning, and cybersecurity. We're not just focused on detecting AI-generated content—we're also helping people understand how digital media is changing.",
-                "Although we're still in the early stages, we're already working with beta users to improve and grow. Every day, we're getting closer to our mission: making video verification easy to use, widely available, and essential for digital literacy."
+                "Fictus AI started with a simple but urgent insight: as artificial intelligence becomes increasingly more powerful and sophisticated, so does the inherent risk of it being misused for malicious purposes. Our dedicated founders saw firsthand how deepfakes and other AI-generated synthetic content could systematically threaten public trust, undermine journalism integrity, and compromise personal privacy rights.",
+                "What began as a focused research project has now evolved and grown into a comprehensive platform specifically designed to help content creators, investigative journalists, and security-conscious organizations verify the authenticity of video content with unprecedented accuracy. We're actively building the essential tools needed to protect and preserve trust in our rapidly evolving digital world.",
+                "Our experienced team brings together multiple decades of combined expertise in artificial intelligence, advanced machine learning, and comprehensive cybersecurity practices. We're not just singularly focused on detecting AI-generated content—we're also actively helping people understand how digital media landscapes are fundamentally changing and evolving.",
+                "Although we're still in the early developmental stages, we're already working closely with beta users to continuously improve and grow our platform capabilities. Every single day, we're getting progressively closer to achieving our mission: making video verification easy to use, widely available, and absolutely essential for digital literacy."
               ].map((text, index) => (
                 <div 
                   key={index}
                   className="opacity-0 animate-fade-in-up"
                   style={{ animationDelay: `${index * 0.3}s`, animationFillMode: 'forwards' }}
                 >
-                  <Typography variant="body" color="secondary" className="text-lg leading-relaxed text-justify">
+                  <Typography variant="body" color="secondary" className="text-lg leading-relaxed text-justify hyphens-auto">
                     {text}
                   </Typography>
                 </div>
