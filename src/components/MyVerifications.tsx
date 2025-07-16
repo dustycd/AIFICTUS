@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, Trash2, Download, Share2, AlertTriangle, CheckCircle, Clock, Shield, Brain, Film, Image as ImageIcon, Video, SlidersHorizontal, ChevronDown, X, Globe } from 'lucide-react';
+import { Search, Filter, Grid, List, Play, Shield, AlertTriangle, CheckCircle, Clock, Eye, Download, Share2, Calendar, User, Trash2, MoreVertical, Film, Image as ImageIcon, Zap, Brain, Globe, Lock, X } from 'lucide-react';
+import { Typography, Heading } from './Typography';
 import ConfirmationModal from './ConfirmationModal';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/database';
@@ -34,7 +35,6 @@ const MyVerifications = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('recent');
-  const [showFilters, setShowFilters] = useState(false);
   const [verifications, setVerifications] = useState<UserVerification[]>([]);
   const [filteredVerifications, setFilteredVerifications] = useState<UserVerification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -523,9 +523,9 @@ const MyVerifications = () => {
                     <option value="authentic">✓ Authentic</option>
                     <option value="suspicious">? Suspicious</option>
                     <option value="fake">⚠ AI Generated</option>
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="error">Error</option>
+                    <option value="pending">⏳ Pending</option>
+                    <option value="processing">🔄 Processing</option>
+                    <option value="error">❌ Error</option>
                   </select>
 
                   {/* Sort By */}
@@ -534,10 +534,10 @@ const MyVerifications = () => {
                     onChange={(e) => setSortBy(e.target.value)}
                     className="px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-colors"
                   >
-                    <option value="recent">Most Recent</option>
-                    <option value="confidence">Highest Confidence</option>
-                    <option value="name">Name A-Z</option>
-                    <option value="size">File Size</option>
+                    <option value="recent">🕒 Most Recent</option>
+                    <option value="confidence">📊 Highest Confidence</option>
+                    <option value="name">📝 Name A-Z</option>
+                    <option value="size">📏 File Size</option>
                   </select>
 
                   {/* View Mode Toggle */}
