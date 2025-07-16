@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Play, Shield, AlertTriangle, CheckCircle, Clock, Eye, Download, Share2, Calendar, User, Trash2, MoreVertical, Film, Image as ImageIcon, Zap, Brain, Globe, Lock, X } from 'lucide-react';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, Trash2, Download, Share2, AlertTriangle, CheckCircle, Clock, Shield, Brain, Film, Image as ImageIcon, Video, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { Typography, Heading } from './Typography';
 import ConfirmationModal from './ConfirmationModal';
 import { useAuth } from '../hooks/useAuth';
@@ -35,6 +35,7 @@ const MyVerifications = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('recent');
+  const [showFilters, setShowFilters] = useState(false);
   const [verifications, setVerifications] = useState<UserVerification[]>([]);
   const [filteredVerifications, setFilteredVerifications] = useState<UserVerification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
