@@ -209,7 +209,7 @@ const About = () => {
                   className="opacity-0 animate-fade-in-up"
                   style={{ animationDelay: `${index * 0.3}s`, animationFillMode: 'forwards' }}
                 >
-                  <Typography variant="body" color="secondary" className="text-lg leading-relaxed">
+                  <Typography variant="body" color="secondary" className="text-lg leading-relaxed text-justify">
                     {text}
                   </Typography>
                 </div>
