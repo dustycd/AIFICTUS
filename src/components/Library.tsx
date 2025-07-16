@@ -514,7 +514,7 @@ const Library = () => {
           <div className="text-center mb-8">
             <Heading level={1} className="mb-4">
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                Public Verification Library
+                Fictus Archive
               </span>
             </Heading>
             <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto">
