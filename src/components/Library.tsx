@@ -516,7 +516,7 @@ const Library = () => {
               <img 
                 src="/fictus archive.png" 
                 alt="Fictus Archive" 
-                className="mx-auto h-20 w-auto object-contain filter drop-shadow-lg"
+                className="mx-auto h-32 sm:h-40 lg:h-48 w-auto object-contain filter drop-shadow-lg"
                 style={{ imageRendering: 'crisp-edges' }}
               />
             </div>
