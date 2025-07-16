@@ -19,7 +19,7 @@ const HowItWorks = () => {
     {
       icon: <Volume2 className="h-8 w-8" />,
       title: "Multi-Layer Detection",
-      description: "We use multiple AI models including deepfake detection, face swap identification, audio-visual synchronization, and temporal analysis to provide comprehensive verification coverage.",
+      description: "We use multiple AI models including deepfake detection, audio-visual synchronization, and temporal analysis to provide comprehensive verification coverage.",
       color: "text-purple-400"
     },
     {
