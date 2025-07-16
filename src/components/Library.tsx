@@ -512,11 +512,14 @@ const Library = () => {
         {/* Header */}
         <div className="mb-12">
           <div className="text-center mb-8">
-            <Heading level={1} className="mb-4">
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                Fictus Archive
-              </span>
-            </Heading>
+            <div className="mb-8">
+              <img 
+                src="/fictus archive.png" 
+                alt="Fictus Archive" 
+                className="mx-auto h-20 w-auto object-contain filter drop-shadow-lg"
+                style={{ imageRendering: 'crisp-edges' }}
+              />
+            </div>
             <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto">
               Explore verified content from our community. See real examples of AI detection in action.
             </Typography>
