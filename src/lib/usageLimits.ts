@@ -80,25 +80,13 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
     const currentMonthYear = getCurrentMonthYear();
     console.log('📅 Current month-year:', currentMonthYear);
     
-    // Query user_usage_limits table for current month with network error handling
-    let usageRecord, usageError;
-    try {
-      const result = await supabase
-        .from('user_usage_limits')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('month_year', currentMonthYear)
-        .limit(1);
-      usageRecord = result.data;
-      usageError = result.error;
-    } catch (networkError) {
-      console.error('❌ Network error connecting to Supabase:', networkError);
-      console.error('🔧 Please check:');
-      console.error('   - Internet connection');
-      console.error('   - Supabase URL and API key configuration');
-      console.error('   - CORS settings in Supabase dashboard');
-      return null;
-    }
+    // Query user_usage_limits table for current month
+    const { data: usageRecord, error: usageError } = await supabase
+      .from('user_usage_limits')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('month_year', currentMonthYear)
+      .limit(1);
     
     let videosUsed = 0;
     let imagesUsed = 0;
