@@ -169,8 +169,9 @@ export const updateUsageAfterUpload = async (
   try {
     console.log('🔍 updateUsageAfterUpload called with:', { userId, contentType });
     
-    // Since we're counting actual verification records, we don't need to manually update usage
-    // The usage will be automatically reflected when we query the verifications table
+    // IMPORTANT: We count actual verification records in the database
+    // Deleting verifications does NOT reduce usage counts to prevent abuse
+    // This ensures users cannot bypass monthly limits by uploading and deleting content
     
     // Get updated usage
     const updatedUsage = await getUserMonthlyUsage(userId);
@@ -183,7 +184,7 @@ export const updateUsageAfterUpload = async (
     
     return {
       success: true,
-      message: `${contentType} upload counted successfully`,
+      message: `${contentType} upload counted successfully (permanent count)`,
       updatedUsage
     };
     
