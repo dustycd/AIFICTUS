@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { db } from './database';
 
 // Monthly usage limits
 export const USAGE_LIMITS = {
@@ -17,6 +16,16 @@ export interface UsageInfo {
   imagesRemaining: number;
   canUploadVideo: boolean;
   canUploadImage: boolean;
+}
+
+interface UsageLimitRecord {
+  user_id: string;
+  month_year: string;
+  video_seconds_used: number;
+  images_used: number;
+  videos_used: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UsageCheckResult {
@@ -57,52 +66,60 @@ export const calculateRollingPeriod = (userCreatedAt: string): { periodStart: st
   };
 };
 
-// Get user's current rolling monthly usage
+// Get current month-year string (YYYY-MM format)
+const getCurrentMonthYear = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+};
+
+// Get user's current monthly usage from user_usage_limits table
 export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | null> => {
   try {
     console.log('🔍 getUserMonthlyUsage called with userId:', userId);
     
-    // First, get the user's creation date
-    const { data: profile, error: profileError } = await db.profiles.get(userId);
+    const currentMonthYear = getCurrentMonthYear();
+    console.log('📅 Current month-year:', currentMonthYear);
     
-    if (profileError || !profile) {
-      console.error('❌ Error getting user profile:', profileError);
-      return null;
-    }
-    
-    const userCreatedAt = profile.created_at;
-    console.log('📅 User created at:', userCreatedAt);
-    
-    // Calculate rolling period
-    const { periodStart, periodEnd } = calculateRollingPeriod(userCreatedAt);
-    console.log('📊 Rolling period:', { periodStart, periodEnd });
-    
-    // Query verifications within the rolling period
-    const { data: verifications, error: verificationsError } = await supabase
-      .from('verifications')
-      .select('content_type, created_at')
+    // Query user_usage_limits table for current month
+    const { data: usageRecord, error: usageError } = await supabase
+      .from('user_usage_limits')
+      .select('*')
       .eq('user_id', userId)
-      .gte('created_at', periodStart)
-      .lt('created_at', periodEnd);
+      .eq('month_year', currentMonthYear)
+      .single();
     
-    if (verificationsError) {
-      console.error('❌ Error getting verifications:', verificationsError);
+    let videosUsed = 0;
+    let imagesUsed = 0;
+    
+    if (usageError && usageError.code !== 'PGRST116') {
+      // PGRST116 means no rows found, which is fine for new users
+      console.error('❌ Error getting usage record:', usageError);
       return null;
     }
     
-    console.log('📋 Found verifications in period:', verifications?.length || 0);
+    if (usageRecord) {
+      videosUsed = usageRecord.videos_used || 0;
+      imagesUsed = usageRecord.images_used || 0;
+      console.log('📊 Found usage record:', { videosUsed, imagesUsed });
+    } else {
+      console.log('📊 No usage record found for current month (new user or new month)');
+    }
     
-    // Count usage by content type
-    const videosUsed = verifications?.filter(v => v.content_type.startsWith('video/')).length || 0;
-    const imagesUsed = verifications?.filter(v => v.content_type.startsWith('image/')).length || 0;
+    // Calculate period dates (first day of month to last day of month)
+    const now = new Date();
+    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of current month
+    
+    // Set end time to end of day
+    periodEnd.setHours(23, 59, 59, 999);
     
     const videosRemaining = Math.max(0, USAGE_LIMITS.VIDEOS_PER_MONTH - videosUsed);
     const imagesRemaining = Math.max(0, USAGE_LIMITS.IMAGES_PER_MONTH - imagesUsed);
     
     const usage: UsageInfo = {
       userId,
-      periodStart,
-      periodEnd,
+      periodStart: periodStart.toISOString(),
+      periodEnd: periodEnd.toISOString(),
       videosUsed,
       imagesUsed,
       videosRemaining,
@@ -111,12 +128,101 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
       canUploadImage: imagesUsed < USAGE_LIMITS.IMAGES_PER_MONTH
     };
     
-    console.log('✅ Usage calculated:', usage);
+    console.log('✅ Usage calculated from user_usage_limits table:', usage);
     return usage;
     
   } catch (err) {
     console.error('❌ Exception getting user monthly usage:', err);
     return null;
+  }
+};
+
+// Increment monthly usage count (called after successful upload)
+export const incrementMonthlyUsage = async (
+  userId: string,
+  contentType: 'video' | 'image'
+): Promise<{ success: boolean; message: string; updatedUsage?: UsageInfo }> => {
+  try {
+    console.log('🔍 incrementMonthlyUsage called with:', { userId, contentType });
+    
+    const currentMonthYear = getCurrentMonthYear();
+    
+    // Use upsert to either update existing record or create new one
+    const updateData: any = {
+      user_id: userId,
+      month_year: currentMonthYear,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (contentType === 'video') {
+      updateData.videos_used = 1; // This will be added to existing value by the database
+    } else {
+      updateData.images_used = 1; // This will be added to existing value by the database
+    }
+    
+    // Use RPC function to atomically increment usage
+    const { data, error } = await supabase.rpc('increment_user_usage', {
+      p_user_id: userId,
+      p_month_year: currentMonthYear,
+      p_content_type: contentType
+    });
+    
+    if (error) {
+      console.error('❌ Error incrementing usage:', error);
+      return { success: false, message: `Failed to update ${contentType} usage count` };
+    }
+    
+    console.log('✅ Usage incremented successfully');
+    
+    // Get updated usage info
+    const updatedUsage = await getUserMonthlyUsage(userId);
+    
+    return {
+      success: true,
+      message: `${contentType} usage incremented successfully (permanent count)`,
+      updatedUsage: updatedUsage || undefined
+    };
+    
+  } catch (err) {
+    console.error('❌ Exception incrementing monthly usage:', err);
+    return { success: false, message: 'Exception occurred while incrementing usage' };
+  }
+};
+
+// Create RPC function fallback if it doesn't exist
+const createUsageRecordFallback = async (
+  userId: string,
+  monthYear: string,
+  contentType: 'video' | 'image'
+): Promise<boolean> => {
+  try {
+    const insertData: any = {
+      user_id: userId,
+      month_year: monthYear,
+      video_seconds_used: 0,
+      images_used: contentType === 'image' ? 1 : 0,
+      videos_used: contentType === 'video' ? 1 : 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    const { error } = await supabase
+      .from('user_usage_limits')
+      .upsert(insertData, {
+        onConflict: 'user_id,month_year',
+        ignoreDuplicates: false
+      });
+    
+    if (error) {
+      console.error('❌ Fallback upsert error:', error);
+      return false;
+    }
+    
+    return true;
+    
+  } catch (err) {
+    console.error('❌ Fallback creation exception:', err);
+    return false;
   }
 };
 
@@ -158,39 +264,6 @@ export const checkUsageLimits = async (
   } catch (err) {
     console.error('❌ Exception checking usage limits:', err);
     return null;
-  }
-};
-
-// Update usage after successful upload
-export const updateUsageAfterUpload = async (
-  userId: string,
-  contentType: 'video' | 'image'
-): Promise<{ success: boolean; message: string; updatedUsage?: UsageInfo }> => {
-  try {
-    console.log('🔍 updateUsageAfterUpload called with:', { userId, contentType });
-    
-    // IMPORTANT: We count actual verification records in the database
-    // Deleting verifications does NOT reduce usage counts to prevent abuse
-    // This ensures users cannot bypass monthly limits by uploading and deleting content
-    
-    // Get updated usage
-    const updatedUsage = await getUserMonthlyUsage(userId);
-    
-    if (!updatedUsage) {
-      return { success: false, message: 'Failed to get updated usage' };
-    }
-    
-    console.log('✅ Usage updated successfully');
-    
-    return {
-      success: true,
-      message: `${contentType} upload counted successfully (permanent count)`,
-      updatedUsage
-    };
-    
-  } catch (err) {
-    console.error('❌ Exception updating usage after upload:', err);
-    return { success: false, message: 'Exception occurred while updating usage' };
   }
 };
 
@@ -239,8 +312,8 @@ export const isNewPeriod = (lastCheckedPeriodEnd: string): boolean => {
 // Usage limits utilities
 export const usageLimits = {
   getUserMonthlyUsage,
+  incrementMonthlyUsage,
   checkUsageLimits,
-  updateUsageAfterUpload,
   calculateRollingPeriod,
   formatRemainingCount,
   formatPeriod,
