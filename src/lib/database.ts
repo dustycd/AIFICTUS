@@ -168,7 +168,6 @@ export const db = {
         }
         
         console.log('✅ Verification deleted:', id)
-        console.log('ℹ️ Note: Usage limits are NOT decremented to prevent abuse')
         return { data, error: null }
       } catch (err) {
         console.error('❌ Verification delete exception:', err)
