@@ -182,12 +182,12 @@ export const useAuth = () => {
             console.log('Found existing session for:', session.user.email)
             
             // Set user immediately, then try to load profile
-            setAuthState({
+            setAuthState(prev => ({
+              ...prev,
               user: session.user,
               session,
-              profile: null,
               loading: false
-            })
+            }))
             
             // Load profile in background (don't block)
             ensureUserProfile(session.user).then(profile => {
@@ -237,12 +237,12 @@ export const useAuth = () => {
         if (mounted) {
           if (session?.user) {
             // Set user immediately
-            setAuthState({
+            setAuthState(prev => ({
+              ...prev,
               user: session.user,
               session,
-              profile: null,
               loading: false
-            })
+            }))
             
             // Load profile in background
             ensureUserProfile(session.user).then(profile => {
