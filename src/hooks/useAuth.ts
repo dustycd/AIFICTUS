@@ -18,7 +18,7 @@ export const useAuth = () => {
   })
 
   // Function to load user profile with timeout
-  const loadUserProfile = async (userId: string, timeout = 15000) => {
+  const loadUserProfile = async (userId: string, timeout = 10000) => {
     try {
       console.log('Loading profile for user:', userId)
       
@@ -74,7 +74,7 @@ export const useAuth = () => {
       
       // Set a timeout for profile creation
       const createTimeout = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Profile creation timeout')), 7000)
+        setTimeout(() => reject(new Error('Profile creation timeout')), 5000)
       })
       
       const createPromise = db.profiles.create(newProfile)
@@ -88,13 +88,10 @@ export const useAuth = () => {
           // If it's a duplicate key error, try to fetch the existing profile
           if (createError.code === '23505') {
             console.log('Profile already exists (duplicate key), attempting to fetch existing profile')
-            
-            // Add small delay to allow any concurrent profile creation to complete
-            await new Promise(resolve => setTimeout(resolve, 500))
-            
             try {
-              const existingProfile = await loadUserProfile(user.id, 15000)
+              const existingProfile = await loadUserProfile(user.id, 3000)
               if (existingProfile) {
+                const existingProfile = await loadUserProfile(user.id, 10000)
                 return existingProfile
               }
             } catch (fetchErr) {
@@ -113,11 +110,7 @@ export const useAuth = () => {
         // If creation timed out, try to fetch existing profile as fallback
         try {
           console.log('Attempting to fetch profile after creation timeout')
-          
-          // Add small delay to allow any concurrent profile creation to complete
-          await new Promise(resolve => setTimeout(resolve, 500))
-          
-          const existingProfile = await loadUserProfile(user.id, 15000)
+          const existingProfile = await loadUserProfile(user.id, 10000)
           if (existingProfile) {
             console.log('Found existing profile after timeout:', existingProfile)
             return existingProfile
@@ -155,7 +148,7 @@ export const useAuth = () => {
               loading: false
             })
           }
-        }, 10000) // Increased to 10 seconds for better reliability
+        }, 5000) // Reduced to 5 seconds
 
         const { data: { session }, error } = await auth.getCurrentSession()
         
@@ -182,12 +175,12 @@ export const useAuth = () => {
             console.log('Found existing session for:', session.user.email)
             
             // Set user immediately, then try to load profile
-            setAuthState(prev => ({
-              ...prev,
+            setAuthState({
               user: session.user,
               session,
+              profile: null,
               loading: false
-            }))
+            })
             
             // Load profile in background (don't block)
             ensureUserProfile(session.user).then(profile => {
@@ -237,12 +230,12 @@ export const useAuth = () => {
         if (mounted) {
           if (session?.user) {
             // Set user immediately
-            setAuthState(prev => ({
-              ...prev,
+            setAuthState({
               user: session.user,
               session,
+              profile: null,
               loading: false
-            }))
+            })
             
             // Load profile in background
             ensureUserProfile(session.user).then(profile => {

@@ -1,6 +1,4 @@
 import { supabase } from './supabase'
-import { usageLimits } from './usageLimits'
-import { isImageFile } from './storage'
 
 // Database helper functions for verifications
 export const db = {
@@ -33,7 +31,6 @@ export const db = {
       is_public_library_item?: boolean;
     }) => {
       try {
-        // First create the verification record
         const { data, error } = await supabase
           .from('verifications')
           .insert({
@@ -46,24 +43,8 @@ export const db = {
         
         if (error) {
           console.error('❌ Verification create error:', error)
-          return { data: null, error }
         } else {
           console.log('✅ Verification record created:', data?.id)
-          
-          // After successful verification creation, increment usage count
-          // This ensures usage is only counted for successful uploads
-          const contentType = isImageFile(undefined, verification.file_name) ? 'image' : 'video'
-          console.log('📊 Incrementing usage count for:', contentType)
-          
-          const usageResult = await usageLimits.incrementMonthlyUsage(verification.user_id, contentType)
-          
-          if (!usageResult.success) {
-            console.error('❌ Failed to increment usage count:', usageResult.message)
-            // Note: We don't fail the entire operation if usage increment fails
-            // The verification was successful, usage tracking is secondary
-          } else {
-            console.log('✅ Usage count incremented successfully')
-          }
         }
         
         return { data, error }
