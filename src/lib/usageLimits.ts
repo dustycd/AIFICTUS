@@ -10,6 +10,7 @@ export interface UsageInfo {
   userId: string;
   periodStart: string; // ISO date string
   periodEnd: string;   // ISO date string
+  periodIdentifier: string; // YYYY-MM-DD format for the period start
   videosUsed: number;
   imagesUsed: number;
   videosRemaining: number;
@@ -34,10 +35,39 @@ export interface UsageCheckResult {
   currentUsage: UsageInfo;
 }
 
-// Get current month-year string (YYYY-MM format)
-const getCurrentMonthYear = (): string => {
+// Calculate rolling monthly period based on user creation date
+const getRollingPeriod = (userCreatedAt: string): {
+  periodStart: string;
+  periodEnd: string;
+  periodIdentifier: string;
+} => {
+  const createdDate = new Date(userCreatedAt);
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  
+  // Get the day of the month when the user was created
+  const createdDay = createdDate.getDate();
+  
+  // Calculate the current period start
+  let periodStart = new Date(now.getFullYear(), now.getMonth(), createdDay);
+  
+  // If the period start is in the future, move it back one month
+  if (periodStart > now) {
+    periodStart = new Date(now.getFullYear(), now.getMonth() - 1, createdDay);
+  }
+  
+  // Calculate the period end (one month after period start, minus 1 day)
+  const periodEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, createdDay - 1);
+  // Set end time to end of day
+  periodEnd.setHours(23, 59, 59, 999);
+  
+  // Create period identifier (YYYY-MM-DD format of period start)
+  const periodIdentifier = periodStart.toISOString().split('T')[0];
+  
+  return {
+    periodStart: periodStart.toISOString(),
+    periodEnd: periodEnd.toISOString(),
+    periodIdentifier
+  };
 };
 
 // Get user's current monthly usage from user_usage_limits table
@@ -45,15 +75,37 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
   try {
     console.log('🔍 getUserMonthlyUsage called with userId:', userId);
     
-    const currentMonthYear = getCurrentMonthYear();
-    console.log('📅 Current month-year:', currentMonthYear);
+    // First, get the user's profile to find their creation date
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) {
+      console.error('❌ Error getting user profile:', profileError);
+      return null;
+    }
+    
+    if (!profile?.created_at) {
+      console.error('❌ User profile has no creation date');
+      return null;
+    }
+    
+    // Calculate the rolling period based on user creation date
+    const rollingPeriod = getRollingPeriod(profile.created_at);
+    console.log('📅 Rolling period calculated:', {
+      periodStart: rollingPeriod.periodStart,
+      periodEnd: rollingPeriod.periodEnd,
+      periodIdentifier: rollingPeriod.periodIdentifier
+    });
     
     // Query user_usage_limits table for current month
     const { data: usageRecord, error: usageError } = await supabase
       .from('user_usage_limits')
       .select('*')
       .eq('user_id', userId)
-      .eq('month_year', currentMonthYear)
+      .eq('month_year', rollingPeriod.periodIdentifier)
       .limit(1);
     
     let videosUsed = 0;
@@ -69,24 +121,17 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
       imagesUsed = usageRecord[0].images_used || 0;
       console.log('📊 Found usage record:', { videosUsed, imagesUsed });
     } else {
-      console.log('📊 No usage record found for current month (new user or new month)');
+      console.log('📊 No usage record found for current rolling period (new user or new period)');
     }
-    
-    // Calculate period dates (first day of month to last day of month)
-    const now = new Date();
-    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of current month
-    
-    // Set end time to end of day
-    periodEnd.setHours(23, 59, 59, 999);
     
     const videosRemaining = Math.max(0, USAGE_LIMITS.VIDEOS_PER_MONTH - videosUsed);
     const imagesRemaining = Math.max(0, USAGE_LIMITS.IMAGES_PER_MONTH - imagesUsed);
     
     const usage: UsageInfo = {
       userId,
-      periodStart: periodStart.toISOString(),
-      periodEnd: periodEnd.toISOString(),
+      periodStart: rollingPeriod.periodStart,
+      periodEnd: rollingPeriod.periodEnd,
+      periodIdentifier: rollingPeriod.periodIdentifier,
       videosUsed,
       imagesUsed,
       videosRemaining,
@@ -95,11 +140,11 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
       canUploadImage: imagesUsed < USAGE_LIMITS.IMAGES_PER_MONTH
     };
     
-    console.log('✅ Usage calculated from user_usage_limits table:', usage);
+    console.log('✅ Rolling usage calculated from user_usage_limits table:', usage);
     return usage;
     
   } catch (err) {
-    console.error('❌ Exception getting user monthly usage:', err);
+    console.error('❌ Exception getting user rolling monthly usage:', err);
     return null;
   }
 };
@@ -112,12 +157,34 @@ export const incrementMonthlyUsage = async (
   try {
     console.log('🔍 incrementMonthlyUsage called with:', { userId, contentType });
     
-    const currentMonthYear = getCurrentMonthYear();
+    // First, get the user's profile to find their creation date
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) {
+      console.error('❌ Error getting user profile for increment:', profileError);
+      return { success: false, message: 'Failed to get user profile for usage increment' };
+    }
+    
+    if (!profile?.created_at) {
+      console.error('❌ User profile has no creation date for increment');
+      return { success: false, message: 'User profile missing creation date' };
+    }
+    
+    // Calculate the rolling period based on user creation date
+    const rollingPeriod = getRollingPeriod(profile.created_at);
+    console.log('📅 Rolling period for increment:', {
+      periodIdentifier: rollingPeriod.periodIdentifier,
+      contentType
+    });
     
     // Use upsert to either update existing record or create new one
     const updateData: any = {
       user_id: userId,
-      month_year: currentMonthYear,
+      month_year: rollingPeriod.periodIdentifier,
       updated_at: new Date().toISOString()
     };
     
@@ -130,7 +197,7 @@ export const incrementMonthlyUsage = async (
     // Use RPC function to atomically increment usage
     const { data, error } = await supabase.rpc('increment_user_usage', {
       p_user_id: userId,
-      p_month_year: currentMonthYear,
+      p_month_year: rollingPeriod.periodIdentifier,
       p_content_type: contentType
     });
     
@@ -139,19 +206,19 @@ export const incrementMonthlyUsage = async (
       return { success: false, message: `Failed to update ${contentType} usage count` };
     }
     
-    console.log('✅ Usage incremented successfully');
+    console.log('✅ Rolling usage incremented successfully');
     
     // Get updated usage info
     const updatedUsage = await getUserMonthlyUsage(userId);
     
     return {
       success: true,
-      message: `${contentType} usage incremented successfully (permanent count)`,
+      message: `${contentType} usage incremented successfully for rolling period`,
       updatedUsage: updatedUsage || undefined
     };
     
   } catch (err) {
-    console.error('❌ Exception incrementing monthly usage:', err);
+    console.error('❌ Exception incrementing rolling monthly usage:', err);
     return { success: false, message: 'Exception occurred while incrementing usage' };
   }
 };
@@ -159,13 +226,13 @@ export const incrementMonthlyUsage = async (
 // Create RPC function fallback if it doesn't exist
 const createUsageRecordFallback = async (
   userId: string,
-  monthYear: string,
+  periodIdentifier: string,
   contentType: 'video' | 'image'
 ): Promise<boolean> => {
   try {
     const insertData: any = {
       user_id: userId,
-      month_year: monthYear,
+      month_year: periodIdentifier,
       video_seconds_used: 0,
       images_used: contentType === 'image' ? 1 : 0,
       videos_used: contentType === 'video' ? 1 : 0,
