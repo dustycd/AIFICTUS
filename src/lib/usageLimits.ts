@@ -86,20 +86,19 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
       .select('*')
       .eq('user_id', userId)
       .eq('month_year', currentMonthYear)
-      .single();
+      .limit(1);
     
     let videosUsed = 0;
     let imagesUsed = 0;
     
-    if (usageError && usageError.code !== 'PGRST116') {
-      // PGRST116 means no rows found, which is fine for new users
+    if (usageError) {
       console.error('❌ Error getting usage record:', usageError);
       return null;
     }
     
-    if (usageRecord) {
-      videosUsed = usageRecord.videos_used || 0;
-      imagesUsed = usageRecord.images_used || 0;
+    if (usageRecord && usageRecord.length > 0) {
+      videosUsed = usageRecord[0].videos_used || 0;
+      imagesUsed = usageRecord[0].images_used || 0;
       console.log('📊 Found usage record:', { videosUsed, imagesUsed });
     } else {
       console.log('📊 No usage record found for current month (new user or new month)');
