@@ -18,7 +18,7 @@ export const useAuth = () => {
   })
 
   // Function to load user profile with timeout
-  const loadUserProfile = async (userId: string, timeout = 30000) => {
+  const loadUserProfile = async (userId: string, timeout = 15000) => {
     try {
       console.log('Loading profile for user:', userId)
       
@@ -51,7 +51,7 @@ export const useAuth = () => {
       console.log('Checking profile for user:', user.email)
       
       // Try to load existing profile first with longer timeout
-      const profile = await loadUserProfile(user.id, 20000)
+      const profile = await loadUserProfile(user.id, 10000)
       
       if (profile) {
         console.log('Profile already exists:', profile)
@@ -93,7 +93,7 @@ export const useAuth = () => {
             await new Promise(resolve => setTimeout(resolve, 500))
             
             try {
-              const existingProfile = await loadUserProfile(user.id, 30000)
+              const existingProfile = await loadUserProfile(user.id, 15000)
               if (existingProfile) {
                 return existingProfile
               }
@@ -117,7 +117,7 @@ export const useAuth = () => {
           // Add small delay to allow any concurrent profile creation to complete
           await new Promise(resolve => setTimeout(resolve, 500))
           
-          const existingProfile = await loadUserProfile(user.id, 30000)
+          const existingProfile = await loadUserProfile(user.id, 15000)
           if (existingProfile) {
             console.log('Found existing profile after timeout:', existingProfile)
             return existingProfile

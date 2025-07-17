@@ -19,7 +19,6 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const loadUsage = async () => {
@@ -34,9 +33,7 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
         setUsage(usageData);
       } catch (err) {
         console.error('Failed to load usage data:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load usage information';
-        setError(errorMessage);
-        setUsage(null);
+        setError('Failed to load usage information');
       } finally {
         setLoading(false);
       }
@@ -45,94 +42,21 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
     loadUsage();
   }, [user]);
 
-  // Auto-refresh management
+  // Auto-refresh usage data every 30 seconds
   useEffect(() => {
-    const startAutoRefresh = () => {
-      // Clear any existing interval
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
-      
-      // Only start auto-refresh if there's no error and user is present
-      if (!user || error) {
-        return;
-      }
-      
-      const interval = setInterval(async () => {
-        try {
-          console.log('🔄 Auto-refreshing usage data...');
-          const usageData = await usageLimits.getUserMonthlyUsage(user.id);
-          setUsage(usageData);
-          setError(null); // Clear any previous errors on successful refresh
-        } catch (err) {
-          console.error('Failed to refresh usage data:', err);
-          const errorMessage = err instanceof Error ? err.message : 'Failed to refresh usage information';
-          setError(errorMessage);
-          
-          // Stop auto-refresh on error to prevent continuous failures
-          if (refreshInterval) {
-            clearInterval(refreshInterval);
-            setRefreshInterval(null);
-          }
-        }
-      }, 30000); // 30 seconds
-      
-      setRefreshInterval(interval);
-    };
-    
-    const stopAutoRefresh = () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-        setRefreshInterval(null);
-      }
-    };
-
-    // Start auto-refresh when component mounts and conditions are met
-    startAutoRefresh();
-
-    // Cleanup on unmount
-    return () => stopAutoRefresh();
-  }, [user, error, refreshInterval]);
-  
-  // Manual retry function
-  const handleRetry = async () => {
     if (!user) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const usageData = await usageLimits.getUserMonthlyUsage(user.id);
-      setUsage(usageData);
-      
-      // Restart auto-refresh on successful retry
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
+
+    const interval = setInterval(async () => {
+      try {
+        const usageData = await usageLimits.getUserMonthlyUsage(user.id);
+        setUsage(usageData);
+      } catch (err) {
+        console.error('Failed to refresh usage data:', err);
       }
-      
-      const interval = setInterval(async () => {
-        try {
-          const refreshedData = await usageLimits.getUserMonthlyUsage(user.id);
-          setUsage(refreshedData);
-        } catch (refreshErr) {
-          console.error('Auto-refresh failed after retry:', refreshErr);
-          const refreshErrorMessage = refreshErr instanceof Error ? refreshErr.message : 'Failed to refresh usage information';
-          setError(refreshErrorMessage);
-          clearInterval(interval);
-          setRefreshInterval(null);
-        }
-      }, 30000);
-      
-      setRefreshInterval(interval);
-      
-    } catch (err) {
-      console.error('Retry failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load usage information';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   if (!user) {
     return (
@@ -161,32 +85,10 @@ const UsageLimitsDisplay: React.FC<UsageLimitsDisplayProps> = ({
   if (error) {
     return (
       <div className={`bg-red-500/10 border border-red-500/30 rounded-2xl p-6 ${className}`}>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3">
           <AlertTriangle className="h-5 w-5 text-red-400" />
           <Typography variant="body" className="text-red-400">
             {error}
-          </Typography>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleRetry}
-            disabled={loading}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white rounded-lg transition-colors flex items-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Retrying...</span>
-              </>
-            ) : (
-              <>
-                <RotateCcw className="h-4 w-4" />
-                <span>Retry</span>
-              </>
-            )}
-          </button>
-          <Typography variant="caption" color="secondary">
-            Check your internet connection and try again
           </Typography>
         </div>
       </div>

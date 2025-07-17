@@ -84,12 +84,12 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
     
     if (profileError) {
       console.error('❌ Error getting user profile:', profileError);
-      throw new Error(`Failed to fetch user profile: ${profileError.message}`);
+      return null;
     }
     
     if (!profile?.created_at) {
       console.error('❌ User profile has no creation date');
-      throw new Error('User profile is missing creation date');
+      return null;
     }
     
     // Calculate the rolling period based on user creation date
@@ -113,7 +113,7 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
     
     if (usageError) {
       console.error('❌ Error getting usage record:', usageError);
-      throw new Error(`Failed to fetch usage data: ${usageError.message}`);
+      return null;
     }
     
     if (usageRecord && usageRecord.length > 0) {
@@ -145,8 +145,7 @@ export const getUserMonthlyUsage = async (userId: string): Promise<UsageInfo | n
     
   } catch (err) {
     console.error('❌ Exception getting user rolling monthly usage:', err);
-    // Re-throw the error to allow the calling component to handle it
-    throw err instanceof Error ? err : new Error('Unknown error occurred while fetching usage data');
+    return null;
   }
 };
 
