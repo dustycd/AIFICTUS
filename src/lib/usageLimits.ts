@@ -34,38 +34,6 @@ export interface UsageCheckResult {
   currentUsage: UsageInfo;
 }
 
-// Calculate rolling period dates based on user's account creation date
-export const calculateRollingPeriod = (userCreatedAt: string): { periodStart: string; periodEnd: string } => {
-  const createdDate = new Date(userCreatedAt);
-  const now = new Date();
-  
-  // Get the day of month when user created account
-  const creationDay = createdDate.getDate();
-  
-  // Calculate current period start
-  let periodStart = new Date(now.getFullYear(), now.getMonth(), creationDay);
-  
-  // If the creation day hasn't occurred this month yet, use last month
-  if (periodStart > now) {
-    periodStart = new Date(now.getFullYear(), now.getMonth() - 1, creationDay);
-  }
-  
-  // Calculate period end (one month from start)
-  let periodEnd = new Date(periodStart);
-  periodEnd.setMonth(periodEnd.getMonth() + 1);
-  
-  // Handle edge case where the creation day doesn't exist in the next month (e.g., Jan 31 -> Feb 28)
-  if (periodEnd.getDate() !== creationDay) {
-    // Set to last day of the month
-    periodEnd = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), 0);
-  }
-  
-  return {
-    periodStart: periodStart.toISOString(),
-    periodEnd: periodEnd.toISOString()
-  };
-};
-
 // Get current month-year string (YYYY-MM format)
 const getCurrentMonthYear = (): string => {
   const now = new Date();
@@ -313,7 +281,6 @@ export const usageLimits = {
   getUserMonthlyUsage,
   incrementMonthlyUsage,
   checkUsageLimits,
-  calculateRollingPeriod,
   formatRemainingCount,
   formatPeriod,
   getDaysUntilReset,
