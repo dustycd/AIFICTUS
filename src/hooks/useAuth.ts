@@ -88,7 +88,7 @@ export const useAuth = () => {
           // If it's a duplicate key error, try to fetch the existing profile
           if (createError.code === '23505') {
             console.log('Profile already exists (duplicate key), attempting to fetch existing profile')
-                const existingProfile = await loadUserProfile(user.id, 10000)
+            try {
               const existingProfile = await loadUserProfile(user.id, 3000)
               if (existingProfile) {
                 return existingProfile
