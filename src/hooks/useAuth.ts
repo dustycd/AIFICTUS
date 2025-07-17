@@ -18,7 +18,7 @@ export const useAuth = () => {
   })
 
   // Function to load user profile with timeout
-  const loadUserProfile = async (userId: string, timeout = 10000) => {
+  const loadUserProfile = async (userId: string, timeout = 15000) => {
     try {
       console.log('Loading profile for user:', userId)
       
@@ -88,8 +88,12 @@ export const useAuth = () => {
           // If it's a duplicate key error, try to fetch the existing profile
           if (createError.code === '23505') {
             console.log('Profile already exists (duplicate key), attempting to fetch existing profile')
+            
+            // Add small delay to allow any concurrent profile creation to complete
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
             try {
-              const existingProfile = await loadUserProfile(user.id, 3000)
+              const existingProfile = await loadUserProfile(user.id, 15000)
               if (existingProfile) {
                 return existingProfile
               }
@@ -109,7 +113,11 @@ export const useAuth = () => {
         // If creation timed out, try to fetch existing profile as fallback
         try {
           console.log('Attempting to fetch profile after creation timeout')
-          const existingProfile = await loadUserProfile(user.id, 10000)
+          
+          // Add small delay to allow any concurrent profile creation to complete
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          const existingProfile = await loadUserProfile(user.id, 15000)
           if (existingProfile) {
             console.log('Found existing profile after timeout:', existingProfile)
             return existingProfile
@@ -147,7 +155,7 @@ export const useAuth = () => {
               loading: false
             })
           }
-        }, 7000) // Increased to 7 seconds for better reliability
+        }, 10000) // Increased to 10 seconds for better reliability
 
         const { data: { session }, error } = await auth.getCurrentSession()
         
