@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, Download, Share2, FileDown } from 'lucide-react';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, Download, Share2, FileDown, Maximize } from 'lucide-react';
 import { Typography, Heading, CardSubtitle } from './Typography';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
@@ -49,6 +49,9 @@ const Library = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
   const [stats, setStats] = useState<any>(null);
+  const [showFullscreen, setShowFullscreen] = useState(false);
+  const [fullscreenMediaUrl, setFullscreenMediaUrl] = useState<string | null>(null);
+  const [fullscreenIsVideo, setFullscreenIsVideo] = useState(false);
 
   // Load library items
   useEffect(() => {
@@ -100,6 +103,18 @@ const Library = () => {
 
     loadStats();
   }, []);
+
+  // Handle escape key for fullscreen
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showFullscreen) {
+        setShowFullscreen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showFullscreen]);
 
   // Get media URL for preview
   const getMediaUrl = (item: LibraryItem): string | null => {
@@ -166,6 +181,16 @@ const Library = () => {
       console.error('Failed to download content:', error);
       alert('Failed to download content. The file may be too large or temporarily unavailable. Please try again.');
     }
+  };
+
+  // Handle fullscreen viewing
+  const handleFullscreenView = (item: LibraryItem) => {
+    const mediaUrl = getMediaUrl(item);
+    if (!mediaUrl) return;
+
+    setFullscreenMediaUrl(mediaUrl);
+    setFullscreenIsVideo(isVideo(item.content_type));
+    setShowFullscreen(true);
   };
 
   // Format file size
@@ -337,6 +362,74 @@ const Library = () => {
               <Eye className="h-6 w-6 text-white" />
             </div>
           </div>
+        </div>
+      );
+    }
+  };
+
+  // Render media preview for modal with fullscreen button
+  const renderModalMediaContent = (item: LibraryItem) => {
+    const mediaUrl = getMediaUrl(item);
+    
+    if (!mediaUrl) {
+      return (
+        <div className="w-full h-64 lg:h-80 bg-gray-800 rounded-lg flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+              {isVideo(item.content_type) ? (
+                <Video className="h-6 w-6 text-gray-400" />
+              ) : (
+                <ImageIcon className="h-6 w-6 text-gray-400" />
+              )}
+            </div>
+            <Typography variant="caption" color="secondary">
+              Preview not available
+            </Typography>
+          </div>
+        </div>
+      );
+    }
+
+    if (isVideo(item.content_type)) {
+      return (
+        <div className="relative w-full h-64 lg:h-80 bg-gray-900 rounded-lg overflow-hidden group">
+          <video 
+            src={mediaUrl}
+            poster={item.thumbnail_path ? getPublicUrl('verification-thumbnails', item.thumbnail_path) : undefined}
+            className="w-full h-full object-cover"
+            controls
+            preload="metadata"
+          />
+          
+          {/* Fullscreen Button */}
+          <button
+            onClick={() => handleFullscreenView(item)}
+            className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"
+            title="View fullscreen"
+          >
+            <Maximize className="h-4 w-4 text-white" />
+          </button>
+        </div>
+      );
+    } else {
+      return (
+        <div className="relative w-full h-64 lg:h-80 bg-gray-900 rounded-lg overflow-hidden group">
+          <img
+            src={mediaUrl}
+            alt={item.original_filename || item.file_name}
+            className="w-full h-full object-cover cursor-pointer"
+            loading="lazy"
+            onClick={() => handleFullscreenView(item)}
+          />
+          
+          {/* Fullscreen Button */}
+          <button
+            onClick={() => handleFullscreenView(item)}
+            className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"
+            title="View fullscreen"
+          >
+            <Maximize className="h-4 w-4 text-white" />
+          </button>
         </div>
       );
     }
@@ -759,7 +852,7 @@ const Library = () => {
                         </Typography>
                       </div>
 
-                      {renderMediaPreview(selectedItem)}
+                      {renderModalMediaContent(selectedItem)}
                     </div>
                   </div>
 
@@ -870,6 +963,52 @@ const Library = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fullscreen Media Viewer */}
+        {showFullscreen && fullscreenMediaUrl && (
+          <div 
+            className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowFullscreen(false);
+              }
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowFullscreen(false)}
+              className="absolute top-4 right-4 p-3 bg-black/60 hover:bg-black/80 rounded-full transition-colors z-10"
+              title="Close fullscreen"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+
+            {/* Media Content */}
+            <div className="w-full h-full flex items-center justify-center">
+              {fullscreenIsVideo ? (
+                <video
+                  src={fullscreenMediaUrl}
+                  className="max-w-full max-h-full object-contain"
+                  controls
+                  autoPlay
+                />
+              ) : (
+                <img
+                  src={fullscreenMediaUrl}
+                  alt="Fullscreen view"
+                  className="max-w-full max-h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Instructions */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
+              <Typography variant="caption" color="secondary" className="bg-black/60 px-4 py-2 rounded-lg backdrop-blur-sm">
+                Press ESC or click outside to close
+              </Typography>
             </div>
           </div>
         )}
