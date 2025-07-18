@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
-import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, Download, Share2 } from 'lucide-react';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, Download, Share2, FileDown } from 'lucide-react';
 import { Typography, Heading, CardSubtitle } from './Typography';
 import { db } from '../lib/database';
 import { getPublicUrl } from '../lib/storage';
@@ -120,6 +120,38 @@ const Library = () => {
 
   // Check if content is video
   const isVideo = (contentType: string) => contentType.startsWith('video/');
+
+  // Handle content download with unique filename
+  const handleDownloadContent = async (item: LibraryItem) => {
+    try {
+      const mediaUrl = getMediaUrl(item);
+      if (!mediaUrl) {
+        alert('Content not available for download');
+        return;
+      }
+
+      // Generate unique filename
+      const originalName = item.original_filename || item.file_name || 'content';
+      const fileExtension = originalName.split('.').pop() || '';
+      const baseName = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
+      const cleanBaseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_'); // Clean for URL safety
+      const uniqueFilename = `${cleanBaseName}_${item.id.substring(0, 8)}.${fileExtension}`;
+
+      // Create download link
+      const link = document.createElement('a');
+      link.href = mediaUrl;
+      link.download = uniqueFilename;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log('Content download initiated:', uniqueFilename);
+    } catch (error) {
+      console.error('Failed to download content:', error);
+      alert('Failed to download content. Please try again.');
+    }
+  };
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -674,8 +706,8 @@ const Library = () => {
               {/* Modal Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-700">
                 <div className="flex-1 min-w-0">
-                  <Typography variant="h3" className="truncate mb-2">
-                    {selectedItem.original_filename || selectedItem.file_name}
+                  <Typography variant="h3" className="mb-2">
+                    Verification Details
                   </Typography>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <div className="flex items-center gap-1">
@@ -798,6 +830,13 @@ const Library = () => {
 
                     {/* Actions */}
                     <div className="flex gap-3 pt-4 border-t border-gray-700">
+                      <button
+                        onClick={() => handleDownloadContent(selectedItem)}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        Download Content
+                      </button>
                       <button
                         onClick={() => generatePDFReport(selectedItem)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
