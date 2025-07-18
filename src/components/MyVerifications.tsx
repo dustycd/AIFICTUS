@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Play, Shield, AlertTriangle, CheckCircle, Clock, Eye, Download, Share2, Calendar, User, Trash2, MoreVertical, Film, Image as ImageIcon, Zap, Brain, Globe, Lock, X } from 'lucide-react';
-import { Typography, Heading } from './Typography';
-import ConfirmationModal from './ConfirmationModal';
+import html2pdf from 'html2pdf.js';
+import { Search, Filter, Grid, List, Play, Eye, Calendar, User, ChevronDown, X, SlidersHorizontal, Image as ImageIcon, Video, Shield, AlertTriangle, CheckCircle, Brain, Clock, Download, Share2, FileDown, Maximize, Trash2, Menu, Plus } from 'lucide-react';
+import { Typography, Heading, CardSubtitle } from './Typography';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/database';
-import { formatFileSize, getPublicUrl } from '../lib/storage';
+import { getPublicUrl } from '../lib/storage';
+import { getVerificationDisplay, getStatusBadgeClasses, formatConfidence, getRecommendationText } from '../utils/verificationDisplayUtils';
+import { usageLimits } from '../lib/usageLimits';
+import { useNavigate } from 'react-router-dom';
+import ConfirmationModal from './ConfirmationModal';
+import UsageLimitsDisplay from './UsageLimitsDisplay';
 
-interface UserVerification {
+// Helper function to format dates
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString();
+};
+
+interface VerificationItem {
   id: string;
   file_name: string;
   original_filename: string;
   content_type: string;
-  verification_status: 'pending' | 'uploading' | 'processing' | 'authentic' | 'suspicious' | 'fake' | 'error';
+  verification_status: 'authentic' | 'suspicious' | 'fake';
   confidence_score: number;
   ai_probability?: number;
   human_probability?: number;
@@ -20,1090 +30,1163 @@ interface UserVerification {
   detection_details: any;
   risk_factors: string[];
   recommendations: string[];
+  created_at: string;
+  file_url: string;
+  storage_bucket: string;
+  storage_path: string;
+  thumbnail_path: string;
   is_public_library_item: boolean;
+  // AI or Not API specific fields
   report_id?: string;
-  file_url?: string;
-  storage_bucket?: string;
-  storage_path?: string;
-  thumbnail_path?: string;
-  upload_progress?: number;
+  api_verdict?: string;
+  generator_analysis?: any;
+  facets?: any;
+  raw_api_response?: any;
 }
 
 const MyVerifications = () => {
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('recent');
-  const [verifications, setVerifications] = useState<UserVerification[]>([]);
-  const [filteredVerifications, setFilteredVerifications] = useState<UserVerification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const [items, setItems] = useState<VerificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<UserVerification | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [verificationToDelete, setVerificationToDelete] = useState<UserVerification | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  const ITEMS_PER_PAGE = 20;
-
-  // Generate download filename with original name preserved for user's own files
-  const getDownloadFilename = (verification: UserVerification): string => {
-    // For user's own files, preserve original filename
-    return verification.original_filename || verification.file_name || 'download';
-  };
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [contentTypeFilter, setContentTypeFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<VerificationItem | null>(null);
+  const [showFullscreen, setShowFullscreen] = useState(false);
+  const [fullscreenMediaUrl, setFullscreenMediaUrl] = useState<string | null>(null);
+  const [fullscreenIsVideo, setFullscreenIsVideo] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    item: VerificationItem | null;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    item: null,
+    loading: false
+  });
 
   // Load user's verifications
-  const loadVerifications = async (page = 0, reset = false) => {
-    if (!user) return;
-
-    try {
-      setError(null);
-      if (reset) {
-        setIsLoading(true);
-        setVerifications([]);
-      }
-
-      const { data, error } = await db.verifications.getByUser(
-        user.id,
-        ITEMS_PER_PAGE,
-        page * ITEMS_PER_PAGE
-      );
-
-      if (error) {
-        console.error('Error loading verifications:', error);
-        setError('Failed to load your verifications');
+  useEffect(() => {
+    const loadVerifications = async () => {
+      if (!user) {
+        setLoading(false);
         return;
       }
 
-      const items = data || [];
-      
-      if (reset) {
-        setVerifications(items);
-      } else {
-        setVerifications(prev => [...prev, ...items]);
-      }
-      
-      setHasMore(items.length === ITEMS_PER_PAGE);
-      setCurrentPage(page);
-    } catch (err) {
-      console.error('Exception loading verifications:', err);
-      setError('Failed to load your verifications');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      try {
+        setError(null);
+        console.log('🔍 Loading user verifications...');
+        
+        const { data, error } = await db.verifications.getByUser(user.id, 50, 0);
 
-  // Initial load
-  useEffect(() => {
-    if (user) {
-      loadVerifications(0, true);
-    }
+        if (error) {
+          console.error('❌ Error loading verifications:', error);
+          setError('Failed to load your verifications');
+          setItems([]);
+        } else {
+          console.log(`✅ Loaded ${data?.length || 0} verifications`);
+          setItems(data || []);
+        }
+      } catch (err) {
+        console.error('❌ Exception loading verifications:', err);
+        setError('Failed to load your verifications');
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVerifications();
   }, [user]);
 
-  // Apply filters and search
+  // Handle escape key for fullscreen and mobile menu
   useEffect(() => {
-    let filtered = verifications;
-
-    // Apply search filter
-    if (searchQuery) {
-      filtered = filtered.filter(verification =>
-        verification.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (verification.original_filename && verification.original_filename.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (verification.report_id && verification.report_id.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Apply status filter
-    if (selectedFilter !== 'all') {
-      filtered = filtered.filter(verification => verification.verification_status === selectedFilter);
-    }
-
-    // Apply sorting
-    switch (sortBy) {
-      case 'recent':
-        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
-      case 'confidence':
-        filtered.sort((a, b) => (b.confidence_score || 0) - (a.confidence_score || 0));
-        break;
-      case 'name':
-        filtered.sort((a, b) => (a.original_filename || a.file_name).localeCompare(b.original_filename || b.file_name));
-        break;
-      case 'size':
-        filtered.sort((a, b) => (b.file_size || 0) - (a.file_size || 0));
-        break;
-    }
-
-    setFilteredVerifications(filtered);
-  }, [verifications, searchQuery, selectedFilter, sortBy]);
-
-  // Toggle public sharing
-  const togglePublicSharing = async (verificationId: string, currentStatus: boolean) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await db.verifications.togglePublicSharing(
-        verificationId,
-        user.id,
-        !currentStatus
-      );
-
-      if (error) {
-        console.error('Error toggling sharing:', error);
-        return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showFullscreen) {
+          setShowFullscreen(false);
+        } else if (showMobileMenu) {
+          setShowMobileMenu(false);
+        }
       }
+    };
 
-      // Update local state
-      setVerifications(prev =>
-        prev.map(v =>
-          v.id === verificationId
-            ? { ...v, is_public_library_item: !currentStatus }
-            : v
-        )
-      );
-    } catch (err) {
-      console.error('Exception toggling sharing:', err);
-    }
-  };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showFullscreen, showMobileMenu]);
 
-  // Delete verification
-  const deleteVerification = async (verificationId: string) => {
-    const verification = verifications.find(v => v.id === verificationId);
-    if (!verification) return;
+  // Filter items based on search and filters
+  const filteredItems = items.filter(item => {
+    const matchesSearch = !searchTerm || 
+      item.original_filename?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.file_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    setVerificationToDelete(verification);
-    setShowDeleteModal(true);
-  };
-
-  // Confirm delete verification
-  const confirmDeleteVerification = async () => {
-    if (!verificationToDelete) return;
-
-    try {
-      setDeleteLoading(true);
-      
-      const { error } = await db.verifications.delete(verificationToDelete.id);
-
-      if (error) {
-        console.error('Error deleting verification:', error);
-        return;
-      }
-
-      // Remove from local state
-      setVerifications(prev => prev.filter(v => v.id !== verificationToDelete.id));
-      
-      // Close modal
-      setShowDeleteModal(false);
-      setVerificationToDelete(null);
-    } catch (err) {
-      console.error('Exception deleting verification:', err);
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  // Close delete modal
-  const closeDeleteModal = () => {
-    if (!deleteLoading) {
-      setShowDeleteModal(false);
-      setVerificationToDelete(null);
-    }
-  };
-
-  // Handle item click to open modal
-  const handleItemClick = (verification: UserVerification) => {
-    setSelectedItem(verification);
-    setShowModal(true);
-  };
-
-  // Close modal
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedItem(null);
-  };
+    const matchesStatus = statusFilter === 'all' || item.verification_status === statusFilter;
+    
+    const matchesContentType = contentTypeFilter === 'all' || 
+      (contentTypeFilter === 'video' && item.content_type.startsWith('video/')) ||
+      (contentTypeFilter === 'image' && item.content_type.startsWith('image/'));
+    
+    return matchesSearch && matchesStatus && matchesContentType;
+  });
 
   // Get media URL for preview
-  const getMediaUrl = (verification: UserVerification): string | null => {
-    // Priority: thumbnail_path > file_url > constructed public URL
-    if (verification.thumbnail_path) {
-      return getPublicUrl('verification-thumbnails', verification.thumbnail_path);
+  const getMediaUrl = (item: VerificationItem): string | null => {
+    if (item.thumbnail_path) {
+      return getPublicUrl('verification-thumbnails', item.thumbnail_path);
     }
     
-    if (verification.file_url) {
-      return verification.file_url;
+    if (item.file_url) {
+      return item.file_url;
     }
     
-    if (verification.storage_bucket && verification.storage_path) {
-      return getPublicUrl(verification.storage_bucket, verification.storage_path);
-    }
-    
-    return null;
-  };
-
-  // Get full quality media URL for modal
-  const getFullMediaUrl = (verification: UserVerification): string | null => {
-    // Priority: file_url > constructed public URL > thumbnail
-    if (verification.file_url) {
-      return verification.file_url;
-    }
-    
-    if (verification.storage_bucket && verification.storage_path) {
-      return getPublicUrl(verification.storage_bucket, verification.storage_path);
-    }
-    
-    if (verification.thumbnail_path) {
-      return getPublicUrl('verification-thumbnails', verification.thumbnail_path);
+    if (item.storage_bucket && item.storage_path) {
+      return getPublicUrl(item.storage_bucket, item.storage_path);
     }
     
     return null;
-  };
-
-  // Download file with original filename preserved
-  const downloadFile = async (verification: UserVerification) => {
-    const url = getFullMediaUrl(verification);
-    if (!url) return;
-
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = getDownloadFilename(verification); // Keep original filename for user's own files
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err) {
-      console.error('Download failed:', err);
-    }
   };
 
   // Check if content is video
   const isVideo = (contentType: string) => contentType.startsWith('video/');
-  const isImage = (contentType: string) => contentType.startsWith('image/');
+
+  // Handle content download with unique filename
+  const handleDownloadContent = async (item: VerificationItem) => {
+    try {
+      const mediaUrl = getMediaUrl(item);
+      if (!mediaUrl) {
+        alert('Content not available for download');
+        return;
+      }
+
+      // Generate unique filename
+      const originalName = item.original_filename || item.file_name || 'content';
+      const fileExtension = originalName.split('.').pop() || '';
+      const baseName = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
+      const cleanBaseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_'); // Clean for URL safety
+      const uniqueFilename = `${cleanBaseName}_${item.id.substring(0, 8)}.${fileExtension}`;
+
+      console.log('Starting download for:', uniqueFilename);
+      
+      // Fetch the content as a blob to force download
+      const response = await fetch(mediaUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      
+      // Create a temporary URL for the blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create download link with blob URL
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = uniqueFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL to free memory
+      URL.revokeObjectURL(blobUrl);
+
+      console.log('Content download completed:', uniqueFilename);
+    } catch (error) {
+      console.error('Failed to download content:', error);
+      alert('Failed to download content. The file may be too large or temporarily unavailable. Please try again.');
+    }
+  };
+
+  // Handle fullscreen viewing
+  const handleFullscreenView = (item: VerificationItem) => {
+    const mediaUrl = getMediaUrl(item);
+    if (!mediaUrl) return;
+
+    setFullscreenMediaUrl(mediaUrl);
+    setFullscreenIsVideo(isVideo(item.content_type));
+    setShowFullscreen(true);
+  };
+
+  // Handle delete verification
+  const handleDeleteVerification = async (item: VerificationItem) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      item,
+      loading: false
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation.item) return;
+
+    setDeleteConfirmation(prev => ({ ...prev, loading: true }));
+
+    try {
+      const { error } = await db.verifications.delete(deleteConfirmation.item.id);
+      
+      if (error) {
+        console.error('Failed to delete verification:', error);
+        alert('Failed to delete verification. Please try again.');
+      } else {
+        // Remove from local state
+        setItems(prev => prev.filter(item => item.id !== deleteConfirmation.item!.id));
+        console.log('Verification deleted successfully');
+      }
+    } catch (err) {
+      console.error('Exception deleting verification:', err);
+      alert('Failed to delete verification. Please try again.');
+    } finally {
+      setDeleteConfirmation({
+        isOpen: false,
+        item: null,
+        loading: false
+      });
+    }
+  };
+
+  // Format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Generate PDF report
+  const generatePDFReport = async (item: VerificationItem) => {
+    const verificationDisplay = getVerificationDisplay(
+      item.ai_probability,
+      item.human_probability,
+      item.verification_status
+    );
+
+    const reportContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #333; margin-bottom: 10px;">Fictus AI Verification Report</h1>
+          <p style="color: #666; margin: 0;">Generated on ${new Date().toLocaleDateString()}</p>
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">File Information</h2>
+          <p><strong>Original Filename:</strong> ${item.original_filename || item.file_name}</p>
+          <p><strong>Content Type:</strong> ${item.content_type}</p>
+          <p><strong>File Size:</strong> ${formatFileSize(item.file_size)}</p>
+          <p><strong>Verification Date:</strong> ${formatDate(item.created_at)}</p>
+          <p><strong>Report ID:</strong> ${item.report_id || item.id}</p>
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">Verification Results</h2>
+          <p><strong>Status:</strong> <span style="color: ${verificationDisplay.status === 'authentic' ? '#10B981' : '#EF4444'};">${verificationDisplay.displayStatus}</span></p>
+          <p><strong>Confidence Score:</strong> ${formatConfidence(item.confidence_score)}</p>
+          <p><strong>AI Probability:</strong> ${formatConfidence(item.ai_probability)}</p>
+          <p><strong>Human Probability:</strong> ${formatConfidence(item.human_probability)}</p>
+          <p><strong>Processing Time:</strong> ${item.processing_time.toFixed(2)} seconds</p>
+        </div>
+        
+        ${item.risk_factors && item.risk_factors.length > 0 ? `
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">Risk Factors</h2>
+          <ul style="margin: 0; padding-left: 20px;">
+            ${item.risk_factors.map(factor => `<li style="margin-bottom: 5px;">${factor}</li>`).join('')}
+          </ul>
+        </div>
+        ` : ''}
+        
+        ${item.recommendations && item.recommendations.length > 0 ? `
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">Recommendations</h2>
+          <ul style="margin: 0; padding-left: 20px;">
+            ${item.recommendations.map(rec => `<li style="margin-bottom: 5px;">${rec}</li>`).join('')}
+          </ul>
+        </div>
+        ` : ''}
+        
+        <div style="border-top: 1px solid #ddd; padding-top: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>This report was generated by Fictus AI verification system.</p>
+          <p>For questions about this report, please contact support@fictus.ai</p>
+        </div>
+      </div>
+    `;
+
+    const opt = {
+      margin: 1,
+      filename: `fictus-ai-report-${item.id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    try {
+      await html2pdf().set(opt).from(reportContent).save();
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      alert('Failed to generate PDF report. Please try again.');
+    }
+  };
+
+  // Share verification result
+  const shareVerification = async (item: VerificationItem) => {
+    const verificationDisplay = getVerificationDisplay(
+      item.ai_probability,
+      item.human_probability,
+      item.verification_status
+    );
+
+    const shareText = `Check out my AI verification result: ${verificationDisplay.displayStatus} with ${formatConfidence(item.confidence_score)} confidence. Verified by Fictus AI.`;
+    const shareUrl = window.location.origin;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Fictus AI Verification Result',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        console.log('Share cancelled or failed');
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        alert('Verification details copied to clipboard!');
+      } catch (error) {
+        console.error('Failed to copy to clipboard:', error);
+        alert('Failed to copy details. Please try again.');
+      }
+    }
+  };
+
+  // Toggle public sharing
+  const togglePublicSharing = async (item: VerificationItem) => {
+    if (!user) return;
+
+    try {
+      const newStatus = !item.is_public_library_item;
+      const { error } = await db.verifications.togglePublicSharing(item.id, user.id, newStatus);
+      
+      if (error) {
+        console.error('Failed to toggle sharing:', error);
+        alert('Failed to update sharing status. Please try again.');
+      } else {
+        // Update local state
+        setItems(prev => prev.map(i => 
+          i.id === item.id 
+            ? { ...i, is_public_library_item: newStatus }
+            : i
+        ));
+        console.log(`Verification ${newStatus ? 'shared to' : 'removed from'} public library`);
+      }
+    } catch (err) {
+      console.error('Exception toggling sharing:', err);
+      alert('Failed to update sharing status. Please try again.');
+    }
+  };
 
   // Render media preview
-  const renderMediaPreview = (verification: UserVerification) => {
-    const mediaUrl = getMediaUrl(verification);
-    const thumbnailUrl = verification.thumbnail_path ? getPublicUrl('verification-thumbnails', verification.thumbnail_path) : null;
+  const renderMediaPreview = (item: VerificationItem) => {
+    const mediaUrl = getMediaUrl(item);
     
     if (!mediaUrl) {
-      // Fallback to placeholder
       return (
-        <div className="w-full h-full flex items-center justify-center bg-gray-900">
-          {isVideo(verification.content_type) ? (
-            <Play className="h-12 w-12 text-gray-400 group-hover:text-white transition-colors" />
-          ) : (
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">🖼️</span>
-              </div>
-              <Typography variant="caption" color="secondary" className="text-xs">
-                Image
-              </Typography>
+        <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-800 rounded-lg flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+              {isVideo(item.content_type) ? (
+                <Video className="h-4 w-4 sm:h-6 sm:w-6 text-gray-400" />
+              ) : (
+                <ImageIcon className="h-4 w-4 sm:h-6 sm:w-6 text-gray-400" />
+              )}
             </div>
-          )}
+            <Typography variant="caption" color="secondary" className="text-xs sm:text-sm">
+              Preview not available
+            </Typography>
+          </div>
         </div>
       );
     }
 
-    if (isVideo(verification.content_type)) {
+    if (isVideo(item.content_type)) {
       return (
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-32 sm:h-40 md:h-48 bg-gray-900 rounded-lg overflow-hidden group">
           <video 
             src={mediaUrl}
-            poster={thumbnailUrl || undefined}
+            poster={item.thumbnail_path ? getPublicUrl('verification-thumbnails', item.thumbnail_path) : undefined}
             className="w-full h-full object-cover"
-            controls={false}
+            muted
             preload="metadata"
-            onError={(e) => {
-              // Fallback to placeholder on error
-              const target = e.target as HTMLVideoElement;
-              target.style.display = 'none';
-              target.parentElement!.innerHTML = `
-                <div class="w-full h-full flex items-center justify-center bg-gray-900">
-                  <div class="h-12 w-12 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play"><polygon points="6,3 20,12 6,21 6,3"/></svg>
-                  </div>
-                </div>
-              `;
-            }}
           />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-black/60 rounded-full p-3">
-              <Play className="h-8 w-8 text-white" />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3">
+              <Play className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
             </div>
           </div>
         </div>
       );
     } else {
       return (
-        <img 
-          src={mediaUrl}
-          alt={verification.original_filename || verification.file_name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // Fallback to placeholder on error
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            target.parentElement!.innerHTML = `
-              <div class="w-full h-full flex items-center justify-center bg-gray-900">
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <span class="text-2xl">🖼️</span>
-                  </div>
-                  <div class="text-xs text-gray-400">Image</div>
-                </div>
-              </div>
-            `;
-          }}
-        />
+        <div className="relative w-full h-32 sm:h-40 md:h-48 bg-gray-900 rounded-lg overflow-hidden group">
+          <img
+            src={mediaUrl}
+            alt={item.original_filename || item.file_name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3">
+              <Eye className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+            </div>
+          </div>
+        </div>
       );
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'authentic':
-        return <CheckCircle className="h-4 w-4 text-green-400" />;
-      case 'suspicious':
-        return <AlertTriangle className="h-4 w-4 text-yellow-400" />;
-      case 'fake':
-        return <Shield className="h-4 w-4 text-red-400" />;
-      case 'pending':
-      case 'uploading':
-      case 'processing':
-        return <Clock className="h-4 w-4 text-blue-400" />;
-      case 'error':
-        return <AlertTriangle className="h-4 w-4 text-red-400" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-400" />;
+  // Render media preview for modal with fullscreen button
+  const renderModalMediaContent = (item: VerificationItem) => {
+    const mediaUrl = getMediaUrl(item);
+    
+    if (!mediaUrl) {
+      return (
+        <div className="w-full h-48 sm:h-64 lg:h-80 bg-gray-800 rounded-lg flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+              {isVideo(item.content_type) ? (
+                <Video className="h-6 w-6 text-gray-400" />
+              ) : (
+                <ImageIcon className="h-6 w-6 text-gray-400" />
+              )}
+            </div>
+            <Typography variant="caption" color="secondary">
+              Preview not available
+            </Typography>
+          </div>
+        </div>
+      );
+    }
+
+    if (isVideo(item.content_type)) {
+      return (
+        <div className="relative w-full h-48 sm:h-64 lg:h-80 bg-gray-900 rounded-lg overflow-hidden group">
+          <video 
+            src={mediaUrl}
+            poster={item.thumbnail_path ? getPublicUrl('verification-thumbnails', item.thumbnail_path) : undefined}
+            className="w-full h-full object-cover"
+            controls
+            preload="metadata"
+          />
+          
+          {/* Fullscreen Button */}
+          <button
+            onClick={() => handleFullscreenView(item)}
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 bg-black/60 hover:bg-black/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"
+            title="View fullscreen"
+          >
+            <Maximize className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+          </button>
+        </div>
+      );
+    } else {
+      return (
+        <div className="relative w-full h-48 sm:h-64 lg:h-80 bg-gray-900 rounded-lg overflow-hidden group">
+          <img
+            src={mediaUrl}
+            alt={item.original_filename || item.file_name}
+            className="w-full h-full object-cover cursor-pointer"
+            loading="lazy"
+            onClick={() => handleFullscreenView(item)}
+          />
+          
+          {/* Fullscreen Button */}
+          <button
+            onClick={() => handleFullscreenView(item)}
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 bg-black/60 hover:bg-black/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"
+            title="View fullscreen"
+          >
+            <Maximize className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+          </button>
+        </div>
+      );
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'authentic':
-        return 'text-green-400 bg-green-400/10 border-green-400/30';
-      case 'suspicious':
-        return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30';
-      case 'fake':
-        return 'text-red-400 bg-red-400/10 border-red-400/30';
-      case 'pending':
-      case 'uploading':
-      case 'processing':
-        return 'text-blue-400 bg-blue-400/10 border-blue-400/30';
-      case 'error':
-        return 'text-red-400 bg-red-400/10 border-red-400/30';
-      default:
-        return 'text-gray-400 bg-gray-400/10 border-gray-400/30';
-    }
+  // Render grid item
+  const renderGridItem = (item: VerificationItem) => {
+    const verificationDisplay = getVerificationDisplay(
+      item.ai_probability,
+      item.human_probability,
+      item.verification_status
+    );
+
+    return (
+      <div
+        key={item.id}
+        className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300 cursor-pointer group hover:transform hover:scale-105"
+        onClick={() => setSelectedItem(item)}
+      >
+        {/* Media Preview */}
+        {renderMediaPreview(item)}
+
+        {/* Content */}
+        <div className="p-3 sm:p-4 lg:p-6">
+          {/* Status Badge */}
+          <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-full border text-xs sm:text-sm font-medium mb-3 sm:mb-4 ${getStatusBadgeClasses(verificationDisplay.status)}`}>
+            {verificationDisplay.status === 'authentic' ? (
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+            ) : (
+              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+            )}
+            <span className="truncate">{verificationDisplay.displayStatus}</span>
+          </div>
+
+          {/* Filename */}
+          <Typography variant="cardTitle" className="mb-2 text-sm sm:text-base truncate" title={item.original_filename || item.file_name}>
+            {item.original_filename || item.file_name}
+          </Typography>
+
+          {/* Overall Assessment */}
+          <Typography variant="cardCaption" color="secondary" className="mb-3 sm:mb-4 text-xs sm:text-sm line-clamp-2">
+            {verificationDisplay.qualitativeStatus}
+          </Typography>
+
+          {/* Public Sharing Status */}
+          {item.is_public_library_item && (
+            <div className="mb-3 sm:mb-4">
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-xs">
+                <Shield className="h-3 w-3" />
+                <span>Public</span>
+              </div>
+            </div>
+          )}
+
+          {/* Metrics */}
+          <div className="space-y-1.5 sm:space-y-2">
+            <div className="flex justify-between items-center">
+              <Typography variant="caption" color="secondary" className="text-xs">Confidence</Typography>
+              <Typography variant="caption" className="font-medium numeric-text text-xs">
+                {formatConfidence(item.confidence_score)}
+              </Typography>
+            </div>
+            <div className="flex justify-between items-center">
+              <Typography variant="caption" color="secondary" className="text-xs">Processing Time</Typography>
+              <Typography variant="caption" className="font-medium numeric-text text-xs">
+                {item.processing_time.toFixed(2)}s
+              </Typography>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-700/50 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-gray-400">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Typography variant="caption" className="text-xs">
+                {formatDate(item.created_at)}
+              </Typography>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Render list item
+  const renderListItem = (item: VerificationItem) => {
+    const verificationDisplay = getVerificationDisplay(
+      item.ai_probability,
+      item.human_probability,
+      item.verification_status
+    );
+
+    return (
+      <div
+        key={item.id}
+        className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300 cursor-pointer p-3 sm:p-4 lg:p-6"
+        onClick={() => setSelectedItem(item)}
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
+          {/* Media Preview */}
+          <div className="w-full sm:w-20 md:w-24 flex-shrink-0">
+            <div className="w-full sm:w-20 md:w-24 h-16 sm:h-20 md:h-24">
+              {renderMediaPreview(item)}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-2 sm:gap-4">
+              {/* Status Badge */}
+              <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-full border text-xs sm:text-sm font-medium ${getStatusBadgeClasses(verificationDisplay.status)}`}>
+                {verificationDisplay.status === 'authentic' ? (
+                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                ) : (
+                  <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+                )}
+                <span className="truncate">{verificationDisplay.displayStatus}</span>
+              </div>
+              {/* Date */}
+              <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-400 flex-shrink-0">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>{formatDate(item.created_at)}</span>
+              </div>
+            </div>
+
+            {/* Filename */}
+            <Typography variant="cardTitle" className="mb-2 text-sm sm:text-base truncate" title={item.original_filename || item.file_name}>
+              {item.original_filename || item.file_name}
+            </Typography>
+
+            {/* Overall Assessment */}
+            <Typography variant="cardCaption" color="secondary" className="mb-3 sm:mb-4 text-xs sm:text-sm line-clamp-2">
+              {verificationDisplay.qualitativeStatus}
+            </Typography>
+
+            {/* Public Sharing Status */}
+            {item.is_public_library_item && (
+              <div className="mb-3 sm:mb-4">
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-xs">
+                  <Shield className="h-3 w-3" />
+                  <span>Shared Publicly</span>
+                </div>
+              </div>
+            )}
+
+            {/* Metrics */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-400">
+              <div className="flex items-center gap-1">
+                <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="numeric-text">{formatConfidence(item.confidence_score)} confidence</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="numeric-text">{item.processing_time.toFixed(2)}s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <Typography variant="h2" className="mb-4">
-            Sign In Required
-          </Typography>
-          <Typography variant="body" color="secondary">
-            Please sign in to view your verification history.
-          </Typography>
+      <div className="min-h-screen bg-black text-white pt-16 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Typography variant="h3" className="mb-2">
+              Sign In Required
+            </Typography>
+            <Typography variant="body" color="secondary" className="mb-6">
+              Please sign in to view your verifications
+            </Typography>
+            <button
+              onClick={() => navigate('/auth')}
+              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header Section */}
-      <section className="relative pt-32 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="mb-8">
-              <img 
-                src="/fictus.png" 
-                alt="Fictus AI" 
-                className="mx-auto h-16 w-auto object-contain filter drop-shadow-lg"
-                style={{ imageRendering: 'crisp-edges' }}
-              />
-            </div>
-            
-            <Heading level={1} className="mb-6 text-5xl lg:text-6xl font-black">
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                My Verifications
-              </span>
+    <div className="min-h-screen bg-black text-white pt-16 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between mb-6 sm:hidden">
+          <Heading level={2} className="text-xl">
+            My Verifications
+          </Heading>
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="p-2 bg-gray-800 rounded-lg border border-gray-700"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden sm:block mb-8">
+          <div className="text-center mb-6">
+            <Heading level={1} className="mb-4">
+              My Verifications
             </Heading>
-            
-            <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto text-xl mb-8 leading-relaxed">
-              View and manage all your verification history. Track your uploads, share results with the community, 
-              and download detailed analysis reports.
+            <Typography variant="heroCaption" color="secondary" className="max-w-3xl mx-auto">
+              Manage and review all your AI verification results
             </Typography>
+          </div>
+        </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
-              <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-                <div className="flex items-center justify-center mb-3">
-                  <User className="h-6 w-6 text-blue-400 mr-2" />
-                  <span className="numeric-text text-2xl text-blue-400 font-bold">{verifications.length}</span>
-                </div>
-                <Typography variant="caption" color="secondary">Total Verifications</Typography>
+        {/* Usage Limits Display */}
+        <div className="mb-6 sm:mb-8">
+          <UsageLimitsDisplay compact={true} showTitle={false} />
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        {showMobileMenu && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 sm:hidden">
+            <div className="bg-gray-900 h-full w-80 max-w-[90vw] border-r border-gray-700 p-4">
+              <div className="flex items-center justify-between mb-6">
+                <Typography variant="h3">Menu</Typography>
+                <button
+                  onClick={() => setShowMobileMenu(false)}
+                  className="p-2 hover:bg-gray-800 rounded-lg"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
 
-              <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-                <div className="flex items-center justify-center mb-3">
-                  <Globe className="h-6 w-6 text-green-400 mr-2" />
-                  <span className="numeric-text text-2xl text-green-400 font-bold">
-                    {verifications.filter(v => v.is_public_library_item).length}
-                  </span>
-                </div>
-                <Typography variant="caption" color="secondary">Shared Publicly</Typography>
-              </div>
-
-              <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-                <div className="flex items-center justify-center mb-3">
-                  <Film className="h-6 w-6 text-purple-400 mr-2" />
-                  <span className="numeric-text text-2xl text-purple-400 font-bold">
-                    {verifications.filter(v => isVideo(v.content_type)).length}
-                  </span>
-                </div>
-                <Typography variant="caption" color="secondary">Videos</Typography>
-              </div>
-
-              <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-                <div className="flex items-center justify-center mb-3">
-                  <ImageIcon className="h-6 w-6 text-cyan-400 mr-2" />
-                  <span className="numeric-text text-2xl text-cyan-400 font-bold">
-                    {verifications.filter(v => isImage(v.content_type)).length}
-                  </span>
-                </div>
-                <Typography variant="caption" color="secondary">Images</Typography>
-              </div>
-            </div>
-
-            {/* Search and Filter Bar */}
-            <div className="bg-gray-800/20 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-              <div className="flex flex-col lg:flex-row gap-4 items-center">
-                {/* Search Bar */}
-                <div className="relative flex-1 w-full lg:max-w-md">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              {/* Mobile Search */}
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search your verifications..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
+                    placeholder="Search verifications..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                   />
-                </div>
-
-                {/* Filter Controls */}
-                <div className="flex flex-wrap gap-3 items-center">
-                  {/* Status Filter */}
-                  <select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    className="px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-colors"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="authentic">✓ Authentic</option>
-                    <option value="suspicious">? Suspicious</option>
-                    <option value="fake">⚠ AI Generated</option>
-                    <option value="pending">⏳ Pending</option>
-                    <option value="processing">🔄 Processing</option>
-                    <option value="error">❌ Error</option>
-                  </select>
-
-                  {/* Sort By */}
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-colors"
-                  >
-                    <option value="recent">Most Recent</option>
-                    <option value="confidence">Highest Confidence</option>
-                    <option value="name">Name A-Z</option>
-                    <option value="size">File Size</option>
-                  </select>
-
-                  {/* View Mode Toggle */}
-                  <div className="flex bg-gray-900 rounded-xl border border-gray-600 overflow-hidden">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-3 transition-colors ${
-                        viewMode === 'grid' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      <Grid className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-3 transition-colors ${
-                        viewMode === 'list' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      <List className="h-5 w-5" />
-                    </button>
-                  </div>
                 </div>
               </div>
 
-              {/* Results Count */}
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <Typography variant="cardCaption" color="secondary">
-                  {isLoading ? 'Loading...' : (
-                    <>
-                      <span className="numeric-text">{filteredVerifications.length}</span> verifications found
-                      {searchQuery && ` for "${searchQuery}"`}
-                    </>
-                  )}
-                </Typography>
+              {/* Mobile Filters */}
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="authentic">Authentic</option>
+                    <option value="fake">AI Generated</option>
+                    <option value="suspicious">Suspicious</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Content Type
+                  </label>
+                  <select
+                    value={contentTypeFilter}
+                    onChange={(e) => setContentTypeFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="video">Videos</option>
+                    <option value="image">Images</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Mobile View Mode */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  View Mode
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setViewMode('grid');
+                      setShowMobileMenu(false);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-colors ${
+                      viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Grid className="h-4 w-4" />
+                    <span>Grid</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewMode('list');
+                      setShowMobileMenu(false);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-colors ${
+                      viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <List className="h-4 w-4" />
+                    <span>List</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Actions */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    navigate('/verify');
+                    setShowMobileMenu(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>New Verification</span>
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* Content Grid/List */}
-      <section className="pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {error ? (
-            <div className="text-center py-20">
-              <div className="w-32 h-32 bg-gradient-to-br from-red-500/20 to-pink-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
-                <AlertTriangle className="h-16 w-16 text-red-400" />
+        {/* Desktop Search and Filters */}
+        <div className="hidden sm:block space-y-4 mb-8">
+          {/* Search Bar */}
+          <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by filename..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                />
               </div>
-              <Heading level={3} className="mb-4 text-red-400">
-                Failed to Load Verifications
-              </Heading>
-              <Typography variant="body" color="secondary" className="mb-6">
-                {error}
-              </Typography>
+
+              {/* View Mode */}
+              <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === 'grid' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <Grid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === 'list' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* New Verification Button */}
               <button
-                onClick={() => loadVerifications(0, true)}
-                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                onClick={() => navigate('/verify')}
+                className="flex items-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors whitespace-nowrap"
               >
-                Try Again
+                <Plus className="h-4 w-4" />
+                <span>New Verification</span>
               </button>
             </div>
-          ) : isLoading && filteredVerifications.length === 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-gray-800/30 rounded-xl overflow-hidden border border-gray-700 animate-pulse">
-                  <div className="aspect-video bg-gray-700" />
-                  <div className="p-6 space-y-3">
-                    <div className="h-4 bg-gray-700 rounded w-3/4" />
-                    <div className="h-3 bg-gray-700 rounded w-1/2" />
-                    <div className="h-3 bg-gray-700 rounded w-2/3" />
+          </div>
+
+          {/* Filters */}
+          <div className="flex justify-center">
+            <div className="bg-gray-800/30 rounded-xl border border-gray-700 overflow-hidden">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700/30 transition-colors"
+              >
+                <SlidersHorizontal className="h-4 w-4 text-gray-400" />
+                <Typography variant="cardCaption">Filters</Typography>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showFilters && (
+                <div className="px-4 pb-4 border-t border-gray-700/50 min-w-[400px]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Verification Status
+                      </label>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="all">All Statuses</option>
+                        <option value="authentic">Authentic</option>
+                        <option value="fake">AI Generated</option>
+                        <option value="suspicious">Suspicious</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Content Type
+                      </label>
+                      <select
+                        value={contentTypeFilter}
+                        onChange={(e) => setContentTypeFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="all">All Types</option>
+                        <option value="video">Videos</option>
+                        <option value="image">Images</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          ) : filteredVerifications.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="w-32 h-32 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
-                <Search className="h-16 w-16 text-gray-400" />
+          </div>
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-4'}`}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden animate-pulse">
+                <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-700" />
+                <div className="p-3 sm:p-4 lg:p-6 space-y-4">
+                  <div className="h-4 bg-gray-700 rounded w-3/4" />
+                  <div className="h-3 bg-gray-700 rounded w-1/2" />
+                  <div className="h-6 bg-gray-700 rounded w-1/3" />
+                </div>
               </div>
-              <Heading level={3} className="mb-4">
-                No verifications found
-              </Heading>
-              <Typography variant="body" color="secondary" className="mb-6">
-                {searchQuery || selectedFilter !== 'all' 
-                  ? 'No verifications match your current filters. Try adjusting your search or filters.'
-                  : 'You haven\'t verified any content yet. Upload your first video or image to get started!'
-                }
-              </Typography>
-              {!searchQuery && selectedFilter === 'all' && (
-                <button
-                  onClick={() => window.location.href = '#verify'}
-                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                >
-                  Verify Your First File
-                </button>
-              )}
-            </div>
-          ) : (
-            <>
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredVerifications.map((verification) => (
-                    <div 
-                      key={verification.id} 
-                      className="bg-gray-800/30 rounded-xl overflow-hidden border border-gray-700 hover:border-gray-600 transition-all duration-300 group hover:transform hover:scale-105 cursor-pointer"
-                      onClick={() => handleItemClick(verification)}
-                    >
-                      {/* Media Preview */}
-                      <div className="relative aspect-video overflow-hidden bg-gray-900">
-                        {renderMediaPreview(verification)}
-                        
-                        {/* Status Badge */}
-                        <div className="absolute top-2 left-2">
-                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${getStatusColor(verification.verification_status)}`}>
-                            {getStatusIcon(verification.verification_status)}
-                            <span className="capitalize">{verification.verification_status}</span>
-                          </div>
-                        </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <Typography variant="h3" className="mb-2 text-red-400">
+              Error Loading Verifications
+            </Typography>
+            <Typography variant="body" color="secondary">
+              {error}
+            </Typography>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-12">
+            <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Typography variant="h3" className="mb-2">
+              {items.length === 0 ? 'No Verifications Yet' : 'No Items Found'}
+            </Typography>
+            <Typography variant="body" color="secondary" className="mb-6">
+              {items.length === 0 
+                ? 'Start by verifying your first video or image'
+                : 'Try adjusting your search or filters'
+              }
+            </Typography>
+            {items.length === 0 && (
+              <button
+                onClick={() => navigate('/verify')}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+              >
+                Verify Content
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
+              : 'space-y-4'
+          }>
+            {filteredItems.map(item => 
+              viewMode === 'grid' ? renderGridItem(item) : renderListItem(item)
+            )}
+          </div>
+        )}
 
-                        {/* Sharing Status */}
-                        <div className="absolute top-2 right-2">
-                          {verification.is_public_library_item ? (
-                            <div className="bg-green-500/20 border border-green-500/30 px-2 py-1 rounded-full text-xs text-green-400 flex items-center gap-1">
-                              <Globe className="h-3 w-3" />
-                              <span>Public</span>
-                            </div>
-                          ) : (
-                            <div className="bg-gray-500/20 border border-gray-500/30 px-2 py-1 rounded-full text-xs text-gray-400 flex items-center gap-1">
-                              <Lock className="h-3 w-3" />
-                              <span>Private</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Progress Bar for Processing */}
-                        {verification.verification_status === 'uploading' && verification.upload_progress !== undefined && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-2">
-                            <div className="w-full bg-gray-700 rounded-full h-2">
-                              <div 
-                                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${verification.upload_progress}%` }}
-                              />
-                            </div>
-                            <Typography variant="caption" className="text-xs text-center mt-1">
-                              Uploading... {verification.upload_progress}%
-                            </Typography>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content - Simplified */}
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="text-blue-400">
-                            <span className="numeric-text text-lg font-bold">
-                              {verification.confidence_score != null ? `${verification.confidence_score.toFixed(1)}%` : 'Processing...'}
-                            </span>
-                          </div>
-                          <div className="text-gray-400 text-xs">
-                            {verification.ai_probability ? (
-                              <span>AI: <span className="numeric-text">{verification.ai_probability.toFixed(1)}%</span></span>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        {/* Show original filename for user's own files */}
-                        <Typography variant="cardTitle" className="mb-2 truncate">
-                          {verification.original_filename || verification.file_name}
-                        </Typography>
-
-                        <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
-                          <span className="numeric-text">{formatFileSize(verification.file_size || 0)}</span>
-                          <span>{formatDate(verification.created_at)}</span>
-                        </div>
-
-                        {/* Risk Factors Preview */}
-                        {verification.risk_factors && verification.risk_factors.length > 0 && (
-                          <div className="mb-3">
-                            <div className="flex flex-wrap gap-1">
-                              {verification.risk_factors.slice(0, 2).map((factor, index) => (
-                                <span key={index} className="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs border border-red-500/30 truncate">
-                                  {factor.length > 15 ? factor.substring(0, 15) + '...' : factor}
-                                </span>
-                              ))}
-                              {verification.risk_factors.length > 2 && (
-                                <span className="px-2 py-1 bg-gray-700/50 text-gray-300 rounded text-xs">
-                                  +{verification.risk_factors.length - 2}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleItemClick(verification);
-                            }}
-                            className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm"
-                          >
-                            View Details
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              togglePublicSharing(verification.id, verification.is_public_library_item);
-                            }}
-                            className={`p-2 rounded-lg transition-colors ${
-                              verification.is_public_library_item
-                                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            }`}
-                            title={verification.is_public_library_item ? 'Remove from public library' : 'Share to public library'}
-                          >
-                            <Globe className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteVerification(verification.id);
-                            }}
-                            className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors"
-                            title="Delete verification"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
+        {/* Modal */}
+        {selectedItem && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-900 rounded-2xl border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in-scale">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-700">
+                <div className="flex-1 min-w-0">
+                  <Typography variant="h3" className="mb-2 text-lg sm:text-xl">
+                    Verification Details
+                  </Typography>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-400">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <Typography variant="caption">
+                        {formatDate(selectedItem.created_at)}
+                      </Typography>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredVerifications.map((verification) => (
-                    <div 
-                      key={verification.id} 
-                      className="bg-gray-800/30 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300 group cursor-pointer"
-                      onClick={() => handleItemClick(verification)}
-                    >
-                      <div className="flex flex-col md:flex-row gap-6 p-6">
-                        {/* Media Preview */}
-                        <div className="relative w-full md:w-80 aspect-video overflow-hidden rounded-lg flex-shrink-0 bg-gray-900">
-                          {renderMediaPreview(verification)}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-4">
-                              <Typography variant="h3" className="text-blue-400">
-                                <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
-                                  {verification.confidence_score != null ? `${verification.confidence_score.toFixed(1)}%` : 'Processing...'}
-                                </span> Confidence
-                              </Typography>
-                              <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${getStatusColor(verification.verification_status)}`}>
-                                {getStatusIcon(verification.verification_status)}
-                                <span className="capitalize">{verification.verification_status}</span>
-                              </div>
-                            </div>
-                            {verification.is_public_library_item ? (
-                              <div className="flex items-center gap-1 text-green-400">
-                                <Globe className="h-4 w-4" />
-                                <span>Public</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-gray-400">
-                                <Lock className="h-4 w-4" />
-                                <span>Private</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Show original filename for user's own files */}
-                          <Typography variant="h4" className="mb-2">
-                            {verification.original_filename || verification.file_name}
-                          </Typography>
-
-                          <div className="flex items-center gap-6 mb-4 text-sm text-gray-400">
-                            {verification.confidence_score != null && (
-                              <div className="flex items-center gap-1">
-                                <Brain className="h-4 w-4" />
-                                <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
-                                  {verification.confidence_score.toFixed(1)}%
-                                </span> confidence
-                              </div>
-                            )}
-                            {verification.processing_time && (
-                              <div className="flex items-center gap-1">
-                                <Zap className="h-4 w-4 text-yellow-400" />
-                                <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
-                                  {verification.processing_time.toFixed(1)}s
-                                </span>
-                              </div>
-                            )}
-                            {verification.ai_probability != null && (
-                              <div className="flex items-center gap-1">
-                                <Brain className="h-4 w-4 text-red-400" />
-                                <span className="numeric-text" style={{ fontFamily: 'Inter, Roboto, Helvetica Neue, Arial, sans-serif' }}>
-                                  {verification.ai_probability.toFixed(1)}%
-                                </span> AI
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Risk Factors Preview */}
-                          {verification.risk_factors && verification.risk_factors.length > 0 && (
-                            <div className="mb-4">
-                              <Typography variant="caption" color="secondary" className="mb-2 block">
-                                Risk Factors:
-                              </Typography>
-                              <div className="flex flex-wrap gap-2">
-                                {verification.risk_factors.slice(0, 3).map((factor, index) => (
-                                  <span key={index} className="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs border border-red-500/30">
-                                    {factor}
-                                  </span>
-                                ))}
-                                {verification.risk_factors.length > 3 && (
-                                  <span className="px-2 py-1 bg-gray-700/50 text-gray-300 rounded text-xs">
-                                    +{verification.risk_factors.length - 3} more
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-sm">
-                              <div className="flex items-center gap-1">
-                                <span className="text-blue-400">Click to view full analysis</span>
-                              </div>
-                            </div>
-
-                            <div className="flex gap-2 ml-4">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleItemClick(verification);
-                                }}
-                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm"
-                              >
-                                View Details
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePublicSharing(verification.id, verification.is_public_library_item);
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                  verification.is_public_library_item
-                                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                }`}
-                                title={verification.is_public_library_item ? 'Remove from public library' : 'Share to public library'}
-                              >
-                                <Globe className="h-4 w-4" />
-                              </button>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  downloadFile(verification);
-                                }}
-                                className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"
-                              >
-                                <Download className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteVerification(verification.id);
-                                }}
-                                className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors"
-                                title="Delete verification"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Load More Button */}
-              {hasMore && !isLoading && (
-                <div className="text-center mt-12">
-                  <button
-                    onClick={() => loadVerifications(currentPage + 1, false)}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-2xl transition-all duration-300 transform hover:scale-105 font-semibold"
-                  >
-                    Load More Verifications
-                  </button>
-                </div>
-              )}
-
-              {/* Loading More Indicator */}
-              {isLoading && filteredVerifications.length > 0 && (
-                <div className="text-center mt-12">
-                  <div className="inline-flex items-center gap-3 px-6 py-3 bg-gray-800/50 rounded-2xl">
-                    <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                    <Typography variant="body" color="secondary">
-                      Loading more verifications...
+                    <Typography variant="caption" className="truncate" title={selectedItem.original_filename || selectedItem.file_name}>
+                      {selectedItem.original_filename || selectedItem.file_name}
                     </Typography>
                   </div>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* Modal for viewing content */}
-      {showModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-700">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <div className="flex items-center gap-4">
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm border ${getStatusColor(selectedItem.verification_status)}`}>
-                  {getStatusIcon(selectedItem.verification_status)}
-                  <span className="capitalize">{selectedItem.verification_status}</span>
-                </div>
-                <Typography variant="h3" className="text-blue-400">
-                  <span className="numeric-text">
-                    {selectedItem.confidence_score != null ? `${selectedItem.confidence_score.toFixed(1)}%` : 'Processing...'}
-                  </span> Confidence
-                </Typography>
-                {selectedItem.is_public_library_item && (
-                  <div className="flex items-center gap-1 text-green-400">
-                    <Globe className="h-4 w-4" />
-                    <span>Public</span>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={closeModal}
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex flex-col lg:flex-row max-h-[calc(90vh-80px)]">
-              {/* Media Display */}
-              <div className="flex-1 bg-black flex items-center justify-center min-h-[300px] lg:min-h-[500px]">
-                {isVideo(selectedItem.content_type) ? (
-                  <video
-                    src={getFullMediaUrl(selectedItem) || undefined}
-                    controls
-                    className="max-w-full max-h-full object-contain"
-                    poster={selectedItem.thumbnail_path ? getPublicUrl('verification-thumbnails', selectedItem.thumbnail_path) : undefined}
-                  />
-                ) : (
-                  <img
-                    src={getFullMediaUrl(selectedItem) || undefined}
-                    alt={selectedItem.original_filename || selectedItem.file_name}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                )}
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                </button>
               </div>
 
-              {/* Analysis Details */}
-              <div className="w-full lg:w-96 p-6 overflow-y-auto">
-                <div className="space-y-6">
-                  {/* Analysis Metrics */}
+              {/* Modal Content */}
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                  {/* Media Preview */}
                   <div>
-                    <Typography variant="cardTitle" className="mb-4">Analysis Results</Typography>
-                    <div className="space-y-3">
-                      {selectedItem.confidence_score != null && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Confidence Score</span>
-                          <span className="numeric-text text-blue-400 font-bold">{selectedItem.confidence_score.toFixed(1)}%</span>
-                        </div>
-                      )}
-                      {selectedItem.ai_probability && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">AI Probability</span>
-                          <span className="numeric-text text-red-400">{selectedItem.ai_probability.toFixed(1)}%</span>
-                        </div>
-                      )}
-                      {selectedItem.human_probability && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Human Probability</span>
-                          <span className="numeric-text text-green-400">{selectedItem.human_probability.toFixed(1)}%</span>
-                        </div>
-                      )}
-                      {selectedItem.processing_time && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Processing Time</span>
-                          <span className="numeric-text">{selectedItem.processing_time.toFixed(1)}s</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">File Size</span>
-                        <span className="numeric-text">{formatFileSize(selectedItem.file_size || 0)}</span>
+                    <div className="w-full">
+                      {/* File Type and Size */}
+                      <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                        {isVideo(selectedItem.content_type) ? (
+                          <Video className="h-4 w-4" />
+                        ) : (
+                          <ImageIcon className="h-4 w-4" />
+                        )}
+                        <Typography variant="caption">
+                          {formatFileSize(selectedItem.file_size)}
+                        </Typography>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Created</span>
-                        <span className="text-sm">{formatDate(selectedItem.created_at)}</span>
-                      </div>
+
+                      {renderModalMediaContent(selectedItem)}
                     </div>
                   </div>
 
-                  {/* Risk Factors */}
-                  {selectedItem.risk_factors && selectedItem.risk_factors.length > 0 && (
+                  {/* Verification Details */}
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Status */}
                     <div>
-                      <Typography variant="cardTitle" className="mb-3">Risk Factors</Typography>
-                      <div className="space-y-2">
-                        {selectedItem.risk_factors.map((factor, index) => (
-                          <div key={index} className="px-3 py-2 bg-red-500/10 text-red-400 rounded-lg text-sm border border-red-500/30">
-                            {factor}
+                      <Typography variant="h4" className="mb-3 text-base sm:text-lg">Verification Status</Typography>
+                      {(() => {
+                        const verificationDisplay = getVerificationDisplay(
+                          selectedItem.ai_probability,
+                          selectedItem.human_probability,
+                          selectedItem.verification_status
+                        );
+                        return (
+                          <div className={`inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-lg border ${getStatusBadgeClasses(verificationDisplay.status)}`}>
+                            {verificationDisplay.status === 'authentic' ? (
+                              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                            ) : (
+                              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
+                            )}
+                            <span className="font-medium text-sm sm:text-base">{verificationDisplay.displayStatus}</span>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })()}
                     </div>
-                  )}
-
-                  {/* Recommendations */}
-                  {selectedItem.recommendations && selectedItem.recommendations.length > 0 && (
-                    <div>
-                      <Typography variant="cardTitle" className="mb-3">Recommendations</Typography>
-                      <div className="space-y-2">
-                        {selectedItem.recommendations.map((rec, index) => (
-                          <div key={index} className="px-3 py-2 bg-blue-500/10 text-blue-400 rounded-lg text-sm border border-blue-500/30">
-                            {rec}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="pt-4 border-t border-gray-700 space-y-3">
-                    <button
-                      onClick={() => downloadFile(selectedItem)}
-                      className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Download className="h-5 w-5" />
-                      Download File
-                    </button>
                     
-                    <div className="flex gap-2">
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div className="bg-gray-800/30 rounded-lg p-3 sm:p-4 border border-gray-700">
+                        <Typography variant="cardCaption" color="secondary" className="mb-1 text-xs sm:text-sm">
+                          Confidence Score
+                        </Typography>
+                        <Typography variant="cardTitle" className="numeric-text text-sm sm:text-base">
+                          {formatConfidence(selectedItem.confidence_score)}
+                        </Typography>
+                      </div>
+                      <div className="bg-gray-800/30 rounded-lg p-3 sm:p-4 border border-gray-700">
+                        <Typography variant="cardCaption" color="secondary" className="mb-1 text-xs sm:text-sm">
+                          Processing Time
+                        </Typography>
+                        <Typography variant="cardTitle" className="numeric-text text-sm sm:text-base">
+                          {selectedItem.processing_time.toFixed(2)}s
+                        </Typography>
+                      </div>
+                    </div>
+
+                    {/* Public Sharing Toggle */}
+                    <div>
+                      <Typography variant="h4" className="mb-3 text-base sm:text-lg">Public Sharing</Typography>
+                      <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-800/30 border border-gray-700 rounded-lg">
+                        <div>
+                          <Typography variant="cardTitle" className="mb-1 text-sm sm:text-base">
+                            Share in Public Library
+                          </Typography>
+                          <Typography variant="cardCaption" color="secondary" className="text-xs sm:text-sm">
+                            Allow others to see this verification result
+                          </Typography>
+                        </div>
+                        <button
+                          onClick={() => togglePublicSharing(selectedItem)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                            selectedItem.is_public_library_item ? 'bg-blue-500' : 'bg-gray-600'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              selectedItem.is_public_library_item ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Risk Factors */}
+                    {selectedItem.risk_factors && selectedItem.risk_factors.length > 0 && (
+                      <div>
+                        <Typography variant="h4" className="mb-3 text-base sm:text-lg">Risk Factors</Typography>
+                        <div className="space-y-2">
+                          {selectedItem.risk_factors.map((factor: string, index: number) => (
+                            <div key={index} className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                              <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                              <Typography variant="cardCaption" className="text-red-400 text-xs sm:text-sm">
+                                {factor}
+                              </Typography>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recommendations */}
+                    {selectedItem.recommendations && selectedItem.recommendations.length > 0 && (
+                      <div>
+                        <Typography variant="h4" className="mb-3 text-base sm:text-lg">Recommendations</Typography>
+                        <div className="space-y-2">
+                          {selectedItem.recommendations.map((rec: string, index: number) => (
+                            <div key={index} className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                              <CheckCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                              <Typography variant="cardCaption" className="text-blue-400 text-xs sm:text-sm">
+                                {rec}
+                              </Typography>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
                       <button
-                        onClick={() => togglePublicSharing(selectedItem.id, selectedItem.is_public_library_item)}
-                        className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                          selectedItem.is_public_library_item
-                            ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
+                        onClick={() => handleDownloadContent(selectedItem)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm sm:text-base"
                       >
-                        <Globe className="h-4 w-4" />
-                        {selectedItem.is_public_library_item ? 'Make Private' : 'Share Public'}
+                        <FileDown className="h-4 w-4" />
+                        Download Content
                       </button>
-                      
                       <button
-                        onClick={() => {
-                          deleteVerification(selectedItem.id);
-                          closeModal();
-                        }}
-                        className="px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors border border-red-500/30"
+                        onClick={() => generatePDFReport(selectedItem)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm sm:text-base"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Report
+                      </button>
+                      <button
+                        onClick={() => shareVerification(selectedItem)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm sm:text-base"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        Share
+                      </button>
+                      <button
+                        onClick={() => handleDeleteVerification(selectedItem)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm sm:text-base"
                       >
                         <Trash2 className="h-4 w-4" />
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -1111,21 +1194,67 @@ const MyVerifications = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={closeDeleteModal}
-        onConfirm={confirmDeleteVerification}
-        title="Delete Verification"
-        message={`Are you sure you want to delete "${verificationToDelete?.original_filename || verificationToDelete?.file_name}"? This action cannot be undone and will permanently remove the verification from your account.`}
-        confirmText="Delete Verification"
-        cancelText="Keep Verification"
-        type="danger"
-        loading={deleteLoading}
-      />
+        {/* Fullscreen Media Viewer */}
+        {showFullscreen && fullscreenMediaUrl && (
+          <div 
+            className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowFullscreen(false);
+              }
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowFullscreen(false)}
+              className="absolute top-4 right-4 p-3 bg-black/60 hover:bg-black/80 rounded-full transition-colors z-10"
+              title="Close fullscreen"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+
+            {/* Media Content */}
+            <div className="w-full h-full flex items-center justify-center">
+              {fullscreenIsVideo ? (
+                <video
+                  src={fullscreenMediaUrl}
+                  className="max-w-full max-h-full object-contain"
+                  controls
+                  autoPlay
+                />
+              ) : (
+                <img
+                  src={fullscreenMediaUrl}
+                  alt="Fullscreen view"
+                  className="max-w-full max-h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Instructions */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
+              <Typography variant="caption" color="secondary" className="bg-black/60 px-4 py-2 rounded-lg backdrop-blur-sm">
+                Press ESC or click outside to close
+              </Typography>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteConfirmation.isOpen}
+          onClose={() => setDeleteConfirmation({ isOpen: false, item: null, loading: false })}
+          onConfirm={confirmDelete}
+          title="Delete Verification"
+          message={`Are you sure you want to delete this verification? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
+          loading={deleteConfirmation.loading}
+        />
+      </div>
     </div>
   );
 };
