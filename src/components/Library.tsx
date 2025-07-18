@@ -137,19 +137,34 @@ const Library = () => {
       const cleanBaseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_'); // Clean for URL safety
       const uniqueFilename = `${cleanBaseName}_${item.id.substring(0, 8)}.${fileExtension}`;
 
-      // Create download link
+      console.log('Starting download for:', uniqueFilename);
+      
+      // Fetch the content as a blob to force download
+      const response = await fetch(mediaUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      
+      // Create a temporary URL for the blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create download link with blob URL
       const link = document.createElement('a');
-      link.href = mediaUrl;
+      link.href = blobUrl;
       link.download = uniqueFilename;
-      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      // Clean up the blob URL to free memory
+      URL.revokeObjectURL(blobUrl);
 
-      console.log('Content download initiated:', uniqueFilename);
+      console.log('Content download completed:', uniqueFilename);
     } catch (error) {
       console.error('Failed to download content:', error);
-      alert('Failed to download content. Please try again.');
+      alert('Failed to download content. The file may be too large or temporarily unavailable. Please try again.');
     }
   };
 
